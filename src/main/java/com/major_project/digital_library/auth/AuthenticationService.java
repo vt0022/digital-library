@@ -1,11 +1,8 @@
-package com.major_project.digital_library.service;
+package com.major_project.digital_library.auth;
 
-import com.major_project.digital_library.auth.AuthenticationRequest;
-import com.major_project.digital_library.auth.AuthenticationResponse;
 import com.major_project.digital_library.entity.Role;
 import com.major_project.digital_library.entity.User;
 import com.major_project.digital_library.repository.UserRepositoty;
-import com.major_project.digital_library.service.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -20,7 +17,7 @@ import java.util.Collection;
 public class AuthenticationService {
     private final UserRepositoty userRepository;
     private final AuthenticationManager authenticationManager;
-    private final JwtService jwtService;
+    private final JWTService jwtService;
 
     public AuthenticationResponse authenticate(AuthenticationRequest request) {
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));

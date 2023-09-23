@@ -16,7 +16,6 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 
-@Component
 @Entity
 public class Review implements Serializable {
 

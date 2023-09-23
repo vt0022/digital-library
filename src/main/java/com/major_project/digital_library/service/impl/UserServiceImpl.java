@@ -12,7 +12,7 @@ import java.util.Optional;
 @Service
 public class UserServiceImpl implements UserService {
 
-    private UserRepositoty userRepository;
+    private final UserRepositoty userRepository;
 
     private final PasswordEncoder passwordEncoder;
 
@@ -22,6 +22,7 @@ public class UserServiceImpl implements UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    @Override
     public <S extends User> S save(S entity) {
         entity.setPassword(passwordEncoder.encode(entity.getPassword()));
         return userRepository.save(entity);

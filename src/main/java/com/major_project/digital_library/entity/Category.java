@@ -18,7 +18,6 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 
-@Component
 @Entity
 public class Category implements Serializable {
     @Serial
@@ -28,8 +27,11 @@ public class Category implements Serializable {
     @UuidGenerator(style = UuidGenerator.Style.TIME)
     private UUID categoryId;
 
-    @Column(length = 50)
+    @Column(length = 50, unique = true, nullable = false)
     private String categoryName;
+
+    @Column(nullable = false, unique = true, length = 50)
+    private String slug;
 
     private Timestamp createdAt;
 

@@ -18,7 +18,6 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 
-@Component
 @Entity
 public class Field implements Serializable {
     @Serial
@@ -28,7 +27,11 @@ public class Field implements Serializable {
     @UuidGenerator(style = UuidGenerator.Style.TIME)
     private UUID fieldId;
 
+    @Column(unique = true, length = 100, nullable = false)
     private String fieldName;
+
+    @Column(unique = true, length = 100, nullable = false)
+    private String slug;
 
     private Timestamp createdAt;
 

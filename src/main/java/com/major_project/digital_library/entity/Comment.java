@@ -24,6 +24,7 @@ public class Comment implements Serializable {
     @UuidGenerator(style = UuidGenerator.Style.TIME)
     private UUID commentId;
 
+    @Column(nullable = false)
     private String content;
 
     private Timestamp createdAt;

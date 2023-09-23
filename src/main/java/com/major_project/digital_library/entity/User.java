@@ -18,7 +18,6 @@ import java.util.*;
 @NoArgsConstructor
 @AllArgsConstructor
 
-@Component
 @Entity
 public class User implements Serializable, UserDetails {
     private static final long serialVersionUID = 1L;
@@ -48,9 +47,10 @@ public class User implements Serializable, UserDetails {
     @Column(unique = true, length = 50)
     private String username;
 
+    @Column(nullable = false)
     private String password;
 
-    @Column(unique = true)
+    @Column(unique = true, length = 50, nullable = false)
     private String email;
 
     private Timestamp createdAt;

@@ -1,17 +1,14 @@
 package com.major_project.digital_library.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.UuidGenerator;
-import org.springframework.stereotype.Component;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
@@ -20,17 +17,20 @@ import java.util.UUID;
 @AllArgsConstructor
 
 @Entity
-public class Role implements Serializable {
+public class Tag implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
     @Id
     @UuidGenerator(style = UuidGenerator.Style.TIME)
-    private UUID id;
+    private UUID tagId;
 
-    @Column(unique = true, nullable = false)
-    private String roleName;
+    @Column(nullable = false, unique = true, length = 30)
+    private String tagName;
 
-    @OneToMany(mappedBy = "role")
-    private Set<User> users;
+    @ManyToMany
+    @JoinTable(name = "document_tag",
+            joinColumns = @JoinColumn(name = "tagId"),
+            inverseJoinColumns = @JoinColumn(name = "docId"))
+    private Set<Document> documents = new HashSet<>();
 }

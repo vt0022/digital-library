@@ -1,11 +1,11 @@
 package com.major_project.digital_library.repository;
 
-import com.major_project.digital_library.entity.Role;
+import com.major_project.digital_library.entity.Document;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.UUID;
 
 @Repository
-public interface RoleRepository extends JpaRepository<Role, UUID> {
+public interface DocumentRepository extends JpaRepository<Document, UUID> {
 }

@@ -1,15 +1,18 @@
 package com.major_project.digital_library.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Type;
 import org.hibernate.annotations.UuidGenerator;
 import org.springframework.stereotype.Component;
 
 import java.io.Serial;
 import java.io.Serializable;
 import java.sql.Timestamp;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -19,7 +22,6 @@ import java.util.UUID;
 @AllArgsConstructor
 
 @Entity
-@Component
 public class Document implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
@@ -28,10 +30,17 @@ public class Document implements Serializable {
     @UuidGenerator(style = UuidGenerator.Style.TIME)
     private UUID docId;
 
+    @Column(nullable = false, length = 100)
     private String docName;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(length = 65535)
     private String docIntroduction;
+
+    @Column(nullable = false)
+    private String url;
+
+    @Column(nullable = false, length = 100, unique = true)
+    private String slug;
 
     private Timestamp uploadedAt;
 
@@ -45,13 +54,14 @@ public class Document implements Serializable {
 
     private int totalFavorite;
 
-    private String keyword;
-
     private boolean isPrivate;
 
     private boolean isInternal;
 
+    @Column(length = 100)
     private String author;
+
+    private String thumbnail;
 
     @ManyToOne
     @JoinColumn(name = "uploadedBy")
@@ -81,6 +91,9 @@ public class Document implements Serializable {
 
     @OneToMany(mappedBy = "document")
     private Set<Review> reviews;
+
+    @ManyToMany(mappedBy = "documents")
+    private Set<Tag> tags = new HashSet<>();
 
     @PrePersist
     protected void onCreate() {

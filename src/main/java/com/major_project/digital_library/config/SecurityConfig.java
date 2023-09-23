@@ -32,7 +32,7 @@ public class SecurityConfig {
                         .requestMatchers("/home", "/swagger-ui").permitAll()
                         .requestMatchers("/profile").hasAuthority("ROLE_ADMIN")
                         .requestMatchers("/api/v1/auth/login").permitAll()
-                        .anyRequest().authenticated())
+                        .anyRequest().permitAll())
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .formLogin(login -> login

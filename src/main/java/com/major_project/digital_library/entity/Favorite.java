@@ -14,7 +14,6 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 
-@Component
 @Entity
 @IdClass(UserDocument.class)
 public class Favorite implements Serializable {

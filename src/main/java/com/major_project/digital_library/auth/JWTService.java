@@ -1,4 +1,4 @@
-package com.major_project.digital_library.service;
+package com.major_project.digital_library.auth;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 
 @Service
 
-public class JwtService {
+public class JWTService {
     private static final String SECRET_KEY = "123";
 
     public String generateToken(User user, Collection<SimpleGrantedAuthority> authorities) {
