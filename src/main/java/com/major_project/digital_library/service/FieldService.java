@@ -15,4 +15,6 @@ public interface FieldService {
     void deleteById(UUID uuid);
 
     Page<Field> findAll(Pageable pageable);
+
+    Optional<Field> findBySlug(String slug);
 }

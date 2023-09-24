@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 import java.io.Serial;
 import java.io.Serializable;
 import java.sql.Timestamp;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -41,10 +42,10 @@ public class Organization implements Serializable {
     private boolean isDeleted;
 
     @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<User> users;
+    private Set<User> users = new HashSet<>();
 
     @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Document> documents;
+    private Set<Document> documents = new HashSet<>();
 
     @PrePersist
     protected void onCreate() {

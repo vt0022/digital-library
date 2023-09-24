@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
@@ -32,5 +33,5 @@ public class Role implements Serializable {
     private String roleName;
 
     @OneToMany(mappedBy = "role")
-    private Set<User> users;
+    private Set<User> users = new HashSet<>();
 }

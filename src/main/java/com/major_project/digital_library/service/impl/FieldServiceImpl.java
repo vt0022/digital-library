@@ -39,4 +39,9 @@ public class FieldServiceImpl implements FieldService {
     public Page<Field> findAll(Pageable pageable) {
         return fieldRepository.findAll(pageable);
     }
+
+    @Override
+    public Optional<Field> findBySlug(String slug) {
+        return fieldRepository.findBySlug(slug);
+    }
 }

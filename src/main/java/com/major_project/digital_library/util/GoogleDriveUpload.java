@@ -3,6 +3,7 @@ package com.major_project.digital_library.util;
 import com.google.api.client.http.FileContent;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.File;
+import com.major_project.digital_library.model.GoogleDriveModel;
 import net.coobird.thumbnailator.Thumbnails;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.ImageType;
@@ -26,20 +27,17 @@ public class GoogleDriveUpload {
         this.googleDrive = googleDrive;
     }
 
-    public File uploadFile(MultipartFile multipartFile) {
+    public GoogleDriveModel uploadFile(MultipartFile multipartFile) {
         try {
             List<String> parents = Collections.singletonList("1QSojNGcBQLysgzLNeGhXqqoHGxh8aZyv");
 
             File ggDriveFile = new File();
-            String fileName = multipartFile.getOriginalFilename().replace(".pdf", ".png");
+            String fileName = multipartFile.getOriginalFilename();
             ggDriveFile.setParents(parents).setName(fileName);
 
             // Create temporary file
             java.io.File tempFile = java.io.File.createTempFile("temp", ".pdf");
             multipartFile.transferTo(tempFile);
-
-            // Set thumbnail
-            // ggDriveFile.setThumbnailLink(generateThumbnail(tempFile, fileName));
 
             // Create FileContent from the MultipartFile bytes
             FileContent mediaContent = new FileContent(multipartFile.getContentType(), tempFile);
@@ -49,7 +47,13 @@ public class GoogleDriveUpload {
                     .setFields("id, name, webViewLink, webContentLink") //, thumbnailLink
                     .execute();
 
-            return file;
+            GoogleDriveModel gd = new GoogleDriveModel();
+            gd.setDocName(file.getName().replace(".pdf", ""));
+            gd.setThumbnail(generateThumbnail(tempFile, fileName.replace(".pdf", ".jpg")));
+            gd.setViewUrl(file.getWebViewLink());
+            gd.setDownloadUrl(file.getWebContentLink());
+            tempFile.delete();
+            return gd;
         } catch (IOException e) {
             // Handle exceptions
             e.printStackTrace();
@@ -62,11 +66,11 @@ public class GoogleDriveUpload {
             // Load the PDF and render a page as an image
             PDDocument document = PDDocument.load(pdfFile);
             PDFRenderer pdfRenderer = new PDFRenderer(document);
-            BufferedImage image = pdfRenderer.renderImageWithDPI(0, 300, ImageType.RGB);
+            BufferedImage image = pdfRenderer.renderImageWithDPI(0, 72, ImageType.RGB);
 
             // Generate a thumbnail from the image
             BufferedImage thumbnail = Thumbnails.of(image)
-                    .size(100, 100) // Set the size of the thumbnail
+                    .size(413, 585) // Set the size of the thumbnail
                     .asBufferedImage();
 
             // Clean up resources
@@ -90,6 +94,7 @@ public class GoogleDriveUpload {
                     .setFields("id, name, webViewLink, webContentLink, thumbnailLink")
                     .execute();
 
+            tempThumbnail.delete();
             return uploadFile.getWebViewLink();
         } catch (IOException e) {
             // Handle exceptions

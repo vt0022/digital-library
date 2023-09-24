@@ -6,6 +6,9 @@ import com.major_project.digital_library.service.RoleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+import java.util.UUID;
+
 @Service
 public class RoleServiceImpl implements RoleService {
     private final RoleRepository roleRepository;
@@ -13,6 +16,11 @@ public class RoleServiceImpl implements RoleService {
     @Autowired
     public RoleServiceImpl(RoleRepository roleRepository) {
         this.roleRepository = roleRepository;
+    }
+
+    @Override
+    public Optional<Role> findById(UUID uuid) {
+        return roleRepository.findById(uuid);
     }
 
     @Override

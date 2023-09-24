@@ -30,16 +30,19 @@ public class Document implements Serializable {
     @UuidGenerator(style = UuidGenerator.Style.TIME)
     private UUID docId;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false)
     private String docName;
 
     @Column(length = 65535)
     private String docIntroduction;
 
     @Column(nullable = false)
-    private String url;
+    private String viewUrl;
 
-    @Column(nullable = false, length = 100, unique = true)
+    @Column(nullable = false)
+    private String downloadUrl;
+
+    @Column(nullable = false, unique = true)
     private String slug;
 
     private Timestamp uploadedAt;
@@ -84,13 +87,13 @@ public class Document implements Serializable {
     private Field field;
 
     @OneToMany(mappedBy = "document")
-    private Set<Save> saves;
+    private Set<Save> saves = new HashSet<>();
 
     @OneToMany(mappedBy = "document")
-    private Set<Favorite> favorites;
+    private Set<Favorite> favorites = new HashSet<>();
 
     @OneToMany(mappedBy = "document")
-    private Set<Review> reviews;
+    private Set<Review> reviews = new HashSet<>();
 
     @ManyToMany(mappedBy = "documents")
     private Set<Tag> tags = new HashSet<>();

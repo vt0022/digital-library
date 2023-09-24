@@ -8,6 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -26,6 +27,11 @@ public class UserServiceImpl implements UserService {
     public <S extends User> S save(S entity) {
         entity.setPassword(passwordEncoder.encode(entity.getPassword()));
         return userRepository.save(entity);
+    }
+
+    @Override
+    public Optional<User> findById(UUID uuid) {
+        return userRepository.findById(uuid);
     }
 
     @Override

@@ -10,6 +10,8 @@ import java.util.UUID;
 public interface CategoryService {
     <S extends Category> S save(S entity);
 
+    Optional<Category> findBySlug(String slug);
+
     Optional<Category> findById(UUID uuid);
 
     Page<Category> findAll(Pageable pageable);

@@ -70,10 +70,10 @@ public class User implements Serializable, UserDetails {
     private Role role;
 
     @OneToMany(mappedBy = "user")
-    private Set<Review> review;
+    private Set<Review> reviews = new HashSet<>();
 
     @OneToMany(mappedBy = "user")
-    private Set<AccessLog> accessLogs;
+    private Set<AccessLog> accessLogs = new HashSet<>();
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
