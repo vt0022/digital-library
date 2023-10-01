@@ -1,4 +1,4 @@
-package com.major_project.digital_library.model;
+package com.major_project.digital_library.model.response_model;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -10,7 +10,7 @@ import java.io.Serializable;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class GoogleDriveModel implements Serializable {
+public class FileModel implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 

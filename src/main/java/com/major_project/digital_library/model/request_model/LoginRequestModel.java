@@ -1,4 +1,4 @@
-package com.major_project.digital_library.auth;
+package com.major_project.digital_library.model.request_model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -8,8 +8,9 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+
 @Builder
-public class AuthenticationResponse {
-    private String token;
-    private String refreshToken;
+public class LoginRequestModel {
+    private String email;
+    private String password;
 }

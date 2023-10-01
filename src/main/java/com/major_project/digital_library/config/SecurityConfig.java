@@ -1,5 +1,6 @@
 package com.major_project.digital_library.config;
 
+import com.major_project.digital_library.auth.JWTAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,28 +16,55 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final JWTAuthenticationFilter jwtAuthenticationFilter;
     private final AuthenticationProvider authenticationProvider;
 
     @Autowired
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter, AuthenticationProvider authenticationProvider) {
+    public SecurityConfig(JWTAuthenticationFilter jwtAuthenticationFilter, AuthenticationProvider authenticationProvider) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.authenticationProvider = authenticationProvider;
     }
 
     @Bean
+    public AccessDeniedConfig accessDenied() {
+        return new AccessDeniedConfig();
+    }
+
+    @Bean
+    public UnauthorizedConfig unauthorized() {
+        return new UnauthorizedConfig();
+    }
+
+    @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable()) // Xem xét lại nếu bị lỗi 403
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.ALWAYS))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/home", "/swagger-ui").permitAll()
-                        .requestMatchers("/profile").hasAuthority("ROLE_ADMIN")
-                        .requestMatchers("/api/v1/auth/login").permitAll()
-                        .anyRequest().permitAll())
+                        .requestMatchers("/swagger-ui", "/swagger-ui/**").permitAll()
+                        .requestMatchers("/api-docs", "/api-docs/**", "/api/v1/document/test").permitAll()
+                        .requestMatchers("/api/v1/public/**").permitAll()
+                        .requestMatchers("/api/v1/admin/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers("/api/v1/manager/**").hasAuthority("ROLE_MANAGER")
+                        .requestMatchers("/api/v1/student/**").hasAuthority("ROLE_STUDENT")
+                        .requestMatchers("/api/v1/lecturer/**").hasAuthority("ROLE_LECTURER"))
+
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+
                 .formLogin(login -> login
-                        .permitAll()) // Nếu không có dòng này thì sẽ không hiển thị được trang login mặc định mà chỉ popup
+                        .permitAll())// Nếu không có dòng này thì sẽ không hiển thị được trang login mặc định mà chỉ popup
+
+                .logout(logout -> logout
+                        .logoutUrl("/api/v1/auth/logout")
+                        .deleteCookies("JSESSIONID")
+                        .invalidateHttpSession(true)
+                        .permitAll())
+
+                .exceptionHandling(exception -> exception
+                        .accessDeniedHandler(accessDenied())
+                        .authenticationEntryPoint(unauthorized()))
+
                 .httpBasic(Customizer.withDefaults())
         ;
         return http.build();

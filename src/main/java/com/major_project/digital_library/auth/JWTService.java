@@ -15,21 +15,23 @@ import java.util.stream.Collectors;
 
 public class JWTService {
     private static final String SECRET_KEY = "123";
+    private static final int expirationTimeAT = 1000*60*20;
+    private static final int expirationTimeRT = 1000*60*60*24;
 
     public String generateToken(User user, Collection<SimpleGrantedAuthority> authorities) {
         Algorithm algorithm = Algorithm.HMAC256(SECRET_KEY.getBytes());
         return JWT.create()
                 .withSubject(user.getEmail())
-                .withExpiresAt(new Date(System.currentTimeMillis() + 60*60*1000))
+                .withExpiresAt(new Date(System.currentTimeMillis() + expirationTimeAT))
                 .withClaim("roles", authorities.stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList()))
                 .sign(algorithm);
     }
 
-    public String generateRefreshToken(User user, Collection<SimpleGrantedAuthority> authorities) {
+    public String generateRefreshToken(User user) {
         Algorithm algorithm = Algorithm.HMAC256(SECRET_KEY.getBytes());
         return JWT.create()
                 .withSubject(user.getEmail())
-                .withExpiresAt(new Date(System.currentTimeMillis() + 80*60*1000))
+                .withExpiresAt(new Date(System.currentTimeMillis() + expirationTimeRT))
                 .sign(algorithm);
     }
 }

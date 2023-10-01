@@ -72,9 +72,6 @@ public class User implements Serializable, UserDetails {
     @OneToMany(mappedBy = "user")
     private Set<Review> reviews = new HashSet<>();
 
-    @OneToMany(mappedBy = "user")
-    private Set<AccessLog> accessLogs = new HashSet<>();
-
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();

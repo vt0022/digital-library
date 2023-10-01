@@ -2,7 +2,7 @@ package com.major_project.digital_library.controller;
 
 import com.google.api.services.drive.Drive;
 import com.major_project.digital_library.entity.Document;
-import com.major_project.digital_library.model.GoogleDriveModel;
+import com.major_project.digital_library.model.response_model.FileModel;
 import com.major_project.digital_library.service.CategoryService;
 import com.major_project.digital_library.service.DocumentService;
 import com.major_project.digital_library.service.FieldService;
@@ -10,11 +10,10 @@ import com.major_project.digital_library.service.OrganizationService;
 import com.major_project.digital_library.util.GoogleDriveUpload;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.text.Normalizer;
@@ -48,7 +47,7 @@ public class DocumentController {
     @PostMapping("/upload")
     public ResponseEntity<?> uploadFileToGoogleDrive(
             @RequestParam("file") MultipartFile multipartFile) {
-        GoogleDriveModel gd = googleDriveUpload.uploadFile(multipartFile);
+        FileModel gd = googleDriveUpload.uploadFile(multipartFile);
         Document doc = new Document();
         doc = modelMapper.map(gd, Document.class);
         doc.setSlug(generateSlug(doc.getDocName().replace(".pdf", "")));
@@ -75,6 +74,12 @@ public class DocumentController {
         }
 
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/test")
+    public ResponseEntity<?> test() {
+        Pageable pageable = PageRequest.of(0, 10);
+        return ResponseEntity.ok(categoryService.findAll(pageable));
     }
 
     public String generateSlug(String name) {

@@ -274,5 +274,18 @@ public class UserInitializer implements CommandLineRunner {
 //        user20.setEmail("le.tu2@example.com");
 //        user20.setVerified(true);
 //        userService.save(user20);
+//
+//        User user20 = new User();
+//        user20.setLastName("Nguyễn");
+//        user20.setMiddleName("Văn");
+//        user20.setFirstName("Thuận");
+//        user20.setDateOfBirth(new Timestamp(System.currentTimeMillis()));
+//        user20.setGender(1); // Giả sử 1 là nam
+//        user20.setPhone("0976543214");
+//        user20.setUsername("vanthuan2004");
+//        user20.setPassword("vanthuan2004"); // Mật khẩu dựa trên tên và số điện thoại
+//        user20.setEmail("vanthuan2004@gmail.com");
+//        user20.setVerified(true);
+//        userService.save(user20);
     }
 }

@@ -3,7 +3,7 @@ package com.major_project.digital_library.util;
 import com.google.api.client.http.FileContent;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.File;
-import com.major_project.digital_library.model.GoogleDriveModel;
+import com.major_project.digital_library.model.response_model.FileModel;
 import net.coobird.thumbnailator.Thumbnails;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.ImageType;
@@ -27,7 +27,7 @@ public class GoogleDriveUpload {
         this.googleDrive = googleDrive;
     }
 
-    public GoogleDriveModel uploadFile(MultipartFile multipartFile) {
+    public FileModel uploadFile(MultipartFile multipartFile) {
         try {
             List<String> parents = Collections.singletonList("1QSojNGcBQLysgzLNeGhXqqoHGxh8aZyv");
 
@@ -47,7 +47,7 @@ public class GoogleDriveUpload {
                     .setFields("id, name, webViewLink, webContentLink") //, thumbnailLink
                     .execute();
 
-            GoogleDriveModel gd = new GoogleDriveModel();
+            FileModel gd = new FileModel();
             gd.setDocName(file.getName().replace(".pdf", ""));
             gd.setThumbnail(generateThumbnail(tempFile, fileName.replace(".pdf", ".jpg")));
             gd.setViewUrl(file.getWebViewLink());
