@@ -1,21 +1,16 @@
 package com.major_project.digital_library.entity;
 
-import com.major_project.digital_library.service.OrganizationService;
-import jakarta.annotation.PostConstruct;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.UuidGenerator;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import java.io.Serial;
 import java.io.Serializable;
 import java.sql.Timestamp;
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 @Data
@@ -30,10 +25,13 @@ public class Organization implements Serializable {
 
     @Id
     @UuidGenerator(style = UuidGenerator.Style.TIME)
-    private UUID orgID;
+    private UUID orgId;
 
     @Column(unique = true, length = 100, nullable = false)
     private String orgName;
+
+    @Column(unique = true, length = 100, nullable = false)
+    private String slug;
 
     private Timestamp createdAt;
 
@@ -42,10 +40,10 @@ public class Organization implements Serializable {
     private boolean isDeleted;
 
     @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<User> users = new HashSet<>();
+    private List<User> users = new ArrayList<>();
 
     @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Document> documents = new HashSet<>();
+    private List<Document> documents = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {

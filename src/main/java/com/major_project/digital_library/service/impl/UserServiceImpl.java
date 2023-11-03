@@ -1,8 +1,8 @@
 package com.major_project.digital_library.service.impl;
 
 import com.major_project.digital_library.entity.User;
-import com.major_project.digital_library.repository.UserRepositoty;
-import com.major_project.digital_library.service.UserService;
+import com.major_project.digital_library.repository.IUserRepositoty;
+import com.major_project.digital_library.service.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -11,14 +11,14 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
-public class UserServiceImpl implements UserService {
+public class UserServiceImpl implements IUserService {
 
-    private final UserRepositoty userRepository;
+    private final IUserRepositoty userRepository;
 
     private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public UserServiceImpl(UserRepositoty userRepository, PasswordEncoder passwordEncoder) {
+    public UserServiceImpl(IUserRepositoty userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }

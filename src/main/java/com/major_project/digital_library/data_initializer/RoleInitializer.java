@@ -1,7 +1,6 @@
 package com.major_project.digital_library.data_initializer;
 
-import com.major_project.digital_library.entity.Role;
-import com.major_project.digital_library.service.RoleService;
+import com.major_project.digital_library.service.IRoleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Service;
@@ -9,7 +8,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class RoleInitializer implements CommandLineRunner {
     @Autowired
-    private RoleService roleService;
+    private IRoleService roleService;
 
     @Override
     public void run(String... args) throws Exception {

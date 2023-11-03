@@ -5,7 +5,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
-import java.util.UUID;
 
 @Data
 @NoArgsConstructor
@@ -13,7 +12,7 @@ import java.util.UUID;
 public class UserDocument implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private UUID userId;
+    private User user;
 
-    private UUID docId;
+    private Document document;
 }

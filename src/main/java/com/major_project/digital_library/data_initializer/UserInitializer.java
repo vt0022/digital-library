@@ -1,17 +1,14 @@
 package com.major_project.digital_library.data_initializer;
 
-import com.major_project.digital_library.entity.User;
-import com.major_project.digital_library.service.UserService;
+import com.major_project.digital_library.service.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
-import java.sql.Timestamp;
-
 @Component
 public class UserInitializer implements CommandLineRunner {
     @Autowired
-    private UserService userService;
+    private IUserService userService;
 
     @Override
     public void run(String... args) throws Exception {

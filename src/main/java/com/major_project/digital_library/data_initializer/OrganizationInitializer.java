@@ -1,7 +1,6 @@
 package com.major_project.digital_library.data_initializer;
 
-import com.major_project.digital_library.entity.Organization;
-import com.major_project.digital_library.service.OrganizationService;
+import com.major_project.digital_library.service.IOrganizationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -9,10 +8,10 @@ import org.springframework.stereotype.Component;
 @Component
 public class OrganizationInitializer implements CommandLineRunner {
     @Autowired
-    private OrganizationService organizationService;
+    private IOrganizationService organizationService;
 
     @Override
-    public void run(String... args) throws Exception  {
+    public void run(String... args) throws Exception {
 //        Organization o1 = new Organization();
 //        o1.setOrgName("Trường Đại học Sư phạm Kỹ thuật TP. Hồ Chí Minh");
 //        organizationService.save(o1);

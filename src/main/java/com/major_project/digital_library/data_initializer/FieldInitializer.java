@@ -1,7 +1,6 @@
 package com.major_project.digital_library.data_initializer;
 
-import com.major_project.digital_library.entity.Field;
-import com.major_project.digital_library.service.FieldService;
+import com.major_project.digital_library.service.IFieldService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -9,7 +8,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class FieldInitializer implements CommandLineRunner {
     @Autowired
-    private FieldService fieldService;
+    private IFieldService fieldService;
+
     @Override
     public void run(String... args) throws Exception {
 //        Field f1 = new Field();

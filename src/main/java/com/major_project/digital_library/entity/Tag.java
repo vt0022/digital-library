@@ -8,9 +8,7 @@ import org.hibernate.annotations.UuidGenerator;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Data
 @NoArgsConstructor
@@ -32,5 +30,5 @@ public class Tag implements Serializable {
     @JoinTable(name = "document_tag",
             joinColumns = @JoinColumn(name = "tagId"),
             inverseJoinColumns = @JoinColumn(name = "docId"))
-    private Set<Document> documents = new HashSet<>();
+    private List<Document> documents = new ArrayList<>();
 }

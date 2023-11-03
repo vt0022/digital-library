@@ -1,8 +1,8 @@
 package com.major_project.digital_library.service.impl;
 
 import com.major_project.digital_library.entity.Organization;
-import com.major_project.digital_library.repository.OrganizationRepository;
-import com.major_project.digital_library.service.OrganizationService;
+import com.major_project.digital_library.repository.IOrganizationRepository;
+import com.major_project.digital_library.service.IOrganizationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -12,11 +12,11 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
-public class OrganizationServiceImpl implements OrganizationService {
-    private final OrganizationRepository organizationRepository;
+public class OrganizationServiceImpl implements IOrganizationService {
+    private final IOrganizationRepository organizationRepository;
 
     @Autowired
-    public OrganizationServiceImpl(OrganizationRepository organizationRepository) {
+    public OrganizationServiceImpl(IOrganizationRepository organizationRepository) {
         this.organizationRepository = organizationRepository;
     }
 
@@ -38,5 +38,10 @@ public class OrganizationServiceImpl implements OrganizationService {
     @Override
     public Page<Organization> findAll(Pageable pageable) {
         return organizationRepository.findAll(pageable);
+    }
+
+    @Override
+    public Optional<Organization> findBySlug(String slug) {
+        return organizationRepository.findBySlug(slug);
     }
 }

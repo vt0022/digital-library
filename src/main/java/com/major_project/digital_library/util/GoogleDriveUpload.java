@@ -3,7 +3,7 @@ package com.major_project.digital_library.util;
 import com.google.api.client.http.FileContent;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.File;
-import com.major_project.digital_library.model.response_model.FileModel;
+import com.major_project.digital_library.model.FileModel;
 import net.coobird.thumbnailator.Thumbnails;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.ImageType;
@@ -27,12 +27,14 @@ public class GoogleDriveUpload {
         this.googleDrive = googleDrive;
     }
 
-    public FileModel uploadFile(MultipartFile multipartFile) {
+    public FileModel uploadFile(MultipartFile multipartFile, String name) {
         try {
+            // Set parent folder
             List<String> parents = Collections.singletonList("1QSojNGcBQLysgzLNeGhXqqoHGxh8aZyv");
 
+            // Create Drive file and apply parent folder and name
             File ggDriveFile = new File();
-            String fileName = multipartFile.getOriginalFilename();
+            String fileName = name;
             ggDriveFile.setParents(parents).setName(fileName);
 
             // Create temporary file
@@ -48,8 +50,8 @@ public class GoogleDriveUpload {
                     .execute();
 
             FileModel gd = new FileModel();
-            gd.setDocName(file.getName().replace(".pdf", ""));
-            gd.setThumbnail(generateThumbnail(tempFile, fileName.replace(".pdf", ".jpg")));
+            gd.setName(fileName);
+            gd.setThumbnail(generateThumbnail(tempFile, name.concat(".jpg")));
             gd.setViewUrl(file.getWebViewLink());
             gd.setDownloadUrl(file.getWebContentLink());
             tempFile.delete();
@@ -82,13 +84,13 @@ public class GoogleDriveUpload {
             ggDriveFile.setParents(parents).setName(fileName);
 
             // Create temporary file
-            java.io.File tempThumbnail = java.io.File.createTempFile("thumbnail", ".png");
+            java.io.File tempThumbnail = java.io.File.createTempFile("thumbnail", ".jpg");
 
             // Write the BufferedImage to the temporary File
-            ImageIO.write(thumbnail, "png", tempThumbnail);
+            ImageIO.write(thumbnail, "jpg", tempThumbnail);
 
             // Create FileContent
-            FileContent mediaContent = new FileContent("image/png", tempThumbnail);
+            FileContent mediaContent = new FileContent("image/jpeg", tempThumbnail);
             // Use Google Drive API to create the file
             File uploadFile = googleDrive.files().create(ggDriveFile, mediaContent)
                     .setFields("id, name, webViewLink, webContentLink, thumbnailLink")

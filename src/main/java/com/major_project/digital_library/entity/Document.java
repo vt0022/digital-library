@@ -1,20 +1,16 @@
 package com.major_project.digital_library.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.Type;
 import org.hibernate.annotations.UuidGenerator;
-import org.springframework.stereotype.Component;
 
 import java.io.Serial;
 import java.io.Serializable;
 import java.sql.Timestamp;
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 @Data
@@ -51,7 +47,9 @@ public class Document implements Serializable {
 
     private boolean isDeleted;
 
-    private boolean isVerified;
+    private int verifiedStatus;
+
+    private String note;
 
     private int totalView;
 
@@ -86,17 +84,17 @@ public class Document implements Serializable {
     @JoinColumn(name = "fieldId")
     private Field field;
 
-    @OneToMany(mappedBy = "document")
-    private Set<Save> saves = new HashSet<>();
+    @OneToMany(mappedBy = "document", cascade = CascadeType.ALL)
+    private List<Save> saves = new ArrayList<>();
 
-    @OneToMany(mappedBy = "document")
-    private Set<Favorite> favorites = new HashSet<>();
+    @OneToMany(mappedBy = "document", cascade = CascadeType.ALL)
+    private List<Favorite> favorites = new ArrayList<>();
 
-    @OneToMany(mappedBy = "document")
-    private Set<Review> reviews = new HashSet<>();
+    @OneToMany(mappedBy = "document", cascade = CascadeType.ALL)
+    private List<Review> reviews = new ArrayList<>();
 
     @ManyToMany(mappedBy = "documents")
-    private Set<Tag> tags = new HashSet<>();
+    private List<Tag> tags = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {

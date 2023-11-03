@@ -1,7 +1,6 @@
 package com.major_project.digital_library.data_initializer;
 
-import com.major_project.digital_library.entity.Category;
-import com.major_project.digital_library.service.CategoryService;
+import com.major_project.digital_library.service.ICategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -9,7 +8,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class CategoryInitializer implements CommandLineRunner{
     @Autowired
-    private CategoryService categoryService;
+    private ICategoryService categoryService;
 
     @Override
     public void run(String... args) throws Exception {

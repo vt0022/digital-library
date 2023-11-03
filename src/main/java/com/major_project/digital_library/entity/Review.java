@@ -5,10 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.UuidGenerator;
-import org.springframework.stereotype.Component;
 
 import java.io.Serializable;
-import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.UUID;
 
@@ -33,8 +31,6 @@ public class Review implements Serializable {
 
     private Timestamp updatedAt;
 
-    private boolean isDeleted;
-
     @ManyToOne
     @JoinColumn(name = "userId")
     private User user;
@@ -54,8 +50,4 @@ public class Review implements Serializable {
         updatedAt = new Timestamp(System.currentTimeMillis());
     }
 
-    @PreRemove
-    protected void onRemove() {
-        isDeleted = true;
-    }
 }

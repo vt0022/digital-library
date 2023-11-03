@@ -10,10 +10,7 @@ import org.springframework.stereotype.Component;
 import java.io.Serial;
 import java.io.Serializable;
 import java.sql.Timestamp;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Data
 @NoArgsConstructor
@@ -40,8 +37,8 @@ public class Category implements Serializable {
 
     private boolean isDeleted;
 
-    @OneToMany(mappedBy = "category")
-    private Set<Document> documents = new HashSet<>();
+    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private List<Document> documents = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {

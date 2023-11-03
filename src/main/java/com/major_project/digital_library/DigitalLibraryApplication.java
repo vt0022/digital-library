@@ -6,8 +6,7 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.drive.Drive;
-import com.major_project.digital_library.entity.User;
-import com.major_project.digital_library.service.UserService;
+import com.major_project.digital_library.service.IUserService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -25,53 +24,52 @@ import java.util.Collection;
 @SpringBootApplication
 public class DigitalLibraryApplication implements CommandLineRunner {
 
-	private final UserService userService;
-	private final GoogleCredential googleCredential;
-	@Lazy
-	@Autowired
-	public DigitalLibraryApplication(UserService userService, GoogleCredential googleCredential) {
-		this.userService = userService;
-		this.googleCredential = googleCredential;
-	}
+    private final IUserService userService;
+    private final GoogleCredential googleCredential;
 
-	@Bean
-	public ModelMapper modelMapper() {
-		return new ModelMapper();
-	}
+    @Lazy
+    @Autowired
+    public DigitalLibraryApplication(IUserService userService, GoogleCredential googleCredential) {
+        this.userService = userService;
+        this.googleCredential = googleCredential;
+    }
 
-	public static void main(String[] args) {
-		SpringApplication.run(DigitalLibraryApplication.class, args);
-	}
+    @Bean
+    public ModelMapper modelMapper() {
+        return new ModelMapper();
+    }
 
-	@Bean
-	public Drive getService() throws GeneralSecurityException, IOException {
-		final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
-		return new Drive.Builder(HTTP_TRANSPORT,
-				JacksonFactory.getDefaultInstance(), googleCredential)
-				.build();
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(DigitalLibraryApplication.class, args);
+    }
 
-	@Bean
-	public GoogleCredential googleCredential() throws GeneralSecurityException, IOException {
-		Collection<String> elenco = new ArrayList<>();
-		elenco.add("https://www.googleapis.com/auth/drive");
-		HttpTransport httpTransport = new NetHttpTransport();
-		JacksonFactory jacksonFactory = new JacksonFactory();
-		return new GoogleCredential.Builder()
-				.setTransport(httpTransport)
-				.setJsonFactory(jacksonFactory)
-				.setServiceAccountId("drive-upload-file@uploadfiles-399604.iam.gserviceaccount.com")
-				.setServiceAccountScopes(elenco)
-				.setServiceAccountPrivateKeyFromP12File(new File("src/main/resources/keys/uploadfiles.p12"))
-				.build();
-	}
+    @Bean
+    public Drive getService() throws GeneralSecurityException, IOException {
+        final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
+        return new Drive.Builder(HTTP_TRANSPORT,
+                JacksonFactory.getDefaultInstance(), googleCredential)
+                .build();
+    }
 
-	@Override
-	public void run(String... args) throws Exception {
+    @Bean
+    public GoogleCredential googleCredential() throws GeneralSecurityException, IOException {
+        Collection<String> elenco = new ArrayList<>();
+        elenco.add("https://www.googleapis.com/auth/drive");
+        HttpTransport httpTransport = new NetHttpTransport();
+        JacksonFactory jacksonFactory = new JacksonFactory();
+        return new GoogleCredential.Builder()
+                .setTransport(httpTransport)
+                .setJsonFactory(jacksonFactory)
+                .setServiceAccountId("drive-upload-file@uploadfiles-399604.iam.gserviceaccount.com")
+                .setServiceAccountScopes(elenco)
+                .setServiceAccountPrivateKeyFromP12File(new File("src/main/resources/keys/uploadfiles.p12"))
+                .build();
+    }
 
-	}
+    @Override
+    public void run(String... args) throws Exception {
 
-
+    }
 
 
 }

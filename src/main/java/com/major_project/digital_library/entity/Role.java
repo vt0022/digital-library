@@ -8,12 +8,11 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.UuidGenerator;
-import org.springframework.stereotype.Component;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -33,5 +32,5 @@ public class Role implements Serializable {
     private String roleName;
 
     @OneToMany(mappedBy = "role")
-    private Set<User> users = new HashSet<>();
+    private List<User> users = new ArrayList<>();
 }

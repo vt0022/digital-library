@@ -8,11 +8,13 @@ import org.hibernate.annotations.UuidGenerator;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Component;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
 
 @Data
 @NoArgsConstructor
@@ -70,7 +72,13 @@ public class User implements Serializable, UserDetails {
     private Role role;
 
     @OneToMany(mappedBy = "user")
-    private Set<Review> reviews = new HashSet<>();
+    private List<Review> reviews = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user")
+    private List<Favorite> favorites = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user")
+    private List<Save> saves = new ArrayList<>();
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
