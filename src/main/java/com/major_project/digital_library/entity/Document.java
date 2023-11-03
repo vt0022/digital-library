@@ -93,9 +93,6 @@ public class Document implements Serializable {
     @OneToMany(mappedBy = "document", cascade = CascadeType.ALL)
     private List<Review> reviews = new ArrayList<>();
 
-    @ManyToMany(mappedBy = "documents")
-    private List<Tag> tags = new ArrayList<>();
-
     @PrePersist
     protected void onCreate() {
         uploadedAt = new Timestamp(System.currentTimeMillis());

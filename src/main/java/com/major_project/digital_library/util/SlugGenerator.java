@@ -16,9 +16,9 @@ public class SlugGenerator {
         String uuid = "";
         if (isRandom) {
             // Random string
-            uuid = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 10) + "-";
+            uuid = "-" + UUID.randomUUID().toString().replaceAll("-", "").substring(0, 10);
         }
         // Replace spaces with hyphens and convert to lowercase
-        return normalized.trim().replaceAll(" ", "-").toLowerCase() + "-" + uuid;
+        return normalized.trim().replaceAll(" ", "-").toLowerCase() + uuid;
     }
 }

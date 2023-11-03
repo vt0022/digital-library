@@ -111,7 +111,7 @@ public class DocumentController {
 
     @Operation(summary = "Xem danh sách tài liệu đã tải lên của một người",
             description = "Trả về danh sách tất cả tài liệu mà một người đã tải lên")
-    @GetMapping("/user")
+    @GetMapping("/mine")
     public ResponseEntity<?> getDocumentsByUser(@RequestParam(defaultValue = "0") int page,
                                                 @RequestParam(defaultValue = "20") int size,
                                                 @RequestParam(defaultValue = "docId") String order) {
@@ -224,15 +224,21 @@ public class DocumentController {
             description = "Trả về danh sách tài liệu đang chờ duyệt cho manager hoặc admin")
     @GetMapping("/waiting")
     public ResponseEntity<?> getWaitingDocument(@RequestParam(defaultValue = "0") int page,
-                                                @RequestParam(defaultValue = "20") int size,
-                                                @RequestParam(defaultValue = "all") String organization) {
+                                                @RequestParam(defaultValue = "20") int size) {
+
         // Order maybe one of these: docId, totalView
         Sort sort = Sort.by(Sort.Direction.DESC, "updatedAt");
         Pageable pageable = PageRequest.of(page, size, sort);
         Page<Document> documents;
+
+        // Find user info
+        UsernamePasswordAuthenticationToken auth = (UsernamePasswordAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
+        String email = String.valueOf(auth.getPrincipal());
+        User user = userService.findByEmail(email).orElseThrow(() -> new RuntimeException("Email is not valid"));
+
         // By organization
-        if (!organization.equals("all")) {
-            Organization foundOrganization = organizationService.findBySlug(organization).orElseThrow(() -> new RuntimeException("Could not find organization"));
+        if (user.getRole().getRoleName().equals("ROLE_MANAGER")) {
+            Organization foundOrganization = user.getOrganization();
             documents = documentService.findByOrganizationAndVerifiedStatusAndIsDeleted(foundOrganization, 0, false, pageable);
         } else { // Not include organization
             documents = documentService.findByVerifiedStatusAndIsDeleted(0, false, pageable);
@@ -319,7 +325,7 @@ public class DocumentController {
 
     @Operation(summary = "Tạo mới một tài liệu",
             description = "Trả về tài liệu vừa mới tạo. Tuỳ vào vai trò sẽ trả về trạng thái kèm theo.")
-    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> uploadDocument(@RequestPart("document") DocumentRequestModel documentRequestModel,
                                             @RequestPart("file") MultipartFile multipartFile) {
         // Find user info

@@ -24,8 +24,8 @@ public class UnauthorizedHandler implements AuthenticationEntryPoint {
                 ResponseModel.builder()
                         .status(401)
                         .error(true)
-                        //.message("User unauthorized")
-                        .message(authException.getMessage())
+                        .message("User unauthorized")
+                        //.message(authException.getMessage())
                         .build());
     }
 }

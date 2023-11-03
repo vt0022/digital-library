@@ -1,7 +1,10 @@
 package com.major_project.digital_library.model.response_model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.major_project.digital_library.entity.*;
+import com.major_project.digital_library.entity.Favorite;
+import com.major_project.digital_library.entity.Review;
+import com.major_project.digital_library.entity.Save;
+import com.major_project.digital_library.entity.User;
 import com.major_project.digital_library.model.FieldModel;
 import com.major_project.digital_library.model.OrganizationModel;
 import lombok.AllArgsConstructor;
@@ -79,7 +82,4 @@ public class DocumentResponseModel implements Serializable {
 
     @JsonIgnore
     private List<Review> reviews = new ArrayList<>();
-
-    @JsonIgnore
-    private List<Tag> tags = new ArrayList<>();
 }

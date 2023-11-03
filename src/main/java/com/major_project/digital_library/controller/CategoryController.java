@@ -71,8 +71,8 @@ public class CategoryController {
     @Operation(summary = "Tạo danh mục mới",
             description = "Tạo một danh mục tài liệu mới")
     @PostMapping
-    public ResponseEntity<?> createCategory(@RequestBody CategoryResponseModel categoryResponseModel) {
-        Category category = modelMapper.map(categoryResponseModel, Category.class);
+    public ResponseEntity<?> createCategory(@RequestBody CategoryRequestModel categoryRequestModel) {
+        Category category = modelMapper.map(categoryRequestModel, Category.class);
         category.setSlug(slugGenerator.generateSlug(category.getCategoryName(), false));
         category = categoryService.save(category);
         CategoryResponseModel newCategoryResponseModel = modelMapper.map(category, CategoryResponseModel.class);
