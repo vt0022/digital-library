@@ -1,0 +1,18 @@
+insert into digital_library.field (field_id, created_at, field_name, is_deleted, slug, updated_at)
+values  (0xC0A801B98AC01A60818AC04A8E100008, '2023-09-23 11:27:06.128000', 'Cơ khí chế tạo máy', false, 'co-khi-che-tao-may', '2023-09-23 11:27:06.128000'),
+        (0xC0A801B98AC01A60818AC04A8E180009, '2023-09-23 11:27:06.136000', 'Điện - Điện tử', false, 'dien-dien-tu', '2023-09-23 11:27:06.136000'),
+        (0xC0A801B98AC01A60818AC04A8E20000A, '2023-09-23 11:27:06.144000', 'Cơ khí động lực', false, 'co-khi-dong-luc', '2023-09-23 11:27:06.144000'),
+        (0xC0A801B98AC01A60818AC04A8E2C000B, '2023-09-23 11:27:06.156000', 'Xây dựng - Kiến trúc', false, 'xay-dung-kien-truc', '2023-09-23 11:27:06.156000'),
+        (0xC0A801B98AC01A60818AC04A8E36000C, '2023-09-23 11:27:06.166000', 'CN Thực phẩm - Môi trường', false, 'cn-thuc-pham-moi-truong', '2023-09-23 11:27:06.166000'),
+        (0xC0A801B98AC01A60818AC04A8E44000D, '2023-09-23 11:27:06.180000', 'Công nghệ thông tin', false, 'cong-nghe-thong-tin', '2023-09-23 11:27:06.180000'),
+        (0xC0A801B98AC01A60818AC04A8E4D000E, '2023-09-23 11:27:06.189000', 'Kinh tế - Quản lý', false, 'kinh-te-quan-ly', '2023-09-23 11:27:06.189000'),
+        (0xC0A801B98AC01A60818AC04A8E54000F, '2023-09-23 11:27:06.196000', 'CN In - Truyền thông', false, 'cn-in-truyen-thong', '2023-09-23 11:27:06.196000'),
+        (0xC0A801B98AC01A60818AC04A8E5C0010, '2023-09-23 11:27:06.204000', 'CN May - thời trang', false, 'cn-may-thoi-trang', '2023-09-23 11:27:06.204000'),
+        (0xC0A801B98AC01A60818AC04A8E640011, '2023-09-23 11:27:06.212000', 'Nghệ thuật - Ẩm thực', false, 'nghe-thuat-am-thuc', '2023-09-23 11:27:06.212000'),
+        (0xC0A801B98AC01A60818AC04A8E6B0012, '2023-09-23 11:27:06.219000', 'Nông - Lâm - Ngư Nghiệp', false, 'nong-lam-ngu-nghiep', '2023-09-23 11:27:06.219000'),
+        (0xC0A801B98AC01A60818AC04A8E730013, '2023-09-23 11:27:06.227000', 'Y học - Sức khỏe', false, 'y-hoc-suc-khoe', '2023-09-23 11:27:06.227000'),
+        (0xC0A801B98AC01A60818AC04A8E7C0014, '2023-09-23 11:27:06.236000', 'Khoa học xã hội', false, 'khoa-hoc-xa-hoi', '2023-09-23 11:27:06.236000'),
+        (0xC0A801B98AC01A60818AC04A8E840015, '2023-09-23 11:27:06.244000', 'Lịch sử - Địa lý - Du lịch', false, 'lich-su-dia-ly-du-lich', '2023-09-23 11:27:06.244000'),
+        (0xC0A801B98AC01A60818AC04A8E8F0016, '2023-09-23 11:27:06.255000', 'Khoa học tự nhiên', false, 'khoa-hoc-tu-nhien', '2023-09-23 11:27:06.255000'),
+        (0xC0A801B98AC01A60818AC04A8E990017, '2023-09-23 11:27:06.265000', 'Ngôn ngữ', false, 'ngon-ngu', '2023-09-23 11:27:06.265000'),
+        (0xC0A801B98AC01A60818AC04A8EA10018, '2023-09-23 11:27:06.273000', 'Kỹ thuật - Khoa học ứng dụng', false, 'ky-thuat-khoa-hoc-ung-dung', '2023-09-23 11:27:06.273000');
