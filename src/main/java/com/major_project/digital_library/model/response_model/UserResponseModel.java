@@ -26,8 +26,6 @@ public class UserResponseModel implements Serializable {
 
     private String firstName;
 
-    private String middleName;
-
     private String lastName;
 
     private Timestamp dateOfBirth;
@@ -37,8 +35,6 @@ public class UserResponseModel implements Serializable {
     private String phone;
 
     private String image;
-
-    private String username;
 
     @JsonIgnore
     private String password;
@@ -50,8 +46,6 @@ public class UserResponseModel implements Serializable {
     private Timestamp updatedAt;
 
     private boolean isDeleted;
-
-    private boolean isVerified;
 
     @JsonIgnore
     private Organization organization;

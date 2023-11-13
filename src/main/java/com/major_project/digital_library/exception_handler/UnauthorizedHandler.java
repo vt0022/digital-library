@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.major_project.digital_library.model.response_model.ResponseModel;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
@@ -22,9 +23,9 @@ public class UnauthorizedHandler implements AuthenticationEntryPoint {
         response.setContentType(APPLICATION_JSON_VALUE);
         new ObjectMapper().writeValue(response.getOutputStream(),
                 ResponseModel.builder()
-                        .status(401)
+                        .status(HttpStatus.UNAUTHORIZED.value())
                         .error(true)
-                        .message("User unauthorized")
+                        .message("User unauthorized. Please log in first.")
                         //.message(authException.getMessage())
                         .build());
     }

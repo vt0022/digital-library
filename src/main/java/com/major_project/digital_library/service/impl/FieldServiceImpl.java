@@ -44,4 +44,9 @@ public class FieldServiceImpl implements IFieldService {
     public Optional<Field> findBySlug(String slug) {
         return fieldRepository.findBySlug(slug);
     }
+
+    @Override
+    public Page<Field> findByIsDeleted(boolean isDeleted, Pageable pageable) {
+        return fieldRepository.findByIsDeleted(isDeleted, pageable);
+    }
 }

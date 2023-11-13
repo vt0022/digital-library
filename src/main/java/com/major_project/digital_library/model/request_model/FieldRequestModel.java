@@ -6,24 +6,15 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.UUID;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class SignupRequestModel implements Serializable {
+public class FieldRequestModel implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    private String firstName;
+    private String fieldName;
 
-    private String lastName;
-
-    private String password;
-
-    private String email;
-
-    private UUID orgId;
-
-    private UUID roleId;
+    private String slug;
 }

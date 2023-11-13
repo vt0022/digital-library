@@ -20,6 +20,7 @@ import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -99,7 +100,7 @@ public class AuthController {
                 .refreshToken(jwtRefreshToken)
                 .build();
 
-        return ResponseEntity.ok(ResponseModel.builder()
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(ResponseModel.builder()
                 .status(200)
                 .error(false)
                 .message("Login successfully")

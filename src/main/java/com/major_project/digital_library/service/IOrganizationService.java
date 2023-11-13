@@ -17,4 +17,6 @@ public interface IOrganizationService {
     Page<Organization> findAll(Pageable pageable);
 
     Optional<Organization> findBySlug(String slug);
+
+    Page<Organization> findByIsDeleted(boolean isDeleted, Pageable pageable);
 }
