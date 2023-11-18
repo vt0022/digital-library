@@ -96,7 +96,7 @@ public class AuthController {
         var jwtRefreshToken = jwtService.generateRefreshToken(user);
 
         AuthModel authResponse = AuthModel.builder()
-                .token(jwtToken)
+                .accessToken(jwtToken)
                 .refreshToken(jwtRefreshToken)
                 .build();
 

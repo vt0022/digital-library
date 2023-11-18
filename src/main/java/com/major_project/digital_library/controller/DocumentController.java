@@ -334,7 +334,7 @@ public class DocumentController {
         User user = userService.findByEmail(email).orElseThrow(() -> new RuntimeException("Email is not valid"));
         // Get data
         Document document = modelMapper.map(documentRequestModel, Document.class);
-        // Upload file
+        // Upload filedocument
         FileModel gd = googleDriveUpload.uploadFile(multipartFile, documentRequestModel.getDocName());
         // Find category and field
         Category category = categoryService.findById(documentRequestModel.getCategoryId()).orElse(null);

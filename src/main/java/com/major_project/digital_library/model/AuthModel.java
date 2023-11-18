@@ -11,6 +11,6 @@ import lombok.NoArgsConstructor;
 
 @Builder
 public class AuthModel {
-    private String token;
+    private String accessToken;
     private String refreshToken;
 }

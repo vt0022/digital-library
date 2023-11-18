@@ -19,15 +19,9 @@ public class DocumentRequestModel implements Serializable {
 
     private String docIntroduction;
 
-    private boolean isDeleted;
-
     private int verifiedStatus;
 
-    private String note;
-
     private boolean isInternal;
-
-    private boolean isPrivate;
 
     private UUID orgId;
 

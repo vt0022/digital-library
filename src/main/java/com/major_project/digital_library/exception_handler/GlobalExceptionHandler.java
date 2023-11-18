@@ -1,5 +1,7 @@
 package com.major_project.digital_library.exception_handler;
 
+import com.auth0.jwt.exceptions.SignatureVerificationException;
+import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.major_project.digital_library.model.response_model.ResponseModel;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -10,30 +12,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
-
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<?> handleGlobalException(Exception e) {
-        return ResponseEntity.ok(ResponseModel
-                .builder()
-                .status(HttpStatus.BAD_REQUEST.value())
-                .error(true)
-                .message(e.getMessage())
-                .build());
-    }
-
-    @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<?> handleBadCredentialException(Exception e) {
-        return ResponseEntity.ok(ResponseModel
-                .builder()
-                .status(HttpStatus.UNAUTHORIZED.value())
-                .error(true)
-                .message("Invalid password")
-                .build());
-    }
-    //SignatureVerificationException
-    //TokenExpiredException
-    //InvalidTokenException
-
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<?> handleDataException(Exception e) {
         String message = e.getMessage();
@@ -43,6 +21,29 @@ public class GlobalExceptionHandler {
         return ResponseEntity.ok(ResponseModel
                 .builder()
                 .status(HttpStatus.CONFLICT.value())
+                .error(true)
+                .message(message)
+                .build());
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<?> handleGlobalException(Exception e) {
+        String message = e.getMessage();
+        int statusCode = HttpStatus.BAD_REQUEST.value();
+
+        if (e instanceof TokenExpiredException) {
+            message = "Token is expired";
+            statusCode = HttpStatus.UNAUTHORIZED.value();
+        } else if (e instanceof SignatureVerificationException) {
+            message = "Invalid signature";
+            statusCode = HttpStatus.UNAUTHORIZED.value();
+        } else if (e instanceof BadCredentialsException) {
+            message = "Invalid password";
+            statusCode = HttpStatus.UNAUTHORIZED.value();
+        }
+        return ResponseEntity.ok(ResponseModel
+                .builder()
+                .status(statusCode)
                 .error(true)
                 .message(message)
                 .build());
