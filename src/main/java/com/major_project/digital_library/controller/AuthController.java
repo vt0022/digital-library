@@ -85,7 +85,7 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequestModel loginRequestModel) {
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequestModel.getEmail(), loginRequestModel.getPassword()));
-        User user = userService.findByEmail(loginRequestModel.getEmail()).orElseThrow(() -> new UsernameNotFoundException("Email not registered"));
+        User user = userService.findByEmailAndIsDeleted(loginRequestModel.getEmail(), false).orElseThrow(() -> new UsernameNotFoundException("Email not registered"));
 
         Role role = user.getRole();
 

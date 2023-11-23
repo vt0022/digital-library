@@ -2,6 +2,7 @@ package com.major_project.digital_library.exception_handler;
 
 import com.auth0.jwt.exceptions.SignatureVerificationException;
 import com.auth0.jwt.exceptions.TokenExpiredException;
+import com.major_project.digital_library.exception_handler.exception.ModelNotFoundException;
 import com.major_project.digital_library.model.response_model.ResponseModel;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -26,6 +27,16 @@ public class GlobalExceptionHandler {
                 .build());
     }
 
+    @ExceptionHandler(ModelNotFoundException.class)
+    public ResponseEntity<?> handleNotFoundException(Exception e) {
+        return ResponseEntity.ok(ResponseModel
+                .builder()
+                .status(HttpStatus.NOT_FOUND.value())
+                .error(true)
+                .message(e.getMessage())
+                .build());
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> handleGlobalException(Exception e) {
         String message = e.getMessage();
@@ -41,6 +52,7 @@ public class GlobalExceptionHandler {
             message = "Invalid password";
             statusCode = HttpStatus.UNAUTHORIZED.value();
         }
+
         return ResponseEntity.ok(ResponseModel
                 .builder()
                 .status(statusCode)

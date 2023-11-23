@@ -64,7 +64,7 @@ public class SecurityConfig {
                     cs.setExposedHeaders(List.of("Access-Control-Allow-Origin", "Access-Control-Allow-Credentials", "Authorization"));
                     return cs;
                 }))
-//
+
                 .anonymous(anonymous -> anonymous.disable())
 
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -123,6 +123,13 @@ public class SecurityConfig {
                                 "/api/v1/documents").authenticated()
                         .requestMatchers(HttpMethod.GET,
                                 "/api/v1/documents").hasAuthority("ROLE_ADMIN")
+
+                        .requestMatchers(
+                                "/api/v1/users/profile",
+                                "/api/v1/users/password",
+                                "/api/v1/users/avatar").authenticated()
+                        .requestMatchers("/api/v1/users/*").hasAnyAuthority("ROLE_ADMIN", "ROLE_MANAGER")
+                        .requestMatchers("/api/v1/users").hasAuthority("ROLE_ADMIN")
 
                         .anyRequest().authenticated())
 

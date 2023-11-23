@@ -1,3 +1,6 @@
+create database digital_library;
+use digital_library;
+
 create table category
 (
     category_id   binary(16)  not null

@@ -4,9 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.major_project.digital_library.entity.Favorite;
 import com.major_project.digital_library.entity.Review;
 import com.major_project.digital_library.entity.Save;
-import com.major_project.digital_library.entity.User;
 import com.major_project.digital_library.model.FieldModel;
-import com.major_project.digital_library.model.OrganizationModel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -59,14 +57,12 @@ public class DocumentResponseModel implements Serializable {
 
     private String thumbnail;
 
-    @JsonIgnore
-    private User userUploaded;
+    private UserResponseModel userUploaded;
 
-    @JsonIgnore
-    private User userVerified;
+    private UserResponseModel userVerified;
 
     //@JsonIgnore
-    private OrganizationModel organization;
+    private OrganizationResponseModel organization;
 
     //@JsonIgnore
     private CategoryResponseModel category;
