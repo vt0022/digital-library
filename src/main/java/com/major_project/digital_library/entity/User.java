@@ -51,6 +51,9 @@ public class User implements Serializable, UserDetails {
     @Column(unique = true, length = 50, nullable = false)
     private String email;
 
+    @Column(nullable = false)
+    private boolean isVerified;
+
     private Timestamp createdAt;
 
     private Timestamp updatedAt;

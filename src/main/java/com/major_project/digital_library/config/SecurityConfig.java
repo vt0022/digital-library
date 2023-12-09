@@ -55,15 +55,15 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable()) // Xem xét lại nếu bị lỗi 403
 
-                .cors(cors -> cors.configurationSource(request -> {
-                    final CorsConfiguration cs = new CorsConfiguration();
-                    cs.setAllowedOrigins(List.of(request.getHeader("Origin")));
-                    cs.setAllowCredentials(true);
-                    cs.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "HEAD", "DELETE", "OPTIONS"));
-                    cs.setAllowedHeaders(List.of("Origin", "Accept", "X-Requested-With", "Content-Type", "Access-Control-Request-Method", "Access-Control-Request-Headers", "Authorization"));
-                    cs.setExposedHeaders(List.of("Access-Control-Allow-Origin", "Access-Control-Allow-Credentials", "Authorization"));
-                    return cs;
-                }))
+//                .cors(cors -> cors.configurationSource(request -> {
+//                    final CorsConfiguration cs = new CorsConfiguration();
+////                    cs.setAllowedOrigins(List.of(request.getHeader("Origin")));
+//                    cs.setAllowCredentials(true);
+//                    cs.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "HEAD", "DELETE", "OPTIONS"));
+//                    cs.setAllowedHeaders(List.of("Origin", "Accept", "X-Requested-With", "Content-Type", "Access-Control-Request-Method", "Access-Control-Request-Headers", "Authorization"));
+//                    cs.setExposedHeaders(List.of("Access-Control-Allow-Origin", "Access-Control-Allow-Credentials", "Authorization"));
+//                    return cs;
+//                }))
 
                 .anonymous(anonymous -> anonymous.disable())
 

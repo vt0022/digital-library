@@ -1,3 +1,4 @@
+DROP DATABASE IF EXISTS digital_library;
 create database digital_library;
 use digital_library;
 

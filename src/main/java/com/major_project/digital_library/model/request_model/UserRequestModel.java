@@ -28,6 +28,8 @@ public class UserRequestModel implements Serializable {
 
     private String email;
 
+    private boolean isVerified;
+
     private String password;
 
     private String confirmPassword;
