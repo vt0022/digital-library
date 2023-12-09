@@ -9,6 +9,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -22,6 +23,7 @@ import java.util.UUID;
 
 @Entity
 public class User implements Serializable, UserDetails {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @Id
@@ -30,9 +32,6 @@ public class User implements Serializable, UserDetails {
 
     @Column(length = 50)
     private String firstName;
-
-    @Column(length = 50)
-    private String middleName;
 
     @Column(length = 50)
     private String lastName;
@@ -46,22 +45,20 @@ public class User implements Serializable, UserDetails {
 
     private String image;
 
-    @Column(unique = true, length = 50)
-    private String username;
-
     @Column(nullable = false)
     private String password;
 
     @Column(unique = true, length = 50, nullable = false)
     private String email;
 
+    @Column(nullable = false)
+    private boolean isVerified;
+
     private Timestamp createdAt;
 
     private Timestamp updatedAt;
 
     private boolean isDeleted;
-
-    private boolean isVerified;
 
     @ManyToOne
     @JoinColumn(name = "orgId")

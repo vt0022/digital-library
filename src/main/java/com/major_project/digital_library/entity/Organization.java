@@ -6,8 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.UuidGenerator;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,10 +16,7 @@ import java.util.UUID;
 @AllArgsConstructor
 
 @Entity
-public class Organization implements Serializable {
-
-    @Serial
-    private static final long serialVersionUID = 1L;
+public class Organization {
 
     @Id
     @UuidGenerator(style = UuidGenerator.Style.TIME)
@@ -42,7 +37,7 @@ public class Organization implements Serializable {
     @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<User> users = new ArrayList<>();
 
-    @OneToMany(mappedBy = "organization", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "organization")
     private List<Document> documents = new ArrayList<>();
 
     @PrePersist

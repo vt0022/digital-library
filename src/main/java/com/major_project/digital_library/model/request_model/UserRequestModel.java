@@ -6,12 +6,13 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.sql.Timestamp;
 import java.util.UUID;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class SignupRequestModel implements Serializable {
+public class UserRequestModel implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
@@ -19,9 +20,19 @@ public class SignupRequestModel implements Serializable {
 
     private String lastName;
 
-    private String password;
+    private Timestamp dateOfBirth;
+
+    private int gender;
+
+    private String phone;
 
     private String email;
+
+    private boolean isVerified;
+
+    private String password;
+
+    private String confirmPassword;
 
     private UUID orgId;
 

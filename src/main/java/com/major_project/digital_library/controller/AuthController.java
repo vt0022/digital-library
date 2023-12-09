@@ -20,6 +20,7 @@ import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -55,22 +56,62 @@ public class AuthController {
         this.jwtService = jwtService;
     }
 
+    //    @PostMapping("/signup")
+//    public ResponseEntity<?> signup(@Valid @RequestBody SignupRequestModel signupRequest) {
+//        Optional<User> user = userService.findByEmail(signupRequest.getEmail());
+//        if (user.isPresent()) {
+//            throw new RuntimeException("Email already registered");
+//        }
+//
+//        // Organization
+//        Organization organization = organizationService.findById(signupRequest.getOrgId()).orElse(null);
+//        // Role
+//        Role role = roleService.findById(signupRequest.getRoleId()).orElse(null);
+//        User newUser = modelMapper.map(signupRequest, User.class);
+//        newUser.setOrganization(organization);
+//        newUser.setRole(role);
+//        newUser = userService.save(newUser);
+//
+//        UserResponseModel userResponseModel = modelMapper.map(newUser, UserResponseModel.class);
+//        ResponseModel signupResponse = new ResponseModel().builder()
+//                .status(200)
+//                .error(false)
+//                .message("Sign up successfully. Please log in.")
+//                .data(userResponseModel)
+//                .build();
+//        return ResponseEntity.ok(signupResponse);
+//    }
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@Valid @RequestBody SignupRequestModel signupRequest) {
-        Optional<User> user = userService.findByEmail(signupRequest.getEmail());
-        if (user.isPresent()) {
+        // Check if the email is already registered
+        Optional<User> existingUser = userService.findByEmail(signupRequest.getEmail());
+        if (existingUser.isPresent()) {
             throw new RuntimeException("Email already registered");
         }
+        // Create a new User instance
+        User newUser = new User();
+        newUser.setFirstName(signupRequest.getFirstName());
+        newUser.setLastName(signupRequest.getLastName());
+        newUser.setPassword(signupRequest.getPassword());
+        newUser.setEmail(signupRequest.getEmail());
+        newUser.setVerified(false);
 
-        // Organization
-        Organization organization = organizationService.findById(signupRequest.getOrgId()).orElse(null);
-        // Role
-        Role role = roleService.findById(signupRequest.getRoleId()).orElse(null);
-        User newUser = modelMapper.map(signupRequest, User.class);
-        newUser.setOrganization(organization);
-        newUser.setRole(role);
+
+
+        // Set organization and role if provided
+        if (signupRequest.getOrgId() != null) {
+            Organization organization = organizationService.findById(signupRequest.getOrgId()).orElse(null);
+            newUser.setOrganization(organization);
+        }
+
+        if (signupRequest.getRoleId() != null) {
+            Role role = roleService.findById(signupRequest.getRoleId()).orElse(null);
+            newUser.setRole(role);
+        }
+
+        // Save the new user
         newUser = userService.save(newUser);
-
+        // Map and return the response
         UserResponseModel userResponseModel = modelMapper.map(newUser, UserResponseModel.class);
         ResponseModel signupResponse = new ResponseModel().builder()
                 .status(200)
@@ -78,13 +119,15 @@ public class AuthController {
                 .message("Sign up successfully. Please log in.")
                 .data(userResponseModel)
                 .build();
+
         return ResponseEntity.ok(signupResponse);
     }
+
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequestModel loginRequestModel) {
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequestModel.getEmail(), loginRequestModel.getPassword()));
-        User user = userService.findByEmail(loginRequestModel.getEmail()).orElseThrow(() -> new UsernameNotFoundException("Email not registered"));
+        User user = userService.findByEmailAndIsDeleted(loginRequestModel.getEmail(), false).orElseThrow(() -> new UsernameNotFoundException("Email not registered"));
 
         Role role = user.getRole();
 
@@ -95,11 +138,11 @@ public class AuthController {
         var jwtRefreshToken = jwtService.generateRefreshToken(user);
 
         AuthModel authResponse = AuthModel.builder()
-                .token(jwtToken)
+                .accessToken(jwtToken)
                 .refreshToken(jwtRefreshToken)
                 .build();
 
-        return ResponseEntity.ok(ResponseModel.builder()
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(ResponseModel.builder()
                 .status(200)
                 .error(false)
                 .message("Login successfully")

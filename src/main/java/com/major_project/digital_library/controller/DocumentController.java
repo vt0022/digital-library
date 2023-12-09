@@ -19,7 +19,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -75,6 +74,7 @@ public class DocumentController {
         document.setTotalView(document.getTotalView() + 1);
         documentService.save(document);
         DocumentResponseModel documentResponseModel = modelMapper.map(document, DocumentResponseModel.class);
+
         return ResponseEntity.ok(ResponseModel
                 .builder()
                 .status(200)
@@ -334,7 +334,7 @@ public class DocumentController {
         User user = userService.findByEmail(email).orElseThrow(() -> new RuntimeException("Email is not valid"));
         // Get data
         Document document = modelMapper.map(documentRequestModel, Document.class);
-        // Upload file
+        // Upload filedocument
         FileModel gd = googleDriveUpload.uploadFile(multipartFile, documentRequestModel.getDocName());
         // Find category and field
         Category category = categoryService.findById(documentRequestModel.getCategoryId()).orElse(null);
@@ -369,7 +369,7 @@ public class DocumentController {
                         .build());
     }
 
-    @Transactional
+    //    @Transactional
     @Operation(summary = "Cập nhật một tài liệu",
             description = "Trả về tài liệu vừa cập nhật. Tuỳ vào vai trò sẽ trả về trạng thái kèm theo.")
     @PutMapping(path = "/{slug}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -382,21 +382,23 @@ public class DocumentController {
         User user = userService.findByEmail(email).orElseThrow(() -> new RuntimeException("Email is not valid"));
         // Find document
         Document document = documentService.findBySlug(slug).orElseThrow(() -> new RuntimeException("Document not found!"));
-
-        modelMapper.map(documentRequestModel, document);
+        document.setDocName(documentRequestModel.getDocName());
+        document.setDocIntroduction(documentRequestModel.getDocIntroduction());
+        document.setInternal(documentRequestModel.isInternal());
+        //document.setSlug(slugGenerator.generateSlug(document.getDocName().replace(".pdf", ""), true));
         if (multipartFile != null) {
             // Upload file
             FileModel gd = googleDriveUpload.uploadFile(multipartFile, documentRequestModel.getDocName());
             // Update file properties for document without overwriting existing properties
-            document = modelMapper.map(gd, Document.class);
-            document.setSlug(slugGenerator.generateSlug(document.getDocName().replace(".pdf", ""), true));
+            document.setThumbnail(gd.getThumbnail());
+            document.setViewUrl(gd.getViewUrl());
+            document.setDownloadUrl(gd.getDownloadUrl());
         }
-        // Find category and field
+        // Find category, field and organization
         Category category = categoryService.findById(documentRequestModel.getCategoryId()).orElseThrow(() -> new RuntimeException("Category not found"));
         Field field = fieldService.findById(documentRequestModel.getFieldId()).orElseThrow(() -> new RuntimeException("Field not found"));
         Organization organization = organizationService.findById(documentRequestModel.getOrgId()).orElseThrow(() -> new RuntimeException("Organization not found"));
         document.setCategory(category);
-        document.setField(new Field());
         document.setField(field);
         document.setOrganization(organization);
         // Student must wait for the approval
@@ -535,4 +537,18 @@ public class DocumentController {
         return documentResponseModel;
     }
 
+    public String getId(String url) {
+        if (url != null) {
+            int startIndex = url.indexOf("/file/d/");
+            if (startIndex != -1) {
+                int endIndex = url.indexOf("/", startIndex + "/file/d/".length());
+                if (endIndex != -1) {
+                    String fileId = url.substring(startIndex + "/file/d/".length(), endIndex);
+                    return "https://drive.google.com/uc?id=" + fileId;
+                }
+            }
+            return url;
+        }
+        return "";
+    }
 }

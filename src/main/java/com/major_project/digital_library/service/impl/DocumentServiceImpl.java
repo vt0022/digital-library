@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -19,6 +20,11 @@ public class DocumentServiceImpl implements IDocumentService {
     @Autowired
     public DocumentServiceImpl(IDocumentRepository documentRepository) {
         this.documentRepository = documentRepository;
+    }
+
+    @Override
+    public List<Document> findAll() {
+        return documentRepository.findAll();
     }
 
     @Override

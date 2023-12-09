@@ -1,9 +1,6 @@
 package com.major_project.digital_library.model.response_model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.major_project.digital_library.entity.Organization;
-import com.major_project.digital_library.entity.Review;
-import com.major_project.digital_library.entity.Role;
+import com.major_project.digital_library.model.RoleModel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -11,8 +8,6 @@ import lombok.NoArgsConstructor;
 import java.io.Serial;
 import java.io.Serializable;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -26,8 +21,6 @@ public class UserResponseModel implements Serializable {
 
     private String firstName;
 
-    private String middleName;
-
     private String lastName;
 
     private Timestamp dateOfBirth;
@@ -38,11 +31,6 @@ public class UserResponseModel implements Serializable {
 
     private String image;
 
-    private String username;
-
-    @JsonIgnore
-    private String password;
-
     private String email;
 
     private Timestamp createdAt;
@@ -51,14 +39,7 @@ public class UserResponseModel implements Serializable {
 
     private boolean isDeleted;
 
-    private boolean isVerified;
+    private RoleModel role;
 
-    @JsonIgnore
-    private Organization organization;
-
-    @JsonIgnore
-    private Role role;
-
-    @JsonIgnore
-    private List<Review> reviews = new ArrayList<>();
+    private OrganizationResponseModel organization;
 }

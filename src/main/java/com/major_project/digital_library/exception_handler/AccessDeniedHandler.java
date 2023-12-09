@@ -5,6 +5,7 @@ import com.major_project.digital_library.model.response_model.ResponseModel;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
 
@@ -22,9 +23,9 @@ public class AccessDeniedHandler implements org.springframework.security.web.acc
         response.setContentType(APPLICATION_JSON_VALUE);
         new ObjectMapper().writeValue(response.getOutputStream(),
                 ResponseModel.builder()
-                        .status(403)
+                        .status(HttpStatus.FORBIDDEN.value())
                         .error(true)
-                        .message("Permission needed to access this")
+                        .message("Access denied. You are not allowed to access this.")
                         .build());
     }
 }

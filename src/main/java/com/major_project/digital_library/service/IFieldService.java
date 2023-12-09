@@ -17,4 +17,6 @@ public interface IFieldService {
     Page<Field> findAll(Pageable pageable);
 
     Optional<Field> findBySlug(String slug);
+
+    Page<Field> findByIsDeleted(boolean isDeleted, Pageable pageable);
 }

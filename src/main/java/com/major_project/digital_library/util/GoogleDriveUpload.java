@@ -46,13 +46,12 @@ public class GoogleDriveUpload {
 
             // Use Google Drive API to create the file
             File file = googleDrive.files().create(ggDriveFile, mediaContent)
-                    .setFields("id, name, webViewLink, webContentLink") //, thumbnailLink
+                    .setFields("id, webContentLink") //, thumbnailLink
                     .execute();
-
             FileModel gd = new FileModel();
             gd.setName(fileName);
             gd.setThumbnail(generateThumbnail(tempFile, name.concat(".jpg")));
-            gd.setViewUrl(file.getWebViewLink());
+            gd.setViewUrl("https://drive.google.com/uc?id=" + file.getId());
             gd.setDownloadUrl(file.getWebContentLink());
             tempFile.delete();
             return gd;
@@ -97,7 +96,7 @@ public class GoogleDriveUpload {
                     .execute();
 
             tempThumbnail.delete();
-            return uploadFile.getWebViewLink();
+            return "https://drive.google.com/uc?id=" + uploadFile.getId();
         } catch (IOException e) {
             // Handle exceptions
             e.printStackTrace();

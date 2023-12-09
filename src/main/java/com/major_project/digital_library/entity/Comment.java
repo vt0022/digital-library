@@ -6,8 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.UuidGenerator;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.UUID;
 
@@ -16,10 +14,7 @@ import java.util.UUID;
 @AllArgsConstructor
 
 @Entity
-public class Comment implements Serializable {
-    @Serial
-    private final static long serialVersionUID = 1L;
-
+public class Comment {
     @Id
     @UuidGenerator(style = UuidGenerator.Style.TIME)
     private UUID commentId;

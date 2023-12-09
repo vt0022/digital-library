@@ -2,6 +2,7 @@ package com.major_project.digital_library.config;
 
 import com.major_project.digital_library.exception_handler.AccessDeniedHandler;
 import com.major_project.digital_library.exception_handler.UnauthorizedHandler;
+import com.major_project.digital_library.filter.GlobalCorsFilter;
 import com.major_project.digital_library.filter.JWTAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -16,6 +17,9 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.context.NullSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.web.cors.CorsConfiguration;
+
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -23,11 +27,13 @@ public class SecurityConfig {
 
     private final JWTAuthenticationFilter jwtAuthenticationFilter;
     private final AuthenticationProvider authenticationProvider;
+    private final GlobalCorsFilter globalCorsFilter;
 
     @Autowired
-    public SecurityConfig(JWTAuthenticationFilter jwtAuthenticationFilter, AuthenticationProvider authenticationProvider) {
+    public SecurityConfig(JWTAuthenticationFilter jwtAuthenticationFilter, AuthenticationProvider authenticationProvider, GlobalCorsFilter globalCorsFilter) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.authenticationProvider = authenticationProvider;
+        this.globalCorsFilter = globalCorsFilter;
     }
 
     @Bean
@@ -48,6 +54,16 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable()) // Xem xét lại nếu bị lỗi 403
+
+//                .cors(cors -> cors.configurationSource(request -> {
+//                    final CorsConfiguration cs = new CorsConfiguration();
+////                    cs.setAllowedOrigins(List.of(request.getHeader("Origin")));
+//                    cs.setAllowCredentials(true);
+//                    cs.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "HEAD", "DELETE", "OPTIONS"));
+//                    cs.setAllowedHeaders(List.of("Origin", "Accept", "X-Requested-With", "Content-Type", "Access-Control-Request-Method", "Access-Control-Request-Headers", "Authorization"));
+//                    cs.setExposedHeaders(List.of("Access-Control-Allow-Origin", "Access-Control-Allow-Credentials", "Authorization"));
+//                    return cs;
+//                }))
 
                 .anonymous(anonymous -> anonymous.disable())
 
@@ -108,12 +124,19 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET,
                                 "/api/v1/documents").hasAuthority("ROLE_ADMIN")
 
+                        .requestMatchers(
+                                "/api/v1/users/profile",
+                                "/api/v1/users/password",
+                                "/api/v1/users/avatar").authenticated()
+                        .requestMatchers("/api/v1/users/*").hasAnyAuthority("ROLE_ADMIN", "ROLE_MANAGER")
+                        .requestMatchers("/api/v1/users").hasAuthority("ROLE_ADMIN")
+
                         .anyRequest().authenticated())
 
                 .securityContext((securityContext) -> securityContext.securityContextRepository(securityContextRepository())) // Add Security Context Holder Repository
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .formLogin(login -> login.permitAll())// Nếu không có dòng này thì sẽ không hiển thị được trang login mặc định mà chỉ popup
+                .addFilterBefore(globalCorsFilter, UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(exception -> exception
                         .accessDeniedHandler(accessDenied())
                         .authenticationEntryPoint(unauthorized())

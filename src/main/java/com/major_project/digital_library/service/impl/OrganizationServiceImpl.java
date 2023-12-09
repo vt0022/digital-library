@@ -44,4 +44,9 @@ public class OrganizationServiceImpl implements IOrganizationService {
     public Optional<Organization> findBySlug(String slug) {
         return organizationRepository.findBySlug(slug);
     }
+
+    @Override
+    public Page<Organization> findByIsDeleted(boolean isDeleted, Pageable pageable) {
+        return organizationRepository.findByIsDeleted(isDeleted, pageable);
+    }
 }
