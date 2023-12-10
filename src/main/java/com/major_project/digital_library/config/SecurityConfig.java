@@ -17,9 +17,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.context.NullSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
-import org.springframework.web.cors.CorsConfiguration;
-
-import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -55,15 +52,15 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable()) // Xem xét lại nếu bị lỗi 403
 
-                .cors(cors -> cors.configurationSource(request -> {
-                    final CorsConfiguration cs = new CorsConfiguration();
-                    cs.setAllowedOrigins(List.of(request.getHeader("Origin")));
-                    cs.setAllowCredentials(true);
-                    cs.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "HEAD", "DELETE", "OPTIONS"));
-                    cs.setAllowedHeaders(List.of("Origin", "Accept", "X-Requested-With", "Content-Type", "Access-Control-Request-Method", "Access-Control-Request-Headers", "Authorization"));
-                    cs.setExposedHeaders(List.of("Access-Control-Allow-Origin", "Access-Control-Allow-Credentials", "Authorization"));
-                    return cs;
-                }))
+//                .cors(cors -> cors.configurationSource(request -> {
+//                    final CorsConfiguration cs = new CorsConfiguration();
+//                    cs.setAllowedOrigins(List.of(request.getHeader("Origin")));
+//                    cs.setAllowCredentials(true);
+//                    cs.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "HEAD", "DELETE", "OPTIONS"));
+//                    cs.setAllowedHeaders(List.of("Origin", "Accept", "X-Requested-With", "Content-Type", "Access-Control-Request-Method", "Access-Control-Request-Headers", "Authorization"));
+//                    cs.setExposedHeaders(List.of("Access-Control-Allow-Origin", "Access-Control-Allow-Credentials", "Authorization"));
+//                    return cs;
+//                }))
 
                 .anonymous(anonymous -> anonymous.disable())
 
@@ -88,9 +85,41 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT,
                                 "/api/v1/categories/*").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(HttpMethod.GET,
+                                "/api/v1/categories/*").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.GET,
                                 "/api/v1/categories").permitAll()
                         .requestMatchers(HttpMethod.POST,
                                 "/api/v1/categories").hasAuthority("ROLE_ADMIN")
+
+                        .requestMatchers(
+                                "/api/v1/fields/all").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.PUT,
+                                "/api/v1/fields/*/activation").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.DELETE,
+                                "/api/v1/fields/*").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.PUT,
+                                "/api/v1/fields/*").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/fields/*").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/fields").permitAll()
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/v1/fields").hasAuthority("ROLE_ADMIN")
+
+                        .requestMatchers(
+                                "/api/v1/organizations/all").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.PUT,
+                                "/api/v1/organizations/*/activation").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.DELETE,
+                                "/api/v1/organizations/*").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.PUT,
+                                "/api/v1/organizations/*").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/organizations/*").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/organizations").permitAll()
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/v1/organizations").hasAuthority("ROLE_ADMIN")
 
                         .requestMatchers(
                                 "/api/v1/documents/public").permitAll()
@@ -100,17 +129,23 @@ public class SecurityConfig {
                                 "/api/v1/documents/*/save",
                                 "/api/v1/documents/saved",
                                 "/api/v1/documents/liked",
-                                "/api/v1/documents/mine",
                                 "/api/v1/documents/students").hasAuthority("ROLE_STUDENT")
                         .requestMatchers(
+                                "/api/v1/documents/mine").authenticated()
+                        .requestMatchers(
+                                "/api/v1/documents/latest",
+                                "/api/v1/documents/cateFalse",
+                                "/api/v1/documents/search").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(
+                                "/api/v1/documents/organizations/*/latest",
+                                "/api/v1/documents/organizations/*/search",
                                 "/api/v1/documents/*/reviews/*").hasAuthority("ROLE_MANAGER")
                         .requestMatchers(
                                 "/api/v1/documents/*/reviews").permitAll() // Chú ý role
                         .requestMatchers(
-                                "/api/v1/documents/*/permanent").hasAnyAuthority("ROLE_ADMIN", "ROLE_MANAGER")
-                        .requestMatchers(
                                 "/api/v1/documents/*/approval",
-                                "/api/v1/documents/waiting").hasAnyAuthority("ROLE_ADMIN", "ROLE_MANAGER")
+                                "/api/v1/documents/user/*",
+                                "/api/v1/documents/pending").hasAnyAuthority("ROLE_ADMIN", "ROLE_MANAGER")
                         .requestMatchers(
                                 "/api/v1/documents/organizations/*").hasAuthority("ROLE_MANAGER")
                         .requestMatchers(HttpMethod.GET,
@@ -125,11 +160,25 @@ public class SecurityConfig {
                                 "/api/v1/documents").hasAuthority("ROLE_ADMIN")
 
                         .requestMatchers(
+                                "/api/v1/users/password/reset").permitAll()
+                        .requestMatchers(
                                 "/api/v1/users/profile",
                                 "/api/v1/users/password",
                                 "/api/v1/users/avatar").authenticated()
-                        .requestMatchers("/api/v1/users/*").hasAnyAuthority("ROLE_ADMIN", "ROLE_MANAGER")
-                        .requestMatchers("/api/v1/users").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(
+                                "/api/v1/user/organizations/*/latest",
+                                "/api/v1/user/organizations/*").hasAuthority("ROLE_MANGAER")
+                        .requestMatchers(
+                                "/api/v1/user/latest").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(
+                                "/api/v1/users/*").hasAnyAuthority("ROLE_ADMIN", "ROLE_MANAGER")
+                        .requestMatchers(
+                                "/api/v1/users").hasAuthority("ROLE_ADMIN")
+
+                        .requestMatchers(
+                                "/api/v1/statistics/admin").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(
+                                "/api/v1/statistics/manager").hasAuthority("ROLE_MANAGER")
 
                         .anyRequest().authenticated())
 

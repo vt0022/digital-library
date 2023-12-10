@@ -13,5 +13,7 @@ import java.util.UUID;
 public interface IFieldRepository extends JpaRepository<Field, UUID> {
     Optional<Field> findBySlug(String slug);
 
+    Optional<Field> findByFieldName(String fieldName);
+
     Page<Field> findByIsDeleted(boolean isDeleted, Pageable pageable);
 }

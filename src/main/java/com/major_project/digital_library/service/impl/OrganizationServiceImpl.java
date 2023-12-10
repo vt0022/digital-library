@@ -31,6 +31,11 @@ public class OrganizationServiceImpl implements IOrganizationService {
     }
 
     @Override
+    public Optional<Organization> findByOrgName(String orgName) {
+        return organizationRepository.findByOrgName(orgName);
+    }
+
+    @Override
     public void deleteById(UUID uuid) {
         organizationRepository.deleteById(uuid);
     }

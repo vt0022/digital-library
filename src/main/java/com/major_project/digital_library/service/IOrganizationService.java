@@ -12,6 +12,8 @@ public interface IOrganizationService {
 
     Optional<Organization> findById(UUID uuid);
 
+    Optional<Organization> findByOrgName(String orgName);
+
     void deleteById(UUID uuid);
 
     Page<Organization> findAll(Pageable pageable);

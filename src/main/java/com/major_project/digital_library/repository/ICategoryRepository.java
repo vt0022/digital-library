@@ -13,5 +13,7 @@ import java.util.UUID;
 public interface ICategoryRepository extends JpaRepository<Category, UUID> {
     Optional<Category> findBySlug(String slug);
 
+    Optional<Category> findByCategoryName(String categoryName);
+
     Page<Category> findByIsDeleted(boolean isDeleted, Pageable pageable);
 }

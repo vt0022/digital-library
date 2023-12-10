@@ -1,6 +1,8 @@
 ACCESS_TOKEN_LIFE: 86400000
 API_KEY: VanThuan.HoangAnh.dmFudGh1YW5ob2FuZ2FuaDIwMjM=
 REFRESH_TOKEN_LIFE: 8.64E7
+EMAIL_SENDER: thuanmyhoa7a2@gmail.com
+
 server:
   servlet:
     context-path: /digital.library
@@ -28,6 +30,18 @@ spring:
     multipart:
       max-file-size: 100MB
       max-request-size: 100MB
+  mail:
+    host: smtp.gmail.com
+    password: dmcymrlbgvcimryp
+    port: 587
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+    username: thuanmyhoa7a2@gmail.com
+
 springdoc:
   api-docs:
     path: /api/v1/api-docs

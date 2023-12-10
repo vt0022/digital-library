@@ -1,5 +1,6 @@
 package com.major_project.digital_library.service.impl;
 
+import com.major_project.digital_library.entity.Organization;
 import com.major_project.digital_library.entity.User;
 import com.major_project.digital_library.exception_handler.exception.UserAuthenticationException;
 import com.major_project.digital_library.repository.IUserRepositoty;
@@ -7,6 +8,7 @@ import com.major_project.digital_library.service.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -31,6 +33,12 @@ public class UserServiceImpl implements IUserService {
     @Override
     public Page<User> findAll(Pageable pageable) {
         return userRepository.findAll(pageable);
+    }
+
+    @Override
+    @Query("SELECT u FROM User u WHERE MONTH(u.createdAt) = MONTH(CURRENT_DATE) AND YEAR(u.createdAt) = YEAR(CURRENT_DATE) ORDER BY u.createdAt DESC")
+    public Page<User> findLatestUsers(Pageable pageable) {
+        return userRepository.findLatestUsers(pageable);
     }
 
     @Override
@@ -73,5 +81,30 @@ public class UserServiceImpl implements IUserService {
         }
         String email = String.valueOf(auth.getPrincipal());
         return userRepository.findByEmail(email);
+    }
+
+    @Override
+    @Query("SELECT u FROM User u " +
+            "WHERE MONTH(u.createdAt) = MONTH(CURRENT_DATE) " +
+            "AND YEAR(u.createdAt) = YEAR(CURRENT_DATE) " +
+            "AND u.organization = ?1 " +
+            "ORDER BY u.createdAt DESC")
+    public Page<User> findLatestUsersByOrganization(Organization organization, Pageable pageable) {
+        return userRepository.findLatestUsersByOrganization(organization, pageable);
+    }
+
+    @Override
+    public Page<User> findByOrganization(Organization organization, Pageable pageable) {
+        return userRepository.findByOrganization(organization, pageable);
+    }
+
+    @Override
+    public long countByOrganization(Organization organization) {
+        return userRepository.countByOrganization(organization);
+    }
+
+    @Override
+    public long count() {
+        return userRepository.count();
     }
 }

@@ -27,7 +27,7 @@ public class GoogleDriveUpload {
         this.googleDrive = googleDrive;
     }
 
-    public FileModel uploadFile(MultipartFile multipartFile, String name) {
+    public FileModel uploadFile(MultipartFile multipartFile, String name, String fileId, String thumbnailId) {
         try {
             // Set parent folder
             List<String> parents = Collections.singletonList("1QSojNGcBQLysgzLNeGhXqqoHGxh8aZyv");
@@ -44,13 +44,22 @@ public class GoogleDriveUpload {
             // Create FileContent from the MultipartFile bytes
             FileContent mediaContent = new FileContent(multipartFile.getContentType(), tempFile);
 
+            // Delete old file
+            if (fileId != null) {
+                try {
+                    googleDrive.files().delete(fileId).execute();
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
+                }
+            }
+
             // Use Google Drive API to create the file
             File file = googleDrive.files().create(ggDriveFile, mediaContent)
                     .setFields("id, webContentLink") //, thumbnailLink
                     .execute();
             FileModel gd = new FileModel();
             gd.setName(fileName);
-            gd.setThumbnail(generateThumbnail(tempFile, name.concat(".jpg")));
+            gd.setThumbnail(generateThumbnail(tempFile, name.concat(".jpg"), thumbnailId));
             gd.setViewUrl("https://drive.google.com/uc?id=" + file.getId());
             gd.setDownloadUrl(file.getWebContentLink());
             tempFile.delete();
@@ -62,7 +71,7 @@ public class GoogleDriveUpload {
         }
     }
 
-    public String generateThumbnail(java.io.File pdfFile, String fileName) {
+    public String generateThumbnail(java.io.File pdfFile, String fileName, String thumbnailId) {
         try {
             // Load the PDF and render a page as an image
             PDDocument document = PDDocument.load(pdfFile);
@@ -90,6 +99,16 @@ public class GoogleDriveUpload {
 
             // Create FileContent
             FileContent mediaContent = new FileContent("image/jpeg", tempThumbnail);
+
+            // Delete old file
+            if (thumbnailId != null) {
+                try {
+                    googleDrive.files().delete(thumbnailId).execute();
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
+                }
+            }
+
             // Use Google Drive API to create the file
             File uploadFile = googleDrive.files().create(ggDriveFile, mediaContent)
                     .setFields("id, name, webViewLink, webContentLink, thumbnailLink")
@@ -103,4 +122,46 @@ public class GoogleDriveUpload {
             return null;
         }
     }
+
+    public FileModel uploadImage(MultipartFile multipartFile, String fileName, String fileId) {
+        try {
+            // Set parent folder
+            List<String> parents = Collections.singletonList("1r7aaTi7J8N6dKHv81UDS6F9yA_u3-wjO");
+
+            // Create Drive file and apply parent folder and name
+            File ggDriveFile = new File();
+            ggDriveFile.setParents(parents).setName(fileName);
+
+            // Create temporary file
+            java.io.File tempFile = java.io.File.createTempFile("temp", null);
+            multipartFile.transferTo(tempFile);
+
+            // Create FileContent from the MultipartFile bytes
+            FileContent mediaContent = new FileContent(multipartFile.getContentType(), tempFile);
+
+            // Delete old file
+            if (fileId != null) {
+                try {
+                    googleDrive.files().delete(fileId).execute();
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
+                }
+            }
+
+            // Use Google Drive API to create the file
+            File file = googleDrive.files().create(ggDriveFile, mediaContent)
+                    .setFields("id, webContentLink") //, thumbnailLink
+                    .execute();
+            FileModel gd = new FileModel();
+            gd.setViewUrl("https://drive.google.com/uc?id=" + file.getId());
+
+            tempFile.delete();
+            return gd;
+        } catch (Exception e) {
+            // Handle exceptions
+            e.printStackTrace();
+            return null;
+        }
+    }
+
 }

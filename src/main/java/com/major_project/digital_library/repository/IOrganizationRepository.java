@@ -13,5 +13,7 @@ import java.util.UUID;
 public interface IOrganizationRepository extends JpaRepository<Organization, UUID> {
     Optional<Organization> findBySlug(String slug);
 
+    Optional<Organization> findByOrgName(String orgName);
+
     Page<Organization> findByIsDeleted(boolean isDeleted, Pageable pageable);
 }

@@ -10,11 +10,11 @@ import java.io.Serializable;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class PasswordRequestModel implements Serializable {
+public class PasswordResetRequestModel implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    private String oldPassword;
+    private String email;
 
     private String newPassword;
 

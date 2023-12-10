@@ -65,6 +65,12 @@ public class User implements Serializable, UserDetails {
     @JoinColumn(name = "roleId")
     private Role role;
 
+    @OneToMany(mappedBy = "userUploaded")
+    private List<Document> uploadedDocuments;
+
+    @OneToMany(mappedBy = "userVerified")
+    private List<Document> verifiedDocuments;
+
     @OneToMany(mappedBy = "user")
     private List<Review> reviews = new ArrayList<>();
 
@@ -73,6 +79,9 @@ public class User implements Serializable, UserDetails {
 
     @OneToMany(mappedBy = "user")
     private List<Save> saves = new ArrayList<>();
+
+    @OneToOne(mappedBy = "user")
+    private VerificationCode verificationCode;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

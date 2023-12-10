@@ -12,6 +12,8 @@ public interface IFieldService {
 
     Optional<Field> findById(UUID uuid);
 
+    Optional<Field> findByFieldName(String fieldName);
+
     void deleteById(UUID uuid);
 
     Page<Field> findAll(Pageable pageable);

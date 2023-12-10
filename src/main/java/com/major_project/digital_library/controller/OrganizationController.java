@@ -9,12 +9,14 @@ import com.major_project.digital_library.util.SlugGenerator;
 import io.swagger.v3.oas.annotations.Operation;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -38,15 +40,13 @@ public class OrganizationController {
     public ResponseEntity<?> getAllOrganizations(@RequestParam(defaultValue = "0") int page,
                                                  @RequestParam(defaultValue = "20") int size) {
         Pageable pageable = PageRequest.of(page, size);
-        List<Organization> organizations = organizationService.findAll(pageable).getContent();
-        List<OrganizationResponseModel> organizationResponseModels = organizations.stream()
-                .map(organization -> modelMapper.map(organization, OrganizationResponseModel.class))
-                .collect(Collectors.toList());
+        Page<Organization> organizations = organizationService.findAll(pageable);
+        Page<OrganizationResponseModel> organizationModels = organizations.map(this::convertToOrganizationModel);
         return ResponseEntity.ok(ResponseModel.builder()
                 .status(200)
                 .error(false)
                 .message("Get all organizations successfully")
-                .data(organizationResponseModels)
+                .data(organizationModels)
                 .build());
     }
 
@@ -72,6 +72,10 @@ public class OrganizationController {
             description = "Tạo một trường học tài liệu mới")
     @PostMapping
     public ResponseEntity<?> createOrganization(@RequestBody OrganizationRequestModel organizationRequestModel) {
+        Optional<Organization> organizationOptional = organizationService.findByOrgName(organizationRequestModel.getOrgName());
+        if (organizationOptional.isPresent())
+            throw new RuntimeException("Organization already exists");
+
         Organization organization = modelMapper.map(organizationRequestModel, Organization.class);
         organization.setSlug(slugGenerator.generateSlug(organization.getOrgName(), false));
         organization = organizationService.save(organization);
@@ -90,7 +94,12 @@ public class OrganizationController {
     public ResponseEntity<?> updateOrganization(@PathVariable UUID organizationId,
                                                 @RequestBody OrganizationRequestModel organizationRequestModel) {
         Organization organization = organizationService.findById(organizationId).orElseThrow(() -> new RuntimeException("Organization not found"));
-        modelMapper.map(organizationRequestModel, organization);
+        Optional<Organization> organizationOptional = organizationService.findByOrgName(organizationRequestModel.getOrgName());
+        if (organizationOptional.isPresent())
+            if (organizationOptional.get().getOrgId() != organization.getOrgId())
+                throw new RuntimeException("Organization already exists");
+
+        organization.setOrgName(organizationRequestModel.getOrgName());
         organization.setSlug(slugGenerator.generateSlug(organization.getOrgName(), false));
         organization = organizationService.save(organization);
         OrganizationResponseModel newOrganizationResponseModel = modelMapper.map(organization, OrganizationResponseModel.class);
@@ -109,12 +118,12 @@ public class OrganizationController {
         Organization organization = organizationService.findById(organizationId).orElseThrow(() -> new RuntimeException("Organization not found"));
         String message = "";
         if (organization.getDocuments().isEmpty()) {
-            message = "Delete organization \"" + organization.getOrgName() + "\" from system successfully";
+            message = "Delete organization from system successfully";
             organizationService.deleteById(organizationId);
         } else {
             organization.setDeleted(true);
             organizationService.save(organization);
-            message = "Unable to delete " + organization.getOrgName() + " as there are documents linked to it. Status changed to deleted";
+            message = "Unable to delete this organization as there are documents and users linked to it. Status changed to deleted";
         }
         return ResponseEntity.ok(ResponseModel.builder()
                 .status(200)
@@ -137,5 +146,10 @@ public class OrganizationController {
                 .message("Activate organization successfully")
                 .data(organizationResponseModel)
                 .build());
+    }
+
+    private OrganizationResponseModel convertToOrganizationModel(Object o) {
+        OrganizationResponseModel organizationResponseModel = modelMapper.map(o, OrganizationResponseModel.class);
+        return organizationResponseModel;
     }
 }

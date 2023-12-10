@@ -31,6 +31,11 @@ public class FieldServiceImpl implements IFieldService {
     }
 
     @Override
+    public Optional<Field> findByFieldName(String fieldName) {
+        return fieldRepository.findByFieldName(fieldName);
+    }
+
+    @Override
     public void deleteById(UUID uuid) {
         fieldRepository.deleteById(uuid);
     }

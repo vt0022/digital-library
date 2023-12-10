@@ -7,6 +7,7 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.major_project.digital_library.entity.Organization;
 import com.major_project.digital_library.entity.Role;
 import com.major_project.digital_library.entity.User;
+import com.major_project.digital_library.entity.VerificationCode;
 import com.major_project.digital_library.jwt.JWTService;
 import com.major_project.digital_library.model.AuthModel;
 import com.major_project.digital_library.model.request_model.LoginRequestModel;
@@ -16,6 +17,8 @@ import com.major_project.digital_library.model.response_model.UserResponseModel;
 import com.major_project.digital_library.service.IOrganizationService;
 import com.major_project.digital_library.service.IRoleService;
 import com.major_project.digital_library.service.IUserService;
+import com.major_project.digital_library.service.IVerificationCodeService;
+import com.major_project.digital_library.util.EmailService;
 import jakarta.validation.Valid;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,11 +29,9 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.sql.Timestamp;
 import java.util.*;
 
 @RestController
@@ -40,6 +41,8 @@ public class AuthController {
     private final IUserService userService;
     private final IOrganizationService organizationService;
     private final IRoleService roleService;
+    private final EmailService emailService;
+    private final IVerificationCodeService verificationCodeService;
     private final AuthenticationManager authenticationManager;
     private final JWTService jwtService;
 
@@ -47,11 +50,13 @@ public class AuthController {
     private String SECRET_KEY;
 
     @Autowired
-    public AuthController(ModelMapper modelMapper, IUserService userService, IOrganizationService organizationService, IRoleService roleService, AuthenticationManager authenticationManager, JWTService jwtService) {
+    public AuthController(ModelMapper modelMapper, IUserService userService, IOrganizationService organizationService, IRoleService roleService, EmailService emailService, IVerificationCodeService verificationCodeService, AuthenticationManager authenticationManager, JWTService jwtService) {
         this.modelMapper = modelMapper;
         this.userService = userService;
         this.organizationService = organizationService;
         this.roleService = roleService;
+        this.emailService = emailService;
+        this.verificationCodeService = verificationCodeService;
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
     }
@@ -108,9 +113,73 @@ public class AuthController {
                 .build());
     }
 
-    @PostMapping("/logout")
-    public ResponseEntity<?> logout() {
-        return ResponseEntity.ok().build();
+    @PostMapping("/sendEmail")
+    public ResponseEntity<?> sendResetPasswordEmail(@RequestParam String email) {
+        User user = userService.findByEmail(email).orElseThrow(() -> new RuntimeException("Email not registered"));
+
+        Random random = new Random();
+        int code = random.nextInt(900000) + 100000;
+
+        VerificationCode verificationCode = new VerificationCode();
+        Optional<VerificationCode> verificationCodeOptional = verificationCodeService.findByUser(user);
+        if (verificationCodeOptional.isPresent()) {
+            verificationCode = verificationCodeOptional.get();
+            verificationCode.setCode(code);
+        } else {
+            verificationCode.setCode(code);
+            verificationCode.setUser(user);
+        }
+        verificationCode.setCreatedAt(new Timestamp(System.currentTimeMillis()));
+        verificationCode.setExpiredAt(new Timestamp(System.currentTimeMillis() + 15 * 60 * 1000));
+        verificationCode.setExpired(false);
+        verificationCodeService.save(verificationCode);
+
+        emailService.sendEmail(
+                email,
+                "WISDO - RESET PASSWORD",
+                code,
+                "reset_password_email");
+
+        return ResponseEntity.ok(ResponseModel.builder()
+                .status(200)
+                .error(false)
+                .message("Send reset password code successfully")
+                .build());
+    }
+
+    @PostMapping("/verify")
+    public ResponseEntity<?> verifyUser(@RequestParam String email, @RequestParam int code) {
+        User user = userService.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+
+        VerificationCode verificationCode = verificationCodeService.findByUser(user).orElseThrow(() -> new RuntimeException("Invalid verification code"));
+
+        if (verificationCode.getCode() == code) {
+            if (verificationCode.isExpired())
+                throw new RuntimeException("Verification code is expired");
+            else {
+                if (verificationCode.getExpiredAt().getTime() > System.currentTimeMillis()) {
+                    verificationCode.setExpired(true);
+                    verificationCodeService.save(verificationCode);
+
+                    return ResponseEntity.ok(ResponseModel.builder()
+                            .status(200)
+                            .error(false)
+                            .message("Verify user successfully")
+                            .build());
+                } else throw new RuntimeException("Verification code is expired");
+
+            }
+        } else throw new RuntimeException("Wrong verification code");
+
+    }
+
+    @GetMapping("/testEmail")
+    public ResponseEntity<?> sendEmail() {
+        emailService.sendEmail("vanthuan2004@gmail.com",
+                "RESET PASSWORD",
+                125678,
+                "reset_password_email");
+        return ResponseEntity.ok("Send email successfully");
     }
 
     @PostMapping("/refresh")
@@ -130,7 +199,7 @@ public class AuthController {
         String accessToken = jwtService.generateToken(user, authorities);
 
         Map<String, String> accessTokenResponse = new HashMap<>();
-        accessTokenResponse.put("access_token", accessToken);
+        accessTokenResponse.put("accessToken", accessToken);
 
         ResponseModel refreshResponse = new ResponseModel().builder()
                 .status(200)
