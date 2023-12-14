@@ -52,23 +52,6 @@ public class DocumentController {
         this.slugGenerator = slugGenerator;
     }
 
-//    @PostMapping("/uploadFile")
-//    public ResponseEntity<?> uploadFileToGoogleDrive(
-//            @RequestParam("file") MultipartFile multipartFile) {
-//        String name = multipartFile.getName();
-//        FileModel gd = googleDriveUpload.uploadFile(multipartFile, name);
-//        Document doc = new Document();
-//        doc = modelMapper.map(gd, Document.class);
-//        doc.setSlug(slugGenerator.generateSlug(doc.getDocName().replace(".pdf", ""), true));
-//
-//        doc.setCategory(categoryService.findBySlug("giao-trinh").get());
-//        doc.setField(fieldService.findBySlug("nghe-thuat-am-thuc").get());
-//
-//        documentService.save(doc);
-//        return ResponseEntity.ok(doc);
-//    }
-
-    /* API endpoint này được dùng để xem một tài liệu */
     @Operation(summary = "Xem chi tiết một tài liệu")
     @GetMapping("/{slug}")
     public ResponseEntity<?> viewDocument(@PathVariable String slug) {
@@ -93,12 +76,12 @@ public class DocumentController {
     public ResponseEntity<?> getAllDocumentsWithFilter(@RequestParam(defaultValue = "0") int page,
                                                        @RequestParam(defaultValue = "20") int size,
                                                        @RequestParam(defaultValue = "updatedAt") String order,
-                                                       @RequestParam String category,
-                                                       @RequestParam String field,
-                                                       @RequestParam String organization,
-                                                       @RequestParam String deleted,
-                                                       @RequestParam String internal,
-                                                       @RequestParam String status) {
+                                                       @RequestParam(defaultValue = "all") String category,
+                                                       @RequestParam(defaultValue = "all") String field,
+                                                       @RequestParam(defaultValue = "all") String organization,
+                                                       @RequestParam(defaultValue = "all") String deleted,
+                                                       @RequestParam(defaultValue = "all") String internal,
+                                                       @RequestParam(defaultValue = "all") String status) {
         // Order maybe one of these: docId, totalView
         Sort sort = Sort.by(Sort.Direction.DESC, order);
         Pageable pageable = PageRequest.of(page, size, sort);
@@ -138,11 +121,37 @@ public class DocumentController {
     public ResponseEntity<?> searchAllDocuments(@RequestParam(defaultValue = "0") int page,
                                                 @RequestParam(defaultValue = "20") int size,
                                                 @RequestParam(defaultValue = "updatedAt") String order,
+                                                @RequestParam(defaultValue = "all") String category,
+                                                @RequestParam(defaultValue = "all") String field,
+                                                @RequestParam(defaultValue = "all") String organization,
+                                                @RequestParam(defaultValue = "all") String deleted,
+                                                @RequestParam(defaultValue = "all") String internal,
+                                                @RequestParam(defaultValue = "all") String status,
                                                 @RequestParam String s) {
+
+        // Order maybe one of these: docId, totalView
         Sort sort = Sort.by(Sort.Direction.DESC, order);
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        Page<Document> documents = documentService.findByDocNameContaining(s, pageable);
+        Category foundCategory = category.equals("all") ?
+                null : categoryService.findBySlug(category).orElseThrow(() -> new RuntimeException("Category not found"));
+
+        Field foundField = field.equals("all") ?
+                null : fieldService.findBySlug(field).orElseThrow(() -> new RuntimeException("Field not found"));
+
+        Organization foundOrganization = organization.equals("all") ?
+                null : organizationService.findBySlug(organization).orElseThrow(() -> new RuntimeException("Organization not found"));
+
+        Boolean isDeleted = deleted.equals("all") ?
+                null : Boolean.valueOf(deleted);
+
+        Boolean isInternal = internal.equals("all") ?
+                null : Boolean.valueOf(internal);
+
+        Integer verifiedStatus = status.equals("all") ?
+                null : Integer.valueOf(status);
+
+        Page<Document> documents = documentService.searchWithAllDocuments(isDeleted, isInternal, verifiedStatus, foundCategory, foundField, foundOrganization, s, pageable);
         Page<DocumentResponseModel> documentModels = documents.map(this::convertToDocumentModel);
         return ResponseEntity.ok(ResponseModel
                 .builder()
@@ -155,16 +164,41 @@ public class DocumentController {
 
     @Operation(summary = "Tìm kiếm tài liệu của một trường",
             description = "Trả về danh sách tất cả tài liệu của một trường tìm được trên hệ thống")
-    @GetMapping("/organizations/{slug}/search")
-    public ResponseEntity<?> searchAllDocumentsByOrganization(@PathVariable String slug,
+    @GetMapping("/organizations/{organization}/search")
+    public ResponseEntity<?> searchAllDocumentsByOrganization(@PathVariable String organization,
                                                               @RequestParam(defaultValue = "0") int page,
                                                               @RequestParam(defaultValue = "20") int size,
                                                               @RequestParam(defaultValue = "updatedAt") String order,
+                                                              @RequestParam(defaultValue = "all") String category,
+                                                              @RequestParam(defaultValue = "all") String field,
+                                                              @RequestParam(defaultValue = "all") String deleted,
+                                                              @RequestParam(defaultValue = "all") String internal,
+                                                              @RequestParam(defaultValue = "all") String status,
                                                               @RequestParam String s) {
-        Organization organization = organizationService.findBySlug(slug).orElseThrow(() -> new RuntimeException("Organization not found"));
+
+        // Order maybe one of these: docId, totalView
         Sort sort = Sort.by(Sort.Direction.DESC, order);
         Pageable pageable = PageRequest.of(page, size, sort);
-        Page<Document> documents = documentService.findByDocNameAndOrganizationContaining(s, organization, pageable);
+
+        Category foundCategory = category.equals("all") ?
+                null : categoryService.findBySlug(category).orElseThrow(() -> new RuntimeException("Category not found"));
+
+        Field foundField = field.equals("all") ?
+                null : fieldService.findBySlug(field).orElseThrow(() -> new RuntimeException("Field not found"));
+
+        Organization foundOrganization = organization.equals("all") ?
+                null : organizationService.findBySlug(organization).orElseThrow(() -> new RuntimeException("Organization not found"));
+
+        Boolean isDeleted = deleted.equals("all") ?
+                null : Boolean.valueOf(deleted);
+
+        Boolean isInternal = internal.equals("all") ?
+                null : Boolean.valueOf(internal);
+
+        Integer verifiedStatus = status.equals("all") ?
+                null : Integer.valueOf(status);
+
+        Page<Document> documents = documentService.searchWithAllDocuments(isDeleted, isInternal, verifiedStatus, foundCategory, foundField, foundOrganization, s, pageable);
         Page<DocumentResponseModel> documentModels = documents.map(this::convertToDocumentModel);
         return ResponseEntity.ok(ResponseModel
                 .builder()
@@ -183,7 +217,6 @@ public class DocumentController {
         // Find user info
         User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not found"));
 
-        // Order maybe one of these: docId, totalView
         Sort sort = Sort.by(Sort.Direction.DESC, "updatedAt");
         Pageable pageable = PageRequest.of(page, size, sort);
         Page<Document> documents;
@@ -232,12 +265,12 @@ public class DocumentController {
                                                            @RequestParam(defaultValue = "0") int page,
                                                            @RequestParam(defaultValue = "20") int size,
                                                            @RequestParam(defaultValue = "updatedAt") String order,
-                                                           @RequestParam String category,
-                                                           @RequestParam String field,
-                                                           @RequestParam String deleted,
-                                                           @RequestParam String internal,
-                                                           @RequestParam String status) {
-        // Order maybe one of these: docId, totalView
+                                                           @RequestParam(defaultValue = "all") String category,
+                                                           @RequestParam(defaultValue = "all") String field,
+                                                           @RequestParam(defaultValue = "all") String deleted,
+                                                           @RequestParam(defaultValue = "all") String internal,
+                                                           @RequestParam(defaultValue = "all") String status) {
+
         Sort sort = Sort.by(Sort.Direction.DESC, order);
         Pageable pageable = PageRequest.of(page, size, sort);
 
@@ -272,14 +305,16 @@ public class DocumentController {
     @Operation(summary = "Xem danh sách tài liệu cho người dùng khách",
             description = "Trả về danh sách tài liệu công khai (internal = true)")
     @GetMapping("/public")
-    public ResponseEntity<?> getDocumentForGuests(@RequestParam(defaultValue = "0") int page,
-                                                  @RequestParam(defaultValue = "20") int size,
-                                                  @RequestParam(defaultValue = "updatedAt") String order,
-                                                  @RequestParam(defaultValue = "all") String category,
-                                                  @RequestParam(defaultValue = "all") String field,
-                                                  @RequestParam(defaultValue = "all") String organization) {
-        // Order maybe one of these: docId, totalView
-        Sort sort = Sort.by(Sort.Direction.DESC, order);
+    public ResponseEntity<?> getDocumentsForGuests(@RequestParam(defaultValue = "0") int page,
+                                                   @RequestParam(defaultValue = "20") int size,
+                                                   @RequestParam(defaultValue = "updatedAt") String order,
+                                                   @RequestParam(defaultValue = "desc") String sortOrder,
+                                                   @RequestParam(defaultValue = "all") String category,
+                                                   @RequestParam(defaultValue = "all") String field,
+                                                   @RequestParam(defaultValue = "all") String organization) {
+        // Order maybe one of these: totalView, updatedAt, averageRating, totalFavorite
+        // Sort order maybe one of these: asc, desc
+        Sort sort = Sort.by(sortOrder.equals("desc") ? Sort.Direction.DESC : Sort.Direction.ASC, order);
         Pageable pageable = PageRequest.of(page, size, sort);
 
         Category foundCategory = category.equals("all") ?
@@ -293,46 +328,6 @@ public class DocumentController {
 
         Page<Document> documents = documentService.findDocumentsForGuests(foundCategory, foundField, foundOrganization, pageable);
 
-//        // By category
-//        if (!category.equals("all")) {
-//            Category foundCategory = categoryService.findBySlug(category).orElseThrow(() -> new RuntimeException("Could not find category"));
-//            // By field
-//            if (!field.equals("all")) {
-//                Field foundField = fieldService.findBySlug(field).orElseThrow(() -> new RuntimeException("Could not find field"));
-//                // By organization
-//                if (!organization.equals("all")) {
-//                    Organization foundOrganization = organizationService.findBySlug(organization).orElseThrow(() -> new RuntimeException("Could not find organization"));
-//                    documents = documentService.findDocumentsForGuests(foundCategory, foundField, foundOrganization, pageable);
-//                } else { // Not include organization
-//                    documents = documentService.findDocumentsForGuests(foundCategory, foundField, null, pageable);
-//                }
-//            } else { // Not include field
-//                // By organization
-//                if (!organization.equals("all")) {
-//                    Organization foundOrganization = organizationService.findBySlug(organization).orElseThrow(() -> new RuntimeException("Could not find organization"));
-//                    documents = documentService.findDocumentsForGuests(foundCategory, null, foundOrganization, pageable);
-//                } else { // Not include organization
-//                    documents = documentService.findDocumentsForGuests(foundCategory, null, null, pageable);
-//                }
-//            }
-//        } else { // Not include category
-//            // By field
-//            if (!field.equals("all")) {
-//                Field foundField = fieldService.findBySlug(field).orElseThrow(() -> new RuntimeException("Could not find field"));
-//                // By organization
-//                if (!organization.equals("all")) {
-//                    Organization foundOrganization = organizationService.findBySlug(organization).orElseThrow(() -> new RuntimeException("Could not find organization"));
-//                    documents = documentService.findDocumentsForGuests(null, foundField, foundOrganization, pageable);
-//                } else { // Not included
-//                    documents = documentService.findDocumentsForGuests(null, foundField, null, pageable);
-//                }
-//            } else {
-//                if (!organization.equals("all")) {
-//                    Organization foundOrganization = organizationService.findBySlug(organization).orElseThrow(() -> new RuntimeException("Could not find organization"));
-//                    documents = documentService.findDocumentsForGuests(null, null, foundOrganization, pageable);
-//                }
-//            }
-//        }
         Page<DocumentResponseModel> documentModels = documents.map(this::convertToDocumentModel);
         return ResponseEntity.ok(ResponseModel
                 .builder()
@@ -343,11 +338,48 @@ public class DocumentController {
                 .build());
     }
 
+    @Operation(summary = "Tìm kiếm tài liệu cho người dùng khách",
+            description = "Trả về danh sách tài liệu công khai người dùng khách tìm kiếm")
+    @GetMapping("/public/search")
+    public ResponseEntity<?> searchDocumentsForGuests(@RequestParam(defaultValue = "0") int page,
+                                                      @RequestParam(defaultValue = "20") int size,
+                                                      @RequestParam(defaultValue = "updatedAt") String order,
+                                                      @RequestParam(defaultValue = "desc") String sortOrder,
+                                                      @RequestParam(defaultValue = "all") String category,
+                                                      @RequestParam(defaultValue = "all") String field,
+                                                      @RequestParam(defaultValue = "all") String organization,
+                                                      @RequestParam String s) {
+        // Order maybe one of these: totalView, updatedAt, averageRating, totalFavorite
+        // Sort order maybe one of these: asc, desc
+        Sort sort = Sort.by(sortOrder.equals("desc") ? Sort.Direction.DESC : Sort.Direction.ASC, order);
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Category foundCategory = category.equals("all") ?
+                null : categoryService.findBySlug(category).orElseThrow(() -> new RuntimeException("Category not found"));
+
+        Field foundField = field.equals("all") ?
+                null : fieldService.findBySlug(field).orElseThrow(() -> new RuntimeException("Field not found"));
+
+        Organization foundOrganization = organization.equals("all") ?
+                null : organizationService.findBySlug(organization).orElseThrow(() -> new RuntimeException("Organization not found"));
+
+        Page<Document> documents = documentService.searchDocumentsForGuests(foundCategory, foundField, foundOrganization, s, pageable);
+
+        Page<DocumentResponseModel> documentModels = documents.map(this::convertToDocumentModel);
+        return ResponseEntity.ok(ResponseModel
+                .builder()
+                .status(200)
+                .error(false)
+                .message("Get documents for students successfully")
+                .data(documentModels)
+                .build());
+    }
+
     @Operation(summary = "Xem danh sách tài liệu đang chờ duyệt",
             description = "Trả về danh sách tài liệu đang chờ duyệt cho manager hoặc admin")
     @GetMapping("/pending")
-    public ResponseEntity<?> getPendingDocument(@RequestParam(defaultValue = "0") int page,
-                                                @RequestParam(defaultValue = "20") int size) {
+    public ResponseEntity<?> getPendingDocuments(@RequestParam(defaultValue = "0") int page,
+                                                 @RequestParam(defaultValue = "20") int size) {
 
         // Order maybe one of these: docId, totalView
         Sort sort = Sort.by(Sort.Direction.DESC, "updatedAt");
@@ -377,19 +409,20 @@ public class DocumentController {
     @Operation(summary = "Xem danh sách tài liệu cho sinh viên",
             description = "Trả về danh sách tài liệu công khai và tài liệu nội bộ thuộc truờng mà sinh viên đăng ký")
     @GetMapping("/students")
-    public ResponseEntity<?> getFilteredDocument(@RequestParam(defaultValue = "0") int page,
-                                                 @RequestParam(defaultValue = "20") int size,
-                                                 @RequestParam(defaultValue = "updatedAt") String order,
-                                                 @RequestParam(defaultValue = "all") String category,
-                                                 @RequestParam(defaultValue = "all") String field,
-                                                 @RequestParam(defaultValue = "all") String organization
-    ) {
+    public ResponseEntity<?> getDocumentsForStudent(@RequestParam(defaultValue = "0") int page,
+                                                    @RequestParam(defaultValue = "20") int size,
+                                                    @RequestParam(defaultValue = "updatedAt") String order,
+                                                    @RequestParam(defaultValue = "desc") String sortOrder,
+                                                    @RequestParam(defaultValue = "all") String category,
+                                                    @RequestParam(defaultValue = "all") String field,
+                                                    @RequestParam(defaultValue = "all") String organization) {
         // Find user info and organization
         User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not found"));
         Organization userOrganization = user.getOrganization();
 
-        // Order maybe one of these: docId, totalView
-        Sort sort = Sort.by(Sort.Direction.DESC, order);
+        // Order maybe one of these: totalView, updatedAt, averageRating, totalFavorite
+        // Sort order maybe one of these: asc, desc
+        Sort sort = Sort.by(sortOrder.equals("desc") ? Sort.Direction.DESC : Sort.Direction.ASC, order);
         Pageable pageable = PageRequest.of(page, size, sort);
 
         Category foundCategory = category.equals("all") ?
@@ -402,6 +435,47 @@ public class DocumentController {
                 null : organizationService.findBySlug(organization).orElseThrow(() -> new RuntimeException("Organization not found"));
 
         Page<Document> documents = documentService.findDocumentsForStudents(foundCategory, foundField, foundOrganization, userOrganization, pageable);
+
+        Page<DocumentResponseModel> documentModels = documents.map(this::convertToDocumentModel);
+        return ResponseEntity.ok(ResponseModel
+                .builder()
+                .status(200)
+                .error(false)
+                .message("Get documents for students successfully")
+                .data(documentModels)
+                .build());
+    }
+
+    @Operation(summary = "Tìm kiếm tài liệu cho sinh viên",
+            description = "Trả về danh sách tài liệu công khai và tài liệu nội bộ mà sinh viên tìm kiếm")
+    @GetMapping("/students/search")
+    public ResponseEntity<?> searchDocumentsForStudents(@RequestParam(defaultValue = "0") int page,
+                                                        @RequestParam(defaultValue = "20") int size,
+                                                        @RequestParam(defaultValue = "updatedAt") String order,
+                                                        @RequestParam(defaultValue = "desc") String sortOrder,
+                                                        @RequestParam(defaultValue = "all") String category,
+                                                        @RequestParam(defaultValue = "all") String field,
+                                                        @RequestParam(defaultValue = "all") String organization,
+                                                        @RequestParam String s) {
+        // Find user info and organization
+        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not found"));
+        Organization userOrganization = user.getOrganization();
+
+        // Order maybe one of these: totalView, updatedAt, averageRating, totalFavorite
+        // Sort order maybe one of these: asc, desc
+        Sort sort = Sort.by(sortOrder.equals("desc") ? Sort.Direction.DESC : Sort.Direction.ASC, order);
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Category foundCategory = category.equals("all") ?
+                null : categoryService.findBySlug(category).orElseThrow(() -> new RuntimeException("Category not found"));
+
+        Field foundField = field.equals("all") ?
+                null : fieldService.findBySlug(field).orElseThrow(() -> new RuntimeException("Field not found"));
+
+        Organization foundOrganization = organization.equals("all") ?
+                null : organizationService.findBySlug(organization).orElseThrow(() -> new RuntimeException("Organization not found"));
+
+        Page<Document> documents = documentService.searchDocumentsForStudents(foundCategory, foundField, foundOrganization, userOrganization, s, pageable);
 
         Page<DocumentResponseModel> documentModels = documents.map(this::convertToDocumentModel);
         return ResponseEntity.ok(ResponseModel
@@ -459,7 +533,6 @@ public class DocumentController {
                         .build());
     }
 
-    //    @Transactional
     @Operation(summary = "Cập nhật một tài liệu",
             description = "Trả về tài liệu vừa cập nhật. Tuỳ vào vai trò sẽ trả về trạng thái kèm theo.")
     @PutMapping(path = "/{slug}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -520,6 +593,8 @@ public class DocumentController {
     @DeleteMapping("/{docId}")
     public ResponseEntity<?> deleteDocument(@PathVariable UUID docId) {
         Document document = documentService.findById(docId).orElseThrow(() -> new RuntimeException("Document not found!"));
+        googleDriveUpload.deleteFile(stringHandler.getFileId(document.getThumbnail()));
+        googleDriveUpload.deleteFile(stringHandler.getFileId(document.getViewUrl()));
         documentService.deleteById(docId);
         return ResponseEntity.ok(ResponseModel.builder()
                 .status(200)
@@ -557,28 +632,36 @@ public class DocumentController {
             description = "Trả về danh sách tài liệu được tải lên trong tháng trên hệ thống")
     @GetMapping("/latest")
     public ResponseEntity<?> getLatestDocuments(@RequestParam(defaultValue = "0") int page,
-                                                @RequestParam(defaultValue = "5") int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        Page<Document> documents = documentService.findLatestDocuments(pageable);
-        Page<DocumentResponseModel> documentModels = documents.map(this::convertToDocumentModel);
-        return ResponseEntity.ok(ResponseModel
-                .builder()
-                .status(200)
-                .error(false)
-                .message("Get latest documents successfully")
-                .data(documentModels)
-                .build());
-    }
+                                                @RequestParam(defaultValue = "5") int size,
+                                                @RequestParam(defaultValue = "updatedAt") String order,
+                                                @RequestParam(defaultValue = "all") String category,
+                                                @RequestParam(defaultValue = "all") String field,
+                                                @RequestParam(defaultValue = "all") String organization,
+                                                @RequestParam(defaultValue = "all") String deleted,
+                                                @RequestParam(defaultValue = "all") String internal,
+                                                @RequestParam(defaultValue = "all") String status) {
 
-    @Operation(summary = "Xem danh sách tài liệu mới tải lên trong tháng",
-            description = "Trả về danh sách tài liệu được tải lên trong tháng trên hệ thống")
-    @GetMapping("/cateFalse")
-    public ResponseEntity<?> getCatDocuments(@RequestParam(defaultValue = "0") int page,
-                                             @RequestParam(defaultValue = "5") int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        Category category = categoryService.findBySlug("giao-trinh").get();
-        Organization organization = organizationService.findBySlug("truong-đai-hoc-su-pham-ky-thuat-tp.-ho-chi-minh-a0c139273a").get();
-        Page<Document> documents = documentService.findDocumentsForStudents(null, null, null, organization, pageable);
+        Sort sort = Sort.by(Sort.Direction.DESC, order);
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Organization foundOrganization = organizationService.findBySlug(organization).orElseThrow(() -> new RuntimeException("Organization not found"));
+
+        Category foundCategory = category.equals("all") ?
+                null : categoryService.findBySlug(category).orElseThrow(() -> new RuntimeException("Category not found"));
+
+        Field foundField = field.equals("all") ?
+                null : fieldService.findBySlug(field).orElseThrow(() -> new RuntimeException("Field not found"));
+
+        Boolean isDeleted = deleted.equals("all") ?
+                null : Boolean.valueOf(deleted);
+
+        Boolean isInternal = internal.equals("all") ?
+                null : Boolean.valueOf(internal);
+
+        Integer verifiedStatus = status.equals("all") ?
+                null : Integer.valueOf(status);
+
+        Page<Document> documents = documentService.findLatestDocuments(isDeleted, isInternal, verifiedStatus, foundCategory, foundField, foundOrganization, pageable);
         Page<DocumentResponseModel> documentModels = documents.map(this::convertToDocumentModel);
         return ResponseEntity.ok(ResponseModel
                 .builder()
@@ -591,14 +674,38 @@ public class DocumentController {
 
     @Operation(summary = "Xem danh sách tài liệu mới tải lên trong tháng của một trường",
             description = "Trả về danh sách tài liệu được tải lên trong tháng của một trường trên hệ thống")
-    @GetMapping("/organizations/{slug}/latest")
-    public ResponseEntity<?> getLatestDocumentsByOrganization(@PathVariable String slug,
+    @GetMapping("/organizations/{organization}/latest")
+    public ResponseEntity<?> getLatestDocumentsByOrganization(@PathVariable String organization,
                                                               @RequestParam(defaultValue = "0") int page,
-                                                              @RequestParam(defaultValue = "5") int size) {
-        Organization organization = organizationService.findBySlug(slug).orElseThrow(() -> new RuntimeException("Organization not found"));
+                                                              @RequestParam(defaultValue = "5") int size,
+                                                              @RequestParam(defaultValue = "updatedAt") String order,
+                                                              @RequestParam(defaultValue = "all") String category,
+                                                              @RequestParam(defaultValue = "all") String field,
+                                                              @RequestParam(defaultValue = "all") String deleted,
+                                                              @RequestParam(defaultValue = "all") String internal,
+                                                              @RequestParam(defaultValue = "all") String status) {
 
-        Pageable pageable = PageRequest.of(page, size);
-        Page<Document> documents = documentService.findLatestDocumentsByOrganization(organization, pageable);
+        Sort sort = Sort.by(Sort.Direction.DESC, order);
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Organization foundOrganization = organizationService.findBySlug(organization).orElseThrow(() -> new RuntimeException("Organization not found"));
+
+        Category foundCategory = category.equals("all") ?
+                null : categoryService.findBySlug(category).orElseThrow(() -> new RuntimeException("Category not found"));
+
+        Field foundField = field.equals("all") ?
+                null : fieldService.findBySlug(field).orElseThrow(() -> new RuntimeException("Field not found"));
+
+        Boolean isDeleted = deleted.equals("all") ?
+                null : Boolean.valueOf(deleted);
+
+        Boolean isInternal = internal.equals("all") ?
+                null : Boolean.valueOf(internal);
+
+        Integer verifiedStatus = status.equals("all") ?
+                null : Integer.valueOf(status);
+
+        Page<Document> documents = documentService.findLatestDocuments(isDeleted, isInternal, verifiedStatus, foundCategory, foundField, foundOrganization, pageable);
         Page<DocumentResponseModel> documentModels = documents.map(this::convertToDocumentModel);
         return ResponseEntity.ok(ResponseModel
                 .builder()

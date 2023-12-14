@@ -27,6 +27,14 @@ public class GoogleDriveUpload {
         this.googleDrive = googleDrive;
     }
 
+    public void deleteFile(String fileId) {
+        try {
+            googleDrive.files().delete(fileId).execute();
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
     public FileModel uploadFile(MultipartFile multipartFile, String name, String fileId, String thumbnailId) {
         try {
             // Set parent folder

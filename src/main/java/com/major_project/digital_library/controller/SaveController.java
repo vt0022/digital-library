@@ -15,8 +15,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -45,9 +43,8 @@ public class SaveController {
     @PostMapping("/documents/{docId}/save")
     public ResponseEntity<?> saveDocument(@PathVariable UUID docId) {
         // Find user info
-        UsernamePasswordAuthenticationToken auth = (UsernamePasswordAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
-        String email = String.valueOf(auth.getPrincipal());
-        User user = userService.findByEmail(email).orElseThrow(() -> new RuntimeException("Email is not valid"));
+        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not found"));
+
         String message = "";
 
         Document document = documentService.findById(docId).orElseThrow(() -> new RuntimeException("Document not found"));
@@ -87,12 +84,19 @@ public class SaveController {
         Pageable pageable = PageRequest.of(page, size);
 
         // Find user info
-        UsernamePasswordAuthenticationToken auth = (UsernamePasswordAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
-        String email = String.valueOf(auth.getPrincipal());
-        User user = userService.findByEmail(email).orElseThrow(() -> new RuntimeException("Email is not valid"));
+        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not found"));
 
         Page<Save> saves = saveService.findByUserAndIsSaved(user, true, pageable);
-        List<Document> documents = saves.getContent().stream().map(Save::getDocument).collect(Collectors.toList());
+        List<Document> documents = saves.getContent()
+                .stream()
+                .map(Save::getDocument)
+                .filter(document ->
+                        (!document.isInternal() || document.getOrganization() == user.getOrganization()) &&
+                                !document.isDeleted() &&
+                                !document.getCategory().isDeleted() &&
+                                !document.getOrganization().isDeleted() &&
+                                !document.getField().isDeleted())
+                .collect(Collectors.toList());
         Page<Document> documentPage = new PageImpl<>(documents, pageable, saves.getTotalElements());
         return ResponseEntity.ok(ResponseModel.builder()
                 .error(false)

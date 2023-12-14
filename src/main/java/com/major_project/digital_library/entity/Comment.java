@@ -13,7 +13,6 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 
-@Entity
 public class Comment {
     @Id
     @UuidGenerator(style = UuidGenerator.Style.TIME)

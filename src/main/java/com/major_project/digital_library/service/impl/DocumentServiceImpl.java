@@ -33,6 +33,11 @@ public class DocumentServiceImpl implements IDocumentService {
     }
 
     @Override
+    public <S extends Document> List<S> saveAll(Iterable<S> entities) {
+        return documentRepository.saveAll(entities);
+    }
+
+    @Override
     public Optional<Document> findById(UUID uuid) {
         return documentRepository.findById(uuid);
     }
@@ -87,41 +92,6 @@ public class DocumentServiceImpl implements IDocumentService {
         return documentRepository.findByOrganizationAndVerifiedStatusAndIsDeleted(organization, verifiedStatus, isDeleted, pageable);
     }
 
-//    @Override
-//    @Query("SELECT d FROM Document d WHERE d.isDeleted = false " +
-//            "AND d.verifiedStatus = 1 " +
-//            "AND (d.isInternal = false OR (d.isInternal = true AND d.organization = ?1))")
-//    public Page<Document> findByInternal(Organization userOrganization, Pageable pageable) {
-//        return documentRepository.findByInternal(userOrganization, pageable);
-//    }
-//
-//    @Override
-//    @Query("SELECT d FROM Document d WHERE d.isDeleted = false " +
-//            "AND d.verifiedStatus = 1 " +
-//            "AND d.category = ?1 " +
-//            "AND (d.isInternal = false OR (d.isInternal = true AND d.organization = ?2))")
-//    public Page<Document> findByCategory(Category category, Organization userOrganization, Pageable pageable) {
-//        return documentRepository.findByCategory(category, userOrganization, pageable);
-//    }
-//
-//    @Override
-//    @Query("SELECT d FROM Document d WHERE d.isDeleted = false " +
-//            "AND d.verifiedStatus = 1 " +
-//            "AND d.field = ?1 " +
-//            "AND (d.isInternal = false OR (d.isInternal = true AND d.organization = ?2))")
-//    public Page<Document> findByField(Field field, Organization userOrganization, Pageable pageable) {
-//        return documentRepository.findByField(field, userOrganization, pageable);
-//    }
-//
-//    @Override
-//    @Query("SELECT d FROM Document d WHERE d.isDeleted = false " +
-//            "AND d.verifiedStatus = 1 " +
-//            "AND d.organization = ?1 " +
-//            "AND (d.isInternal = false OR (d.isInternal = true AND d.organization = ?2))")
-//    public Page<Document> findByOrganization(Organization organization, Organization userOrganization, Pageable pageable) {
-//        return documentRepository.findByOrganization(organization, userOrganization, pageable);
-//    }
-
     @Override
     @Query("SELECT d FROM Document d WHERE d.isDeleted = false " +
             "AND d.verifiedStatus = 1 " +
@@ -130,92 +100,6 @@ public class DocumentServiceImpl implements IDocumentService {
     public Page<Document> findByUserUploaded(User user, Organization userOrganization, Pageable pageable) {
         return documentRepository.findByUserUploaded(user, userOrganization, pageable);
     }
-
-//    @Override
-//    @Query("SELECT d FROM Document d WHERE d.isDeleted = false " +
-//            "AND d.verifiedStatus = 1 " +
-//            "AND d.category = ?1 " +
-//            "AND d.field = ?2 " +
-//            "AND (d.isInternal = false OR (d.isInternal = true AND d.organization = ?3))")
-//    public Page<Document> findByCategoryAndField(Category category, Field field, Organization userOrganization, Pageable pageable) {
-//        return documentRepository.findByCategoryAndField(category, field, userOrganization, pageable);
-//    }
-//
-//    @Override
-//    @Query("SELECT d FROM Document d WHERE d.isDeleted = false " +
-//            "AND d.verifiedStatus = 1 " +
-//            "AND d.category = ?1 " +
-//            "AND d.organization = ?2 " +
-//            "AND (d.isInternal = false OR (d.isInternal = true AND d.organization = ?3))")
-//    public Page<Document> findByCategoryAndOrganization(Category category, Organization organization, Organization userOrganization, Pageable pageable) {
-//        return documentRepository.findByCategoryAndOrganization(category, organization, userOrganization, pageable);
-//    }
-//
-//    @Override
-//    @Query("SELECT d FROM Document d WHERE d.isDeleted = false " +
-//            "AND d.verifiedStatus = 1 " +
-//            "AND d.field = ?1 " +
-//            "AND d.organization = ?2 " +
-//            "AND (d.isInternal = false OR (d.isInternal = true AND d.organization = ?3))")
-//    public Page<Document> findByFieldAndOrganization(Field field, Organization organization, Organization userOrganization, Pageable pageable) {
-//        return documentRepository.findByFieldAndOrganization(field, organization, userOrganization, pageable);
-//    }
-//
-//    @Override
-//    @Query("SELECT d FROM Document d WHERE d.isDeleted = false " +
-//            "AND d.verifiedStatus = 1 " +
-//            "AND d.category = ?1 " +
-//            "AND d.field = ?2 " +
-//            "AND d.organization = ?3 " +
-//            "AND (d.isInternal = false OR (d.isInternal = true AND d.organization = ?4))")
-//    public Page<Document> findByCategoryAndFieldAndOrganization(Category category, Field field, Organization organization, Organization userOrganization, Pageable pageable) {
-//        return documentRepository.findByCategoryAndFieldAndOrganization(category, field, organization, userOrganization, pageable);
-//    }
-//
-//    @Override
-//    public Page<Document> findByVerifiedStatusAndIsInternalAndIsDeleted(int VerifiedStatus, boolean isInternal, boolean isDeleted, Pageable pageable) {
-//        return documentRepository.findByVerifiedStatusAndIsInternalAndIsDeleted(VerifiedStatus, isInternal, isDeleted, pageable);
-//    }
-//
-//    @Override
-//    public Page<Document> findByCategoryAndVerifiedStatusAndIsInternalAndIsDeleted(Category category, int VerifiedStatus, boolean isInternal, boolean isDeleted, Pageable pageable) {
-//        return documentRepository.findByCategoryAndVerifiedStatusAndIsInternalAndIsDeleted(category, VerifiedStatus, isInternal, isDeleted, pageable);
-//    }
-//
-//    @Override
-//    public Page<Document> findByFieldAndVerifiedStatusAndIsInternalAndIsDeleted(Field field, int VerifiedStatus, boolean isInternal, boolean isDeleted, Pageable pageable) {
-//        return documentRepository.findByFieldAndVerifiedStatusAndIsInternalAndIsDeleted(field, VerifiedStatus, isInternal, isDeleted, pageable);
-//    }
-//
-//    @Override
-//    public Page<Document> findByOrganizationAndVerifiedStatusAndIsInternalAndIsDeleted(Organization organization, int VerifiedStatus, boolean isInternal, boolean isDeleted, Pageable pageable) {
-//        return documentRepository.findByOrganizationAndVerifiedStatusAndIsInternalAndIsDeleted(organization, VerifiedStatus, isInternal, isDeleted, pageable);
-//    }
-//
-//    @Override
-//    public Page<Document> findByUserUploadedAndVerifiedStatusAndIsInternalAndIsDeleted(User user, int VerifiedStatus, boolean isInternal, boolean isDeleted, Pageable pageable) {
-//        return documentRepository.findByUserUploadedAndVerifiedStatusAndIsInternalAndIsDeleted(user, VerifiedStatus, isInternal, isDeleted, pageable);
-//    }
-//
-//    @Override
-//    public Page<Document> findByCategoryAndFieldAndVerifiedStatusAndIsInternalAndIsDeleted(Category category, Field field, int VerifiedStatus, boolean isInternal, boolean isDeleted, Pageable pageable) {
-//        return documentRepository.findByCategoryAndFieldAndVerifiedStatusAndIsInternalAndIsDeleted(category, field, VerifiedStatus, isInternal, isDeleted, pageable);
-//    }
-//
-//    @Override
-//    public Page<Document> findByCategoryAndOrganizationAndVerifiedStatusAndIsInternalAndIsDeleted(Category category, Organization organization, int VerifiedStatus, boolean isInternal, boolean isDeleted, Pageable pageable) {
-//        return documentRepository.findByCategoryAndOrganizationAndVerifiedStatusAndIsInternalAndIsDeleted(category, organization, VerifiedStatus, isInternal, isDeleted, pageable);
-//    }
-//
-//    @Override
-//    public Page<Document> findByFieldAndOrganizationAndVerifiedStatusAndIsInternalAndIsDeleted(Field field, Organization organization, int VerifiedStatus, boolean isInternal, boolean isDeleted, Pageable pageable) {
-//        return documentRepository.findByFieldAndOrganizationAndVerifiedStatusAndIsInternalAndIsDeleted(field, organization, VerifiedStatus, isInternal, isDeleted, pageable);
-//    }
-//
-//    @Override
-//    public Page<Document> findByCategoryAndFieldAndOrganizationAndVerifiedStatusAndIsInternalAndIsDeleted(Category category, Field field, Organization organization, int VerifiedStatus, boolean isInternal, boolean isDeleted, Pageable pageable) {
-//        return documentRepository.findByCategoryAndFieldAndOrganizationAndVerifiedStatusAndIsInternalAndIsDeleted(category, field, organization, VerifiedStatus, isInternal, isDeleted, pageable);
-//    }
 
     @Override
     @Query("SELECT d FROM Document d " +
@@ -258,9 +142,59 @@ public class DocumentServiceImpl implements IDocumentService {
     }
 
     @Override
-    @Query("SELECT d FROM Document d WHERE MONTH(d.uploadedAt) = MONTH(CURRENT_DATE) AND YEAR(d.uploadedAt) = YEAR(CURRENT_DATE) ORDER BY d.uploadedAt DESC")
-    public Page<Document> findLatestDocuments(Pageable pageable) {
-        return documentRepository.findLatestDocuments(pageable);
+    @Query("SELECT d FROM Document d WHERE d.isDeleted = false " +
+            "AND d.verifiedStatus = 1 " +
+            "AND (d.category = :category OR :category IS NULL) " +
+            "AND (d.field = :field OR :field IS NULL) " +
+            "AND (d.organization = :organization OR :organization IS NULL) " +
+            "AND d.category.isDeleted = false " +
+            "AND d.field.isDeleted = false " +
+            "AND d.organization.isDeleted = false " +
+            "AND (d.isInternal = false OR (d.isInternal = true AND d.organization = :userOrganization)) " +
+            "AND (LOWER(d.docName) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(d.docIntroduction) LIKE LOWER(CONCAT('%', :query, '%')))")
+    public Page<Document> searchDocumentsForStudents(Category category, Field field, Organization organization, Organization userOrganization, String query, Pageable pageable) {
+        return documentRepository.searchDocumentsForStudents(category, field, organization, userOrganization, query, pageable);
+    }
+
+    @Override
+    @Query("SELECT d FROM Document d WHERE d.isDeleted = false " +
+            "AND d.verifiedStatus = 1 " +
+            "AND (d.category = :category OR :category IS NULL) " +
+            "AND (d.field = :field OR :field IS NULL) " +
+            "AND (d.organization = :organization OR :organization IS NULL) " +
+            "AND d.category.isDeleted = false " +
+            "AND d.field.isDeleted = false " +
+            "AND d.organization.isDeleted = false " +
+            "AND (d.isInternal = false) " +
+            "AND (LOWER(d.docName) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(d.docIntroduction) LIKE LOWER(CONCAT('%', :query, '%')))")
+    public Page<Document> searchDocumentsForGuests(Category category, Field field, Organization organization, String query, Pageable pageable) {
+        return documentRepository.searchDocumentsForGuests(category, field, organization, query, pageable);
+    }
+
+    @Override
+    @Query("SELECT d FROM Document d " +
+            "WHERE (d.isDeleted = :isDeleted OR :isDeleted IS NULL) " +
+            "AND (d.isInternal = :isInternal OR :isInternal IS NULL) " +
+            "AND (d.verifiedStatus = :verifiedStatus OR :verifiedStatus IS NULL) " +
+            "AND (d.category = :category OR :category IS NULL) " +
+            "AND (d.field = :field OR :field IS NULL) " +
+            "AND (d.organization = :organization OR :organization IS NULL) " +
+            "AND (LOWER(d.docName) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(d.docIntroduction) LIKE LOWER(CONCAT('%', :query, '%')))")
+    public Page<Document> searchWithAllDocuments(Boolean isDeleted, Boolean isInternal, Integer verifiedStatus, Category category, Field field, Organization organization, String query, Pageable pageable) {
+        return documentRepository.searchWithAllDocuments(isDeleted, isInternal, verifiedStatus, category, field, organization, query, pageable);
+    }
+
+    @Override
+    @Query("SELECT d FROM Document d " +
+            "WHERE (d.isDeleted = :isDeleted OR :isDeleted IS NULL) " +
+            "AND (d.isInternal = :isInternal OR :isInternal IS NULL) " +
+            "AND (d.verifiedStatus = :verifiedStatus OR :verifiedStatus IS NULL) " +
+            "AND (d.category = :category OR :category IS NULL) " +
+            "AND (d.field = :field OR :field IS NULL) " +
+            "AND (d.organization = :organization OR :organization IS NULL) " +
+            "AND MONTH(d.uploadedAt) = MONTH(CURRENT_DATE) AND YEAR(d.uploadedAt) = YEAR(CURRENT_DATE)")
+    public Page<Document> findLatestDocuments(Boolean isDeleted, Boolean isInternal, Integer verifiedStatus, Category category, Field field, Organization organization, Pageable pageable) {
+        return documentRepository.findLatestDocuments(isDeleted, isInternal, verifiedStatus, category, field, organization, pageable);
     }
 
     @Override
@@ -278,23 +212,9 @@ public class DocumentServiceImpl implements IDocumentService {
         return documentRepository.countByOrganization(organization);
     }
 
-    @Override
-    @Query("SELECT d FROM Document d " +
-            "WHERE MONTH(d.uploadedAt) = MONTH(CURRENT_DATE) " +
-            "AND YEAR(d.uploadedAt) = YEAR(CURRENT_DATE) " +
-            "AND d.organization = ?1 " +
-            "ORDER BY d.uploadedAt DESC")
-    public Page<Document> findLatestDocumentsByOrganization(Organization organization, Pageable pageable) {
-        return documentRepository.findLatestDocumentsByOrganization(organization, pageable);
-    }
 
     @Override
     public long countByVerifiedStatusAndOrganization(int verifiedStatus, Organization organization) {
         return documentRepository.countByVerifiedStatusAndOrganization(verifiedStatus, organization);
-    }
-
-    @Override
-    public Page<Document> findByCategoryIsDeletedFalse(Pageable pageable) {
-        return documentRepository.findByCategoryIsDeletedFalse(pageable);
     }
 }

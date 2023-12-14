@@ -87,13 +87,17 @@ public class UserServiceImpl implements IUserService {
     @Query("SELECT u FROM User u " +
             "WHERE MONTH(u.createdAt) = MONTH(CURRENT_DATE) " +
             "AND YEAR(u.createdAt) = YEAR(CURRENT_DATE) " +
-            "AND u.organization = ?1 " +
+            "AND u.organization = :organization " +
+            "AND u.role.roleName <> 'ROLE_MANAGER' " +
             "ORDER BY u.createdAt DESC")
     public Page<User> findLatestUsersByOrganization(Organization organization, Pageable pageable) {
         return userRepository.findLatestUsersByOrganization(organization, pageable);
     }
 
     @Override
+    @Query("SELECT u FROM User u " +
+            "WHERE u.organization = :organization " +
+            "AND u.role.roleName <> 'ROLE_MANAGER'")
     public Page<User> findByOrganization(Organization organization, Pageable pageable) {
         return userRepository.findByOrganization(organization, pageable);
     }

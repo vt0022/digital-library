@@ -1,6 +1,5 @@
 package com.major_project.digital_library.model.response_model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -25,9 +24,7 @@ public class ReviewResponseModel implements Serializable {
 
     private Timestamp updatedAt;
 
-    @JsonIgnore
     private UserResponseModel user;
 
-    @JsonIgnore
     private DocumentResponseModel document;
 }

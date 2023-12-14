@@ -45,5 +45,4 @@ public class Review {
     protected void onUpdate() {
         updatedAt = new Timestamp(System.currentTimeMillis());
     }
-
 }

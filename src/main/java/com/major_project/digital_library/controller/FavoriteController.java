@@ -16,8 +16,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -40,14 +39,13 @@ public class FavoriteController {
         this.modelMapper = modelMapper;
     }
 
+    @Transactional
     @Operation(summary = "Thích/bỏ thích một tài liệu",
             description = "Thêm/xoá một tài liệu vào/khỏi danh sách yêu thích")
     @PostMapping("/documents/{docId}/like")
     public ResponseEntity<?> likeDocument(@PathVariable UUID docId) {
         // Find user info
-        UsernamePasswordAuthenticationToken auth = (UsernamePasswordAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
-        String email = String.valueOf(auth.getPrincipal());
-        User user = userService.findByEmail(email).orElseThrow(() -> new RuntimeException("Email is not valid"));
+        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not found"));
 
         Document document = documentService.findById(docId).orElseThrow(() -> new RuntimeException("Document not found"));
 
@@ -57,14 +55,17 @@ public class FavoriteController {
             Favorite favorite = favoriteService.findByUserAndDocument(user, document).orElseThrow(() -> new RuntimeException("Error while processing"));
             if (favorite.isLiked()) {
                 // Bỏ thích
+                document.setTotalFavorite(document.getTotalFavorite() - 1);
                 favorite.setLiked(false);
                 message = "Unlike document successfully";
             } else {
+                document.setTotalFavorite(document.getTotalFavorite() + 1);
                 favorite.setLiked(true);
                 message = "Like document successfully";
             }
             favoriteService.save(favorite);
         } else { // Thích
+            document.setTotalFavorite(document.getTotalFavorite() + 1);
             Favorite favorite = new Favorite();
             favorite.setDocument(document);
             favorite.setUser(user);
@@ -72,6 +73,7 @@ public class FavoriteController {
             favoriteService.save(favorite);
             message = "Like document successfully";
         }
+
         return ResponseEntity.ok(ResponseModel.builder()
                 .status(200)
                 .error(false)
@@ -88,20 +90,19 @@ public class FavoriteController {
         Pageable pageable = PageRequest.of(page, size);
 
         // Find user info
-        UsernamePasswordAuthenticationToken auth = (UsernamePasswordAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
-        String email = String.valueOf(auth.getPrincipal());
-        User user = userService.findByEmail(email).orElseThrow(() -> new RuntimeException("Email is not valid"));
+        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not found"));
 
         Page<Favorite> favorites = favoriteService.findByUserAndIsLiked(user, true, pageable);
         // Tìm theo người dùng với điều kiện tài liệu đó chưa xoá, công khai và được chia sẻ
         List<Document> documents = favorites.getContent()
                 .stream()
-                .filter(favorite -> (
-                        !favorite.getDocument().isInternal()
-                                && !favorite.getDocument().isPrivate()
-                                && !favorite.getDocument().isDeleted()
-                ))
                 .map(Favorite::getDocument)
+                .filter(document ->
+                        (!document.isInternal() || document.getOrganization() == user.getOrganization()) &&
+                                !document.isDeleted() &&
+                                !document.getCategory().isDeleted() &&
+                                !document.getOrganization().isDeleted() &&
+                                !document.getField().isDeleted())
                 .collect(Collectors.toList());
         Page<Document> documentPage = new PageImpl<>(documents, pageable, favorites.getTotalElements());
         Page<DocumentResponseModel> documentModels = documentPage.map(this::convertToDocumentModel);
@@ -117,4 +118,5 @@ public class FavoriteController {
         DocumentResponseModel documentResponseModel = modelMapper.map(o, DocumentResponseModel.class);
         return documentResponseModel;
     }
+
 }

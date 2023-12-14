@@ -29,5 +29,5 @@ public class Favorite implements Serializable {
     private Document document;
 
     private boolean isLiked;
-
+    
 }

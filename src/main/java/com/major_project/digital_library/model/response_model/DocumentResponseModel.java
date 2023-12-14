@@ -42,7 +42,7 @@ public class DocumentResponseModel implements Serializable {
 
     private int totalFavorite;
 
-    private boolean isPrivate;
+    private double averageRating;
 
     private boolean isInternal;
 

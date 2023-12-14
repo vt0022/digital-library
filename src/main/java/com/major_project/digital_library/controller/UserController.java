@@ -255,7 +255,7 @@ public class UserController {
     @DeleteMapping("/{userId}")
     public ResponseEntity<?> deleteUser(@PathVariable UUID userId) {
         User user = userService.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
-        if (user.getFavorites().size() > 0 || user.getSaves().size() > 0 || user.getReviews().size() > 0 || user.getUploadedDocuments().size() > 0) {
+        if (user.getUploadedDocuments().size() > 0) {
             user.setDeleted(true);
             userService.update(user);
         } else {
