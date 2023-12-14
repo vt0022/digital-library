@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,8 +39,9 @@ public class OrganizationController {
             description = "Trả về danh sách tất cả trường học cho admin quản lý")
     @GetMapping("/all")
     public ResponseEntity<?> getAllOrganizations(@RequestParam(defaultValue = "0") int page,
-                                                 @RequestParam(defaultValue = "20") int size) {
-        Pageable pageable = PageRequest.of(page, size);
+                                                 @RequestParam(defaultValue = "15") int size) {
+        Sort sort = Sort.by(Sort.Direction.DESC, "updatedAt");
+        Pageable pageable = PageRequest.of(page, size, sort);
         Page<Organization> organizations = organizationService.findAll(pageable);
         Page<OrganizationResponseModel> organizationModels = organizations.map(this::convertToOrganizationModel);
         return ResponseEntity.ok(ResponseModel.builder()
@@ -65,6 +67,20 @@ public class OrganizationController {
                 .error(false)
                 .message("Get all organizations successfully")
                 .data(organizationResponseModels)
+                .build());
+    }
+
+    @Operation(summary = "Lấy thông tin trường học",
+            description = "Trả về thông tin trường học")
+    @GetMapping("/{organizationId}")
+    public ResponseEntity<?> getAOrganization(@PathVariable UUID organizationId) {
+        Organization organization = organizationService.findById(organizationId).orElseThrow(() -> new RuntimeException("Organization not found"));
+        OrganizationResponseModel organizationResponseModel = modelMapper.map(organization, OrganizationResponseModel.class);
+        return ResponseEntity.ok(ResponseModel.builder()
+                .status(200)
+                .error(false)
+                .message("Get organization successfully")
+                .data(organizationResponseModel)
                 .build());
     }
 

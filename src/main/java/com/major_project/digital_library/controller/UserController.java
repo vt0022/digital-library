@@ -164,7 +164,7 @@ public class UserController {
         }
         User newUser = modelMapper.map(userRequestModel, User.class);
 
-        if (userRequestModel.getOrgId() != null || userRequestModel.getOrgId().toString() != "") {
+        if (userRequestModel.getOrgId() != null && userRequestModel.getOrgId().toString() != "") {
             Organization organization = organizationService.findById(userRequestModel.getOrgId()).orElseThrow(
                     () -> new ModelNotFoundException("Organization not found"));
             newUser.setOrganization(organization);

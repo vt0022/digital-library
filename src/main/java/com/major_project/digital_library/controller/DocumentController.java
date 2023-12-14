@@ -643,8 +643,9 @@ public class DocumentController {
 
         Sort sort = Sort.by(Sort.Direction.DESC, order);
         Pageable pageable = PageRequest.of(page, size, sort);
-
-        Organization foundOrganization = organizationService.findBySlug(organization).orElseThrow(() -> new RuntimeException("Organization not found"));
+        
+        Organization foundOrganization = organization.equals("all") ?
+                null : organizationService.findBySlug(organization).orElseThrow(() -> new RuntimeException("Organization not found"));
 
         Category foundCategory = category.equals("all") ?
                 null : categoryService.findBySlug(category).orElseThrow(() -> new RuntimeException("Category not found"));
