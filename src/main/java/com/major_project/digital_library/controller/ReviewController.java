@@ -45,9 +45,9 @@ public class ReviewController {
 
     @Operation(summary = "Lấy đánh giá của một tài liệu",
             description = "Trả về tất cả đánh giá của một tài liệu")
-    @GetMapping("/documents/{docId}/reviews")
-    public ResponseEntity<?> getReviewsByDocument(@PathVariable UUID docId) {
-        Document document = documentService.findById(docId).orElseThrow(() -> new RuntimeException("Document not found"));
+    @GetMapping("/documents/{slug}/reviews")
+    public ResponseEntity<?> getReviewsByDocument(@PathVariable String slug) {
+        Document document = documentService.findBySlug(slug).orElseThrow(() -> new RuntimeException("Document not found"));
 
         List<ReviewResponseModel> reviewResponseModels = document.getReviews()
                 .stream()
@@ -80,6 +80,25 @@ public class ReviewController {
                 .error(false)
                 .message("Get reviews of organization successfully")
                 .data(reviewResponseModels)
+                .build());
+    }
+
+    @Operation(summary = "Kiểm tra đã đánh giá chưa",
+            description = "Trả về kết quả người dùng đã đánh giá tài liệu này chưa")
+    @GetMapping("/documents/{slug}/reviewed")
+    public ResponseEntity<?> checkReviewed(@PathVariable String slug) {
+        Document document = documentService.findBySlug(slug).orElseThrow(() -> new RuntimeException("Document not found"));
+        // Find user info
+        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not found"));
+
+        boolean isReviewed = reviewService.existsByUserAndDocument(user, document);
+        String message = "Not reviewed";
+        if (isReviewed) message = "Reviewed";
+
+        return ResponseEntity.ok(ResponseModel.builder()
+                .status(200)
+                .error(false)
+                .message(message)
                 .build());
     }
 

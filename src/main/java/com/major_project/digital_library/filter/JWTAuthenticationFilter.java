@@ -4,8 +4,6 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.major_project.digital_library.model.response_model.ResponseModel;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,8 +21,6 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
-import static org.springframework.http.HttpStatus.OK;
-import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @Component
 public class JWTAuthenticationFilter extends OncePerRequestFilter {
@@ -35,8 +31,9 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String authorizationHeader = request.getHeader(AUTHORIZATION);
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            try {
-                String token = authorizationHeader.substring("Bearer ".length());
+//            try {
+            String token = authorizationHeader.substring("Bearer ".length());
+            if (token.length() > 0) {
                 Algorithm algorithm = Algorithm.HMAC256(SECRET_KEY.getBytes());
                 JWTVerifier verifier = JWT.require(algorithm).build();
                 DecodedJWT decodedJWT = verifier.verify(token);
@@ -50,17 +47,20 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
 
                 filterChain.doFilter(request, response);
-
-            } catch (Exception e) {
-                response.setStatus(OK.value());
-                response.setContentType(APPLICATION_JSON_VALUE);
-                new ObjectMapper().writeValue(response.getOutputStream(),
-                        ResponseModel.builder()
-                                .status(403)
-                                .error(true)
-                                .message(e.getMessage())
-                                .build());
+            } else {
+                filterChain.doFilter(request, response);
             }
+
+//            } catch (Exception e) {
+//                response.setStatus(OK.value());
+//                response.setContentType(APPLICATION_JSON_VALUE);
+//                new ObjectMapper().writeValue(response.getOutputStream(),
+//                        ResponseModel.builder()
+//                                .status(403)
+//                                .error(true)
+//                                .message(e.getMessage())
+//                                .build());
+//            }
         } else {
             filterChain.doFilter(request, response);
         }

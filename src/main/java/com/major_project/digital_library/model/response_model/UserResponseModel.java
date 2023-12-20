@@ -39,6 +39,12 @@ public class UserResponseModel implements Serializable {
 
     private boolean isDeleted;
 
+    private int totalLikes;
+
+    private int totalViews;
+
+    private int totalDocuments;
+
     private RoleModel role;
 
     private OrganizationResponseModel organization;

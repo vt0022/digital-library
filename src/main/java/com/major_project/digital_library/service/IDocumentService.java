@@ -119,6 +119,54 @@ public interface IDocumentService {
             "AND MONTH(d.uploadedAt) = MONTH(CURRENT_DATE) AND YEAR(d.uploadedAt) = YEAR(CURRENT_DATE)")
     Page<Document> findLatestDocuments(Boolean isDeleted, Boolean isInternal, Integer verifiedStatus, Category category, Field field, Organization organization, Pageable pageable);
 
+    @Query("SELECT d FROM Document d WHERE d.isDeleted = false " +
+            "AND (d.verifiedStatus = :verifiedStatus OR :verifiedStatus IS NULL) " +
+            "AND (d.category = :category OR :category IS NULL) " +
+            "AND (d.field = :field OR :field IS NULL) " +
+            "AND (d.organization = :organization OR :organization IS NULL) " +
+            "AND d.category.isDeleted = false " +
+            "AND d.field.isDeleted = false " +
+            "AND d.organization.isDeleted = false " +
+            "AND d.userUploaded = :userUploaded " +
+            "AND (LOWER(d.docName) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(d.docIntroduction) LIKE LOWER(CONCAT('%', :query, '%')))")
+    Page<Document> findUploadedDocuments(Integer verifiedStatus, Category category, Field field, Organization organization, User userUploaded, String query, Pageable pageable);
+
+    @Query("SELECT d FROM Document d WHERE d.isDeleted = false " +
+            "AND (d.verifiedStatus = 1) " +
+            "AND (d.isInternal = false OR (d.isInternal = true AND d.organization = :userOrganization)) " +
+            "AND (d.category = :category OR :category IS NULL) " +
+            "AND (d.field = :field OR :field IS NULL) " +
+            "AND d.category.isDeleted = false " +
+            "AND d.field.isDeleted = false " +
+            "AND d.organization.isDeleted = false " +
+            "AND d.userUploaded = :userUploaded " +
+            "AND (LOWER(d.docName) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(d.docIntroduction) LIKE LOWER(CONCAT('%', :query, '%')))")
+    Page<Document> findUploadedDocumentsByUserForStudent(Category category, Field field, Organization userOrganization, User userUploaded, String query, Pageable pageable);
+
+    @Query("SELECT d FROM Document d WHERE d.isDeleted = false " +
+            "AND (d.verifiedStatus = 1) " +
+            "AND (d.isInternal = false) " +
+            "AND (d.category = :category OR :category IS NULL) " +
+            "AND (d.field = :field OR :field IS NULL) " +
+            "AND d.category.isDeleted = false " +
+            "AND d.field.isDeleted = false " +
+            "AND d.organization.isDeleted = false " +
+            "AND d.userUploaded = :userUploaded " +
+            "AND (LOWER(d.docName) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(d.docIntroduction) LIKE LOWER(CONCAT('%', :query, '%')))")
+    Page<Document> findUploadedDocumentsByUserForGuest(Category category, Field field, User userUploaded, String query, Pageable pageable);
+
+    @Query("SELECT s.document FROM Save s " +
+            "JOIN s.document d " +
+            "WHERE s.user = :user " +
+            "AND s.isSaved = true " +
+            "AND (d.isInternal = false OR d.organization = s.user.organization) " +
+            "AND d.isDeleted = false " +
+            "AND d.category.isDeleted = false " +
+            "AND d.field.isDeleted = false " +
+            "AND d.organization.isDeleted = false " +
+            "AND (LOWER(d.docName) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(d.docIntroduction) LIKE LOWER(CONCAT('%', :query, '%')))")
+    Page<Document> findLikedDocuments(User user, String query, Pageable pageable);
+
     long count();
 
     long countByVerifiedStatus(int verifiedStatus);

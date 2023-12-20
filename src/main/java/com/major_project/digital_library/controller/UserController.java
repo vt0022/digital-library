@@ -1,8 +1,6 @@
 package com.major_project.digital_library.controller;
 
-import com.major_project.digital_library.entity.Organization;
-import com.major_project.digital_library.entity.Role;
-import com.major_project.digital_library.entity.User;
+import com.major_project.digital_library.entity.*;
 import com.major_project.digital_library.exception_handler.exception.ModelNotFoundException;
 import com.major_project.digital_library.model.FileModel;
 import com.major_project.digital_library.model.request_model.PasswordRequestModel;
@@ -25,10 +23,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -146,6 +146,20 @@ public class UserController {
         User user = userService.findById(userId).orElseThrow(
                 () -> new RuntimeException("User not found"));
         UserResponseModel userResponseModel = modelMapper.map(user, UserResponseModel.class);
+
+        int totalDocuments = user.getUploadedDocuments().size();
+        int totalViews = (int) user.getUploadedDocuments().stream()
+                .mapToLong(Document::getTotalView)
+                .sum();
+        int totalLikes = (int) user.getUploadedDocuments().stream()
+                .flatMap(document -> document.getFavorites().stream()) // Chuyển từng list like của mỗi document thành một stream
+                .filter(Favorite::isLiked) // Lọc những like có trạng thái là true
+                .count(); // Đếm số lượng lượt like có trạng thái là true
+
+        userResponseModel.setTotalDocuments(totalDocuments);
+        userResponseModel.setTotalViews(totalViews);
+        userResponseModel.setTotalLikes(totalLikes);
+
         return ResponseEntity.ok(ResponseModel.builder()
                 .status(200)
                 .error(false)
@@ -188,6 +202,25 @@ public class UserController {
                 .error(false)
                 .message("Create user successfully")
                 .data(userResponseModel)
+                .build());
+    }
+
+    @Operation(summary = "Update mật khẩu")
+    @PreAuthorize("permitAll")
+    @PostMapping("/pass/all")
+    public ResponseEntity<?> updatePasswordForAll() {
+        Pageable pageable = PageRequest.of(0, 100);
+        List<User> users = userService.findAll(pageable).getContent();
+        for (User user : users) {
+            String password = stringHandler.getEmailUsername(user.getEmail());
+            user.setPassword(password);
+            userService.save(user);
+        }
+
+        return ResponseEntity.ok(ResponseModel.builder()
+                .status(200)
+                .error(false)
+                .message("Update password successfully")
                 .build());
     }
 
@@ -273,6 +306,20 @@ public class UserController {
     public ResponseEntity<?> getProfile() {
         User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not found"));
         UserResponseModel userResponseModel = modelMapper.map(user, UserResponseModel.class);
+
+        int totalDocuments = user.getUploadedDocuments().size();
+        int totalViews = (int) user.getUploadedDocuments().stream()
+                .mapToLong(Document::getTotalView)
+                .sum();
+        int totalLikes = (int) user.getUploadedDocuments().stream()
+                .flatMap(document -> document.getFavorites().stream()) // Chuyển từng list like của mỗi document thành một stream
+                .filter(Favorite::isLiked) // Lọc những like có trạng thái là true
+                .count(); // Đếm số lượng lượt like có trạng thái là true
+
+        userResponseModel.setTotalDocuments(totalDocuments);
+        userResponseModel.setTotalViews(totalViews);
+        userResponseModel.setTotalLikes(totalLikes);
+
         return ResponseEntity.ok(ResponseModel.builder()
                 .status(200)
                 .error(false)

@@ -1,7 +1,9 @@
 package com.major_project.digital_library.service.impl;
 
+import com.major_project.digital_library.entity.Document;
 import com.major_project.digital_library.entity.Organization;
 import com.major_project.digital_library.entity.Review;
+import com.major_project.digital_library.entity.User;
 import com.major_project.digital_library.repository.IReviewRepository;
 import com.major_project.digital_library.service.IReviewService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,5 +43,10 @@ public class ReviewServiceImpl implements IReviewService {
     @Override
     public void deleteById(UUID uuid) {
         reviewRepository.deleteById(uuid);
+    }
+
+    @Override
+    public boolean existsByUserAndDocument(User user, Document document) {
+        return reviewRepository.existsByUserAndDocument(user, document);
     }
 }

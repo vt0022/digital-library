@@ -3,6 +3,7 @@ package com.major_project.digital_library.exception_handler;
 import com.auth0.jwt.exceptions.SignatureVerificationException;
 import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.major_project.digital_library.exception_handler.exception.ModelNotFoundException;
+import com.major_project.digital_library.exception_handler.exception.UserAuthenticationException;
 import com.major_project.digital_library.model.response_model.ResponseModel;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -50,6 +51,9 @@ public class GlobalExceptionHandler {
             statusCode = HttpStatus.UNAUTHORIZED.value();
         } else if (e instanceof BadCredentialsException) {
             message = "Invalid password";
+            statusCode = HttpStatus.UNAUTHORIZED.value();
+        } else if (e instanceof UserAuthenticationException) {
+            message = "User unauthorized. Please log in again";
             statusCode = HttpStatus.UNAUTHORIZED.value();
         }
 

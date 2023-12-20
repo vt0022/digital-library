@@ -44,6 +44,8 @@ public class DetailDocumentResponseModel implements Serializable {
 
     private double averageRating;
 
+    private int totalReviews;
+
     private boolean isInternal;
 
     private String author;

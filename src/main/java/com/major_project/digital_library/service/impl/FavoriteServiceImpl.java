@@ -40,4 +40,6 @@ public class FavoriteServiceImpl implements IFavoriteService {
     public Page<Favorite> findByUserAndIsLiked(User user, boolean isLiked, Pageable pageable) {
         return favoriteRepository.findByUserAndIsLiked(user, isLiked, pageable);
     }
+
+
 }

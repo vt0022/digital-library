@@ -3,6 +3,7 @@ package com.major_project.digital_library.controller;
 import com.major_project.digital_library.entity.Document;
 import com.major_project.digital_library.entity.Save;
 import com.major_project.digital_library.entity.User;
+import com.major_project.digital_library.model.response_model.DocumentResponseModel;
 import com.major_project.digital_library.model.response_model.ResponseModel;
 import com.major_project.digital_library.service.IDocumentService;
 import com.major_project.digital_library.service.ISaveService;
@@ -18,7 +19,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RestController
@@ -37,17 +37,17 @@ public class SaveController {
         this.modelMapper = modelMapper;
     }
 
-
     @Operation(summary = "Lưu/bỏ lưu một tài liệu",
             description = "Thêm/xoá một tài liệu vào/khỏi danh sách đã lưu")
-    @PostMapping("/documents/{docId}/save")
-    public ResponseEntity<?> saveDocument(@PathVariable UUID docId) {
+    @PostMapping("/documents/{slug}/save")
+    public ResponseEntity<?> saveDocument(@PathVariable String slug) {
         // Find user info
         User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not found"));
 
         String message = "";
 
-        Document document = documentService.findById(docId).orElseThrow(() -> new RuntimeException("Document not found"));
+        Document document = documentService.findBySlug(slug).orElseThrow(() -> new RuntimeException("Document not found"));
+
         // Đã từng lưu hoặc bỏ lưu
         if (saveService.existsByUserAndDocument(user, document)) {
             Save save = saveService.findByUserAndDocument(user, document).orElseThrow(() -> new RuntimeException("Error while processing"));
@@ -59,6 +59,7 @@ public class SaveController {
                 save.setSaved(true);
                 message = "Save document successfully";
             }
+            saveService.save(save);
         } else { // Lưu
             Save save = new Save();
             save.setDocument(document);
@@ -75,11 +76,42 @@ public class SaveController {
                 .build());
     }
 
+    @Operation(summary = "Kiểm tra trạng thái lưu",
+            description = "Trả về trạng thái lưu hay chưa lưu")
+    @GetMapping("/documents/{slug}/saved")
+    public ResponseEntity<?> checkSaved(@PathVariable String slug) {
+        // Find user info
+        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not found"));
+
+        String message = "";
+
+        Document document = documentService.findBySlug(slug).orElseThrow(() -> new RuntimeException("Document not found"));
+        // Đã từng lưu hoặc bỏ lưu
+        if (saveService.existsByUserAndDocument(user, document)) {
+            Save save = saveService.findByUserAndDocument(user, document).orElseThrow(() -> new RuntimeException("Error while processing"));
+            if (save.isSaved()) {
+                message = "Saved";
+            } else {
+                save.setSaved(true);
+                message = "Not saved";
+            }
+        } else {
+            message = "Not saved";
+        }
+        return ResponseEntity.ok(ResponseModel
+                .builder()
+                .status(200)
+                .error(false)
+                .message(message)
+                .build());
+    }
+
     @Operation(summary = "Xem danh sách đã lưu",
             description = "Trả về danh sách tài liệu đã lưu")
     @GetMapping("/documents/saved")
     public ResponseEntity<?> getFavoriteDocuments(@RequestParam(defaultValue = "0") int page,
-                                                  @RequestParam(defaultValue = "20") int size) {
+                                                  @RequestParam(defaultValue = "12") int size,
+                                                  @RequestParam String s) {
         // Pageable
         Pageable pageable = PageRequest.of(page, size);
 
@@ -95,14 +127,22 @@ public class SaveController {
                                 !document.isDeleted() &&
                                 !document.getCategory().isDeleted() &&
                                 !document.getOrganization().isDeleted() &&
-                                !document.getField().isDeleted())
+                                !document.getField().isDeleted() &&
+                                (document.getDocName().toLowerCase().contains(s.toLowerCase()) ||
+                                        document.getDocIntroduction().toLowerCase().contains(s.toLowerCase())))
                 .collect(Collectors.toList());
         Page<Document> documentPage = new PageImpl<>(documents, pageable, saves.getTotalElements());
+        Page<DocumentResponseModel> documentModels = documentPage.map(this::convertToDocumentModel);
         return ResponseEntity.ok(ResponseModel.builder()
                 .error(false)
                 .status(200)
                 .message("Get saved documents successfully")
-                .data(documentPage)
+                .data(documentModels)
                 .build());
+    }
+
+    private DocumentResponseModel convertToDocumentModel(Object o) {
+        DocumentResponseModel documentResponseModel = modelMapper.map(o, DocumentResponseModel.class);
+        return documentResponseModel;
     }
 }

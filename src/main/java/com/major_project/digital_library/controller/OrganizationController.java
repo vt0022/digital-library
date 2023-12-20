@@ -52,6 +52,25 @@ public class OrganizationController {
                 .build());
     }
 
+    @Operation(summary = "Tìm trường học",
+            description = "Trả về danh sách trường học tìm được")
+    @GetMapping("/search")
+    public ResponseEntity<?> searchOrganizations(@RequestParam(defaultValue = "0") int page,
+                                                 @RequestParam(defaultValue = "15") int size,
+                                                 @RequestParam String s) {
+        Sort sort = Sort.by(Sort.Direction.DESC, "updatedAt");
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<Organization> organizations = organizationService.searchOrganization(false, s, pageable);
+        Page<OrganizationResponseModel> organizationModels = organizations.map(this::convertToOrganizationModel);
+        return ResponseEntity.ok(ResponseModel.builder()
+                .status(200)
+                .error(false)
+                .message("Search organizations successfully")
+                .data(organizationModels)
+                .build());
+    }
+
     @Operation(summary = "Lấy danh sách trường học có thể xem được",
             description = "Trả về danh sách tất cả trường học chưa bị xoá")
     @GetMapping

@@ -61,60 +61,28 @@ public class AuthController {
         this.jwtService = jwtService;
     }
 
-    //    @PostMapping("/signup")
-//    public ResponseEntity<?> signup(@Valid @RequestBody SignupRequestModel signupRequest) {
-//        Optional<User> user = userService.findByEmail(signupRequest.getEmail());
-//        if (user.isPresent()) {
-//            throw new RuntimeException("Email already registered");
-//        }
-//
-//        // Organization
-//        Organization organization = organizationService.findById(signupRequest.getOrgId()).orElse(null);
-//        // Role
-//        Role role = roleService.findById(signupRequest.getRoleId()).orElse(null);
-//        User newUser = modelMapper.map(signupRequest, User.class);
-//        newUser.setOrganization(organization);
-//        newUser.setRole(role);
-//        newUser = userService.save(newUser);
-//
-//        UserResponseModel userResponseModel = modelMapper.map(newUser, UserResponseModel.class);
-//        ResponseModel signupResponse = new ResponseModel().builder()
-//                .status(200)
-//                .error(false)
-//                .message("Sign up successfully. Please log in.")
-//                .data(userResponseModel)
-//                .build();
-//        return ResponseEntity.ok(signupResponse);
-//    }
     @PostMapping("/signup")
     public ResponseEntity<?> signup(@Valid @RequestBody SignupRequestModel signupRequest) {
-        // Check if the email is already registered
-        Optional<User> existingUser = userService.findByEmail(signupRequest.getEmail());
-        if (existingUser.isPresent()) {
+
+        Optional<User> user = userService.findByEmail(signupRequest.getEmail());
+
+        if (user.isPresent()) {
             throw new RuntimeException("Email already registered");
         }
-        // Create a new User instance
-        User newUser = new User();
-        newUser.setFirstName(signupRequest.getFirstName());
-        newUser.setLastName(signupRequest.getLastName());
-        newUser.setPassword(signupRequest.getPassword());
-        newUser.setEmail(signupRequest.getEmail());
 
-
-        // Set organization and role if provided
-        if (signupRequest.getOrgId() != null) {
-            Organization organization = organizationService.findById(signupRequest.getOrgId()).orElse(null);
-            newUser.setOrganization(organization);
+        if (!signupRequest.getPassword().equals(signupRequest.getConfirmPassword())) {
+            throw new RuntimeException("Password not matched");
         }
 
-        if (signupRequest.getRoleId() != null) {
-            Role role = roleService.findById(signupRequest.getRoleId()).orElse(null);
-            newUser.setRole(role);
-        }
-
-        // Save the new user
+        // Organization
+        Organization organization = organizationService.findById(signupRequest.getOrgId()).orElseThrow(() -> new RuntimeException("Organization not found"));
+        // Role
+        Role role = roleService.findById(UUID.fromString("c0a801b9-8ac0-1a60-818a-c04a8f950035")).orElseThrow(() -> new RuntimeException("Role not found"));
+        User newUser = modelMapper.map(signupRequest, User.class);
+        newUser.setOrganization(organization);
+        newUser.setRole(role);
         newUser = userService.save(newUser);
-        // Map and return the response
+
         UserResponseModel userResponseModel = modelMapper.map(newUser, UserResponseModel.class);
         ResponseModel signupResponse = new ResponseModel().builder()
                 .status(200)
@@ -122,10 +90,8 @@ public class AuthController {
                 .message("Sign up successfully. Please log in.")
                 .data(userResponseModel)
                 .build();
-
         return ResponseEntity.ok(signupResponse);
     }
-
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequestModel loginRequestModel) {

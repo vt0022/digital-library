@@ -52,14 +52,104 @@ public class DocumentController {
         this.slugGenerator = slugGenerator;
     }
 
-    @Operation(summary = "Xem chi tiết một tài liệu")
+    @Operation(summary = "Xem chi tiết một tài liệu cho sinh viên, quản lý, admin")
     @GetMapping("/{slug}")
     public ResponseEntity<?> viewDocument(@PathVariable String slug) {
-        Document document = documentService.findBySlug(slug).orElseThrow(() -> new RuntimeException("Could not find document"));
+        User user = userService.findLoggedInUser().orElse(null);
+        Document document = documentService.findBySlug(slug).orElse(null);
+
+        if (document == null)
+            return ResponseEntity.ok(ResponseModel
+                    .builder()
+                    .status(404)
+                    .error(true)
+                    .message("Document not accessible")
+                    .build());
+
+        if (user.getRole().getRoleName().equals("ROLE_STUDENT")) {
+            if (user == document.getUserUploaded()) {
+                if (document.isDeleted() || document.getCategory().isDeleted() ||
+                        document.getField().isDeleted() || document.getOrganization().isDeleted()) {
+                    return ResponseEntity.ok(ResponseModel
+                            .builder()
+                            .status(404)
+                            .error(true)
+                            .message("Document not accessible")
+                            .build());
+                }
+            } else {
+                if ((document.isInternal() && document.getOrganization() != user.getOrganization()) ||
+                        document.isDeleted() || document.getVerifiedStatus() == 0 ||
+                        document.getVerifiedStatus() == -1 || document.getCategory().isDeleted() ||
+                        document.getField().isDeleted() || document.getOrganization().isDeleted()) {
+                    return ResponseEntity.ok(ResponseModel
+                            .builder()
+                            .status(404)
+                            .error(true)
+                            .message("Document not accessible")
+                            .build());
+                }
+            }
+        } else if (user.getRole().getRoleName().equals("ROLE_MANAGER")) {
+            if (user.getOrganization() != document.getUserUploaded().getOrganization()) {
+
+                return ResponseEntity.ok(ResponseModel
+                        .builder()
+                        .status(404)
+                        .error(true)
+                        .message("Document not accessible")
+                        .build());
+
+            }
+        }
+
         // Increase views
         document.setTotalView(document.getTotalView() + 1);
         documentService.save(document);
         DetailDocumentResponseModel documentResponseModel = modelMapper.map(document, DetailDocumentResponseModel.class);
+        int totalReviews = (int) document.getReviews().stream().count();
+        documentResponseModel.setTotalReviews(totalReviews);
+
+        return ResponseEntity.ok(ResponseModel
+                .builder()
+                .status(200)
+                .error(false)
+                .message("Get document successfully")
+                .data(documentResponseModel)
+                .build());
+    }
+
+    @Operation(summary = "Xem chi tiết một tài liệu cho khách")
+    @GetMapping("/{slug}/public")
+    public ResponseEntity<?> viewDocumentForGuest(@PathVariable String slug) {
+        Document document = documentService.findBySlug(slug).orElse(null);
+
+        if (document == null)
+            return ResponseEntity.ok(ResponseModel
+                    .builder()
+                    .status(404)
+                    .error(true)
+                    .message("Document not accessible")
+                    .build());
+
+
+        if (document.isDeleted() || document.isInternal() || document.getVerifiedStatus() == 0 ||
+                document.getVerifiedStatus() == -1 || document.getCategory().isDeleted() ||
+                document.getField().isDeleted() || document.getOrganization().isDeleted()) {
+            return ResponseEntity.ok(ResponseModel
+                    .builder()
+                    .status(404)
+                    .error(true)
+                    .message("Document not accessible")
+                    .build());
+        }
+
+        // Increase views
+        document.setTotalView(document.getTotalView() + 1);
+        documentService.save(document);
+        DetailDocumentResponseModel documentResponseModel = modelMapper.map(document, DetailDocumentResponseModel.class);
+        int totalReviews = (int) document.getReviews().stream().count();
+        documentResponseModel.setTotalReviews(totalReviews);
 
         return ResponseEntity.ok(ResponseModel
                 .builder()
@@ -209,6 +299,48 @@ public class DocumentController {
                 .build());
     }
 
+    @Operation(summary = "Xem danh sách tài liệu bản thân đã tải lên (sinh viên)",
+            description = "Trả về danh sách tất cả tài liệu mà bản thân sinh viên đã tải lên (có phân loại)")
+    @GetMapping("/myuploads")
+    public ResponseEntity<?> getMyUploads(@RequestParam(defaultValue = "0") int page,
+                                          @RequestParam(defaultValue = "20") int size,
+                                          @RequestParam(defaultValue = "updatedAt") String order,
+                                          @RequestParam(defaultValue = "all") String category,
+                                          @RequestParam(defaultValue = "all") String organization,
+                                          @RequestParam(defaultValue = "all") String field,
+                                          @RequestParam(defaultValue = "all") String status,
+                                          @RequestParam String s) {
+
+        // Order maybe one of these: docId, totalView
+        Sort sort = Sort.by(Sort.Direction.DESC, order);
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        // Find user info
+        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not found"));
+
+        Category foundCategory = category.equals("all") ?
+                null : categoryService.findBySlug(category).orElseThrow(() -> new RuntimeException("Category not found"));
+
+        Field foundField = field.equals("all") ?
+                null : fieldService.findBySlug(field).orElseThrow(() -> new RuntimeException("Field not found"));
+
+        Organization foundOrganization = organization.equals("all") ?
+                null : organizationService.findBySlug(organization).orElseThrow(() -> new RuntimeException("Organization not found"));
+
+        Integer verifiedStatus = status.equals("all") ?
+                null : Integer.valueOf(status);
+
+        Page<Document> documents = documentService.findUploadedDocuments(verifiedStatus, foundCategory, foundField, foundOrganization, user, s, pageable);
+        Page<DocumentResponseModel> documentModels = documents.map(this::convertToDocumentModel);
+        return ResponseEntity.ok(ResponseModel
+                .builder()
+                .status(200)
+                .error(false)
+                .message("Get my uploads successfully")
+                .data(documentModels)
+                .build());
+    }
+
     @Operation(summary = "Xem danh sách tài liệu bản thân đã tải lên",
             description = "Trả về danh sách tất cả tài liệu mà bản thân đã tải lên")
     @GetMapping("/mine")
@@ -254,6 +386,79 @@ public class DocumentController {
                 .status(200)
                 .error(false)
                 .message("Get uploaded documents successfully")
+                .data(documentModels)
+                .build());
+    }
+
+    @Operation(summary = "Tài liệu một người đã tải lên cho sinh viên xem",
+            description = "Trả về danh sách tất cả tài liệu một người đã tải lên cho sinh viên xem)")
+    @GetMapping("/view/user/{userId}")
+    public ResponseEntity<?> findDocumentsByUserForStudent(@PathVariable UUID userId,
+                                                           @RequestParam(defaultValue = "0") int page,
+                                                           @RequestParam(defaultValue = "20") int size,
+                                                           @RequestParam(defaultValue = "updatedAt") String order,
+                                                           @RequestParam(defaultValue = "all") String category,
+                                                           @RequestParam(defaultValue = "all") String field,
+                                                           @RequestParam String s) {
+
+
+        User user = userService.findLoggedInUser().orElse(null);
+
+        User userUploaded = userService.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Order maybe one of these: docId, totalView
+        Sort sort = Sort.by(Sort.Direction.DESC, order);
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Category foundCategory = category.equals("all") ?
+                null : categoryService.findBySlug(category).orElseThrow(() -> new RuntimeException("Category not found"));
+
+        Field foundField = field.equals("all") ?
+                null : fieldService.findBySlug(field).orElseThrow(() -> new RuntimeException("Field not found"));
+
+        Page<Document> documents = documentService.findUploadedDocumentsByUserForStudent(foundCategory, foundField, userUploaded.getOrganization(), userUploaded, s, pageable);
+
+        Page<DocumentResponseModel> documentModels = documents.map(this::convertToDocumentModel);
+        return ResponseEntity.ok(ResponseModel
+                .builder()
+                .status(200)
+                .error(false)
+                .message("Get documents by user successfully")
+                .data(documentModels)
+                .build());
+    }
+
+    @Operation(summary = "Tài liệu một người đã tải lên cho khách xem)",
+            description = "Trả về danh sách tất cả tài liệu một người đã tải lên cho khách xem)")
+    @GetMapping("/view/user/{userId}/public")
+    public ResponseEntity<?> findDocumentsByUserForGuest(@PathVariable UUID userId,
+                                                         @RequestParam(defaultValue = "0") int page,
+                                                         @RequestParam(defaultValue = "20") int size,
+                                                         @RequestParam(defaultValue = "updatedAt") String order,
+                                                         @RequestParam(defaultValue = "all") String category,
+                                                         @RequestParam(defaultValue = "all") String field,
+                                                         @RequestParam String s) {
+
+        // Order maybe one of these: docId, totalView
+        Sort sort = Sort.by(Sort.Direction.DESC, order);
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        User userUploaded = userService.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+
+        Category foundCategory = category.equals("all") ?
+                null : categoryService.findBySlug(category).orElseThrow(() -> new RuntimeException("Category not found"));
+
+        Field foundField = field.equals("all") ?
+                null : fieldService.findBySlug(field).orElseThrow(() -> new RuntimeException("Field not found"));
+
+        Page<Document> documents = documentService.findUploadedDocumentsByUserForGuest(foundCategory, foundField, userUploaded, s, pageable);
+
+        Page<DocumentResponseModel> documentModels = documents.map(this::convertToDocumentModel);
+        return ResponseEntity.ok(ResponseModel
+                .builder()
+                .status(200)
+                .error(false)
+                .message("Get documents by user successfully")
                 .data(documentModels)
                 .build());
     }
@@ -643,7 +848,7 @@ public class DocumentController {
 
         Sort sort = Sort.by(Sort.Direction.DESC, order);
         Pageable pageable = PageRequest.of(page, size, sort);
-        
+
         Organization foundOrganization = organization.equals("all") ?
                 null : organizationService.findBySlug(organization).orElseThrow(() -> new RuntimeException("Organization not found"));
 

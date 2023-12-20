@@ -1,5 +1,7 @@
 package com.major_project.digital_library.model.request_model;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,15 +17,19 @@ public class SignupRequestModel implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    @Email
+    private String email;
+
+    @Size(min = 8)
+    private String password;
+
+    @Size(min = 8)
+    private String confirmPassword;
+
     private String firstName;
 
     private String lastName;
 
-    private String password;
-
-    private String email;
-
     private UUID orgId;
 
-    private UUID roleId;
 }

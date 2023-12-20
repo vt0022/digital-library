@@ -6,6 +6,7 @@ import com.major_project.digital_library.service.IOrganizationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -53,5 +54,13 @@ public class OrganizationServiceImpl implements IOrganizationService {
     @Override
     public Page<Organization> findByIsDeleted(boolean isDeleted, Pageable pageable) {
         return organizationRepository.findByIsDeleted(isDeleted, pageable);
+    }
+
+    @Override
+    @Query("SELECT o FROM Organization o " +
+            "WHERE (o.isDeleted = :isDeleted OR :isDeleted IS NULL) " +
+            "AND LOWER(o.orgName) LIKE LOWER(CONCAT('%', :query, '%'))")
+    public Page<Organization> searchOrganization(boolean isDeleted, String query, Pageable pageable) {
+        return organizationRepository.searchOrganization(isDeleted, query, pageable);
     }
 }

@@ -1,7 +1,9 @@
 package com.major_project.digital_library.service;
 
+import com.major_project.digital_library.entity.Document;
 import com.major_project.digital_library.entity.Organization;
 import com.major_project.digital_library.entity.Review;
+import com.major_project.digital_library.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -16,4 +18,6 @@ public interface IReviewService {
     Optional<Review> findById(UUID uuid);
 
     void deleteById(UUID uuid);
+
+    boolean existsByUserAndDocument(User user, Document document);
 }
