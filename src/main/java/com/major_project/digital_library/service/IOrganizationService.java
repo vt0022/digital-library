@@ -26,5 +26,5 @@ public interface IOrganizationService {
     @Query("SELECT o FROM Organization o " +
             "WHERE (o.isDeleted = :isDeleted OR :isDeleted IS NULL) " +
             "AND LOWER(o.orgName) LIKE LOWER(CONCAT('%', :query, '%'))")
-    Page<Organization> searchOrganization(boolean isDeleted, String query, Pageable pageable);
+    Page<Organization> searchOrganizations(Boolean isDeleted, String query, Pageable pageable);
 }

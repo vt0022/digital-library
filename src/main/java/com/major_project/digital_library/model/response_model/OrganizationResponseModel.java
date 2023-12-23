@@ -28,6 +28,8 @@ public class OrganizationResponseModel implements Serializable {
 
     private boolean isDeleted;
 
+    private int totalDocuments;
+
 //    @JsonIgnore
 //    private List<UserResponseModel> users = new ArrayList<>();
 //

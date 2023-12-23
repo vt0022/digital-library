@@ -6,6 +6,7 @@ import com.major_project.digital_library.service.ICategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -53,5 +54,13 @@ public class CategoryServiceImpl implements ICategoryService {
     @Override
     public void deleteById(UUID uuid) {
         categoryRepository.deleteById(uuid);
+    }
+
+    @Override
+    @Query("SELECT c FROM Category  c " +
+            "WHERE (c.isDeleted = :isDeleted OR :isDeleted IS NULL) " +
+            "AND LOWER(c.categoryName) LIKE LOWER(CONCAT('%', :query, '%'))")
+    public Page<Category> searchCategories(Boolean isDeleted, String query, Pageable pageable) {
+        return categoryRepository.searchCategories(isDeleted, query, pageable);
     }
 }

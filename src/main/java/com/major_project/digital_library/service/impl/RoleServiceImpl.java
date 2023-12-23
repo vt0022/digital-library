@@ -27,4 +27,9 @@ public class RoleServiceImpl implements IRoleService {
     public <S extends Role> S save(S entity) {
         return roleRepository.save(entity);
     }
+
+    @Override
+    public Optional<Role> findByRoleName(String roleName) {
+        return roleRepository.findByRoleName(roleName);
+    }
 }

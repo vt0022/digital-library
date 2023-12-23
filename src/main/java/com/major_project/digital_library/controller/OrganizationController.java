@@ -39,11 +39,19 @@ public class OrganizationController {
             description = "Trả về danh sách tất cả trường học cho admin quản lý")
     @GetMapping("/all")
     public ResponseEntity<?> getAllOrganizations(@RequestParam(defaultValue = "0") int page,
-                                                 @RequestParam(defaultValue = "15") int size) {
+                                                 @RequestParam(defaultValue = "15") int size,
+                                                 @RequestParam(defaultValue = "all") String deleted,
+                                                 @RequestParam String s) {
         Sort sort = Sort.by(Sort.Direction.DESC, "updatedAt");
         Pageable pageable = PageRequest.of(page, size, sort);
-        Page<Organization> organizations = organizationService.findAll(pageable);
+
+        Boolean isDeleted = deleted.equals("all") ?
+                null : Boolean.valueOf(deleted);
+
+        Page<Organization> organizations = organizationService.searchOrganizations(isDeleted, s, pageable);
+
         Page<OrganizationResponseModel> organizationModels = organizations.map(this::convertToOrganizationModel);
+
         return ResponseEntity.ok(ResponseModel.builder()
                 .status(200)
                 .error(false)
@@ -61,8 +69,10 @@ public class OrganizationController {
         Sort sort = Sort.by(Sort.Direction.DESC, "updatedAt");
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        Page<Organization> organizations = organizationService.searchOrganization(false, s, pageable);
+        Page<Organization> organizations = organizationService.searchOrganizations(false, s, pageable);
+
         Page<OrganizationResponseModel> organizationModels = organizations.map(this::convertToOrganizationModel);
+
         return ResponseEntity.ok(ResponseModel.builder()
                 .status(200)
                 .error(false)
@@ -183,8 +193,9 @@ public class OrganizationController {
                 .build());
     }
 
-    private OrganizationResponseModel convertToOrganizationModel(Object o) {
-        OrganizationResponseModel organizationResponseModel = modelMapper.map(o, OrganizationResponseModel.class);
+    private OrganizationResponseModel convertToOrganizationModel(Organization organization) {
+        OrganizationResponseModel organizationResponseModel = modelMapper.map(organization, OrganizationResponseModel.class);
+        organizationResponseModel.setTotalDocuments(organization.getDocuments().size());
         return organizationResponseModel;
     }
 }

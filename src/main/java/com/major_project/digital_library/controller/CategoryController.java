@@ -9,6 +9,7 @@ import com.major_project.digital_library.util.SlugGenerator;
 import io.swagger.v3.oas.annotations.Operation;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -38,13 +39,19 @@ public class CategoryController {
             description = "Trả về danh sách tất cả danh mục cho admin quản lý")
     @GetMapping("/all")
     public ResponseEntity<?> getAllCategories(@RequestParam(defaultValue = "0") int page,
-                                              @RequestParam(defaultValue = "50") int size) {
+                                              @RequestParam(defaultValue = "20") int size,
+                                              @RequestParam(defaultValue = "all") String deleted,
+                                              @RequestParam String s) {
         Sort sort = Sort.by(Sort.Direction.DESC, "updatedAt");
         Pageable pageable = PageRequest.of(page, size, sort);
-        List<Category> categories = categoryService.findAll(pageable).getContent();
-        List<CategoryResponseModel> categoryResponseModels = categories.stream()
-                .map(category -> modelMapper.map(category, CategoryResponseModel.class))
-                .collect(Collectors.toList());
+
+        Boolean isDeleted = deleted.equals("all") ?
+                null : Boolean.valueOf(deleted);
+
+        Page<Category> categories = categoryService.searchCategories(isDeleted, s, pageable);
+
+        Page<CategoryResponseModel> categoryResponseModels = categories.map(this::convertToCategoryModel);
+
         return ResponseEntity.ok(ResponseModel.builder()
                 .status(200)
                 .error(false)
@@ -164,5 +171,11 @@ public class CategoryController {
                 .message("Activate category successfully")
                 .data(categoryResponseModel)
                 .build());
+    }
+
+    private CategoryResponseModel convertToCategoryModel(Category category) {
+        CategoryResponseModel categoryResponseModel = modelMapper.map(category, CategoryResponseModel.class);
+        categoryResponseModel.setTotalDocuments(category.getDocuments().size());
+        return categoryResponseModel;
     }
 }

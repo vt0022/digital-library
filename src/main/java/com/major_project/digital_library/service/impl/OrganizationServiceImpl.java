@@ -60,7 +60,7 @@ public class OrganizationServiceImpl implements IOrganizationService {
     @Query("SELECT o FROM Organization o " +
             "WHERE (o.isDeleted = :isDeleted OR :isDeleted IS NULL) " +
             "AND LOWER(o.orgName) LIKE LOWER(CONCAT('%', :query, '%'))")
-    public Page<Organization> searchOrganization(boolean isDeleted, String query, Pageable pageable) {
-        return organizationRepository.searchOrganization(isDeleted, query, pageable);
+    public Page<Organization> searchOrganizations(Boolean isDeleted, String query, Pageable pageable) {
+        return organizationRepository.searchOrganizations(isDeleted, query, pageable);
     }
 }

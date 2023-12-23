@@ -28,6 +28,8 @@ public class FieldResponseModel implements Serializable {
 
     private boolean isDeleted;
 
+    private int totalDocuments;
+
 //    @JsonIgnore
 //    private List<DocumentResponseModel> documents = new ArrayList<>();
 }

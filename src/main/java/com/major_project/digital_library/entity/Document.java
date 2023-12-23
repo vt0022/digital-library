@@ -56,9 +56,6 @@ public class Document {
 
     private boolean isInternal;
 
-    @Column(length = 100)
-    private String author;
-
     private String thumbnail;
 
     @ManyToOne

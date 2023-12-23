@@ -9,4 +9,6 @@ public interface IRoleService {
     Optional<Role> findById(UUID uuid);
 
     <S extends Role> S save(S entity);
+
+    Optional<Role> findByRoleName(String roleName);
 }

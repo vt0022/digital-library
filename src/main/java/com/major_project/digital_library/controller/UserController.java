@@ -100,12 +100,32 @@ public class UserController {
     }
 
     @Operation(summary = "Lấy danh sách tất cả người dùng")
-    @GetMapping
+    @GetMapping()
     public ResponseEntity<?> getAllUsers(@RequestParam(defaultValue = "0") int page,
-                                         @RequestParam(defaultValue = "20") int size) {
+                                         @RequestParam(defaultValue = "20") int size,
+                                         @RequestParam(defaultValue = "all") String deleted,
+                                         @RequestParam(defaultValue = "all") String gender,
+                                         @RequestParam(defaultValue = "all") String organization,
+                                         @RequestParam(defaultValue = "all") String role,
+                                         @RequestParam(defaultValue = "") String s) {
         Sort sort = Sort.by(Sort.Direction.DESC, "updatedAt");
         Pageable pageable = PageRequest.of(page, size, sort);
-        Page<User> users = userService.findAll(pageable);
+
+        Organization foundOrganization = organization.equals("all") ?
+                null : organizationService.findBySlug(organization).orElseThrow(() -> new RuntimeException("Organization not found"));
+
+        Role foundRole = role.equals("all") ?
+                null : roleService.findByRoleName(role).orElseThrow(() -> new RuntimeException("Role not found"));
+
+        Boolean isDeleted = deleted.equals("all") ?
+                null : Boolean.valueOf(deleted);
+
+        Integer userGender = gender.equals("all") ?
+                null : Integer.valueOf(gender);
+
+        String roleName = "";
+
+        Page<User> users = userService.searchUsers(isDeleted, userGender, foundOrganization, foundRole, roleName, s, pageable);
 
         Page<UserResponseModel> userModels = users.map(this::convertToUserModel);
         ;
@@ -118,26 +138,43 @@ public class UserController {
 
     }
 
-    @Operation(summary = "Lấy danh sách tất cả người dùng")
+    @Operation(summary = "Lấy danh sách tất cả người dùng của một tổ chức")
     @GetMapping("/organizations/{slug}")
     public ResponseEntity<?> getAllUsersByOrganization(@PathVariable String slug,
                                                        @RequestParam(defaultValue = "0") int page,
-                                                       @RequestParam(defaultValue = "20") int size) {
-        Organization organization = organizationService.findBySlug(slug).orElseThrow(() -> new RuntimeException("Organization not found"));
-
+                                                       @RequestParam(defaultValue = "20") int size,
+                                                       @RequestParam(defaultValue = "all") String deleted,
+                                                       @RequestParam(defaultValue = "all") String gender,
+                                                       @RequestParam(defaultValue = "all") String role,
+                                                       @RequestParam(defaultValue = "") String s) {
         Sort sort = Sort.by(Sort.Direction.DESC, "updatedAt");
         Pageable pageable = PageRequest.of(page, size, sort);
-        Page<User> users = userService.findByOrganization(organization, pageable);
+
+        Organization foundOrganization = organizationService.findBySlug(slug).orElseThrow(() -> new RuntimeException("Organization not found"));
+
+        Role foundRole = role.equals("all") ?
+                null : roleService.findByRoleName(role).orElseThrow(() -> new RuntimeException("Role not found"));
+
+        Boolean isDeleted = deleted.equals("all") ?
+                null : Boolean.valueOf(deleted);
+
+        Integer userGender = gender.equals("all") ?
+                null : Integer.valueOf(gender);
+
+        User currentUser = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not found"));
+
+        String roleName = currentUser.getRole().getRoleName().equals("ROLE_MANAGER") ? "ROLE_MANAGER" : "";
+
+        Page<User> users = userService.searchUsers(isDeleted, userGender, foundOrganization, foundRole, roleName, s, pageable);
 
         Page<UserResponseModel> userModels = users.map(this::convertToUserModel);
         ;
         return ResponseEntity.ok(ResponseModel.builder()
                 .status(200)
                 .error(false)
-                .message("Get all users successfully")
+                .message("Get all users of organization successfully")
                 .data(userModels)
                 .build());
-
     }
 
     @Operation(summary = "Lấy thông tin người dùng")
@@ -382,16 +419,36 @@ public class UserController {
     @Operation(summary = "Lấy danh sách người dùng mới trong tháng")
     @GetMapping("/latest")
     public ResponseEntity<?> getLatestUsers(@RequestParam(defaultValue = "0") int page,
-                                            @RequestParam(defaultValue = "5") int size) {
+                                            @RequestParam(defaultValue = "5") int size,
+                                            @RequestParam(defaultValue = "all") String deleted,
+                                            @RequestParam(defaultValue = "all") String gender,
+                                            @RequestParam(defaultValue = "all") String organization,
+                                            @RequestParam(defaultValue = "all") String role,
+                                            @RequestParam(defaultValue = "") String s) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<User> users = userService.findLatestUsers(pageable);
+
+        Organization foundOrganization = organization.equals("all") ?
+                null : organizationService.findBySlug(organization).orElseThrow(() -> new RuntimeException("Organization not found"));
+
+        Role foundRole = role.equals("all") ?
+                null : roleService.findByRoleName(role).orElseThrow(() -> new RuntimeException("Role not found"));
+
+        Boolean isDeleted = deleted.equals("all") ?
+                null : Boolean.valueOf(deleted);
+
+        Integer userGender = gender.equals("all") ?
+                null : Integer.valueOf(gender);
+
+        String roleName = "";
+
+        Page<User> users = userService.searchLatestUsers(isDeleted, userGender, foundOrganization, foundRole, roleName, s, pageable);
 
         Page<UserResponseModel> userModels = users.map(this::convertToUserModel);
         ;
         return ResponseEntity.ok(ResponseModel.builder()
                 .status(200)
                 .error(false)
-                .message("Get all users successfully")
+                .message("Get latest users successfully")
                 .data(userModels)
                 .build());
 
@@ -401,10 +458,29 @@ public class UserController {
     @GetMapping("/organizations/{slug}/latest")
     public ResponseEntity<?> getLatestUsersByOrganization(@PathVariable String slug,
                                                           @RequestParam(defaultValue = "0") int page,
-                                                          @RequestParam(defaultValue = "5") int size) {
-        Organization organization = organizationService.findBySlug(slug).orElseThrow(() -> new RuntimeException("Organization not found"));
+                                                          @RequestParam(defaultValue = "5") int size,
+                                                          @RequestParam(defaultValue = "all") String deleted,
+                                                          @RequestParam(defaultValue = "all") String gender,
+                                                          @RequestParam(defaultValue = "all") String role,
+                                                          @RequestParam(defaultValue = "") String s) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<User> users = userService.findLatestUsersByOrganization(organization, pageable);
+
+        Organization foundOrganization = organizationService.findBySlug(slug).orElseThrow(() -> new RuntimeException("Organization not found"));
+
+        Role foundRole = role.equals("all") ?
+                null : roleService.findByRoleName(role).orElseThrow(() -> new RuntimeException("Role not found"));
+
+        Boolean isDeleted = deleted.equals("all") ?
+                null : Boolean.valueOf(deleted);
+
+        Integer userGender = gender.equals("all") ?
+                null : Integer.valueOf(gender);
+
+        User currentUser = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not found"));
+
+        String roleName = currentUser.getRole().getRoleName().equals("ROLE_MANAGER") ? "ROLE_MANAGER" : "";
+
+        Page<User> users = userService.searchLatestUsers(isDeleted, userGender, foundOrganization, foundRole, roleName, s, pageable);
 
         Page<UserResponseModel> userModels = users.map(this::convertToUserModel);
         ;

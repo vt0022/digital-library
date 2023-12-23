@@ -9,6 +9,7 @@ import com.major_project.digital_library.util.SlugGenerator;
 import io.swagger.v3.oas.annotations.Operation;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -38,13 +39,19 @@ public class FieldController {
             description = "Trả về danh sách tất cả lĩnh vực cho admin quản lý")
     @GetMapping("/all")
     public ResponseEntity<?> getAllFields(@RequestParam(defaultValue = "0") int page,
-                                          @RequestParam(defaultValue = "50") int size) {
+                                          @RequestParam(defaultValue = "20") int size,
+                                          @RequestParam(defaultValue = "all") String deleted,
+                                          @RequestParam String s) {
         Sort sort = Sort.by(Sort.Direction.DESC, "updatedAt");
         Pageable pageable = PageRequest.of(page, size, sort);
-        List<Field> fields = fieldService.findAll(pageable).getContent();
-        List<FieldResponseModel> fieldResponseModels = fields.stream()
-                .map(field -> modelMapper.map(field, FieldResponseModel.class))
-                .collect(Collectors.toList());
+
+        Boolean isDeleted = deleted.equals("all") ?
+                null : Boolean.valueOf(deleted);
+
+        Page<Field> fields = fieldService.searchFields(isDeleted, s, pageable);
+
+        Page<FieldResponseModel> fieldResponseModels = fields.map(this::convertToFieldModel);
+
         return ResponseEntity.ok(ResponseModel.builder()
                 .status(200)
                 .error(false)
@@ -162,5 +169,11 @@ public class FieldController {
                 .message("Activate field successfully")
                 .data(fieldResponseModel)
                 .build());
+    }
+
+    private FieldResponseModel convertToFieldModel(Field field) {
+        FieldResponseModel fieldResponseModel = modelMapper.map(field, FieldResponseModel.class);
+        fieldResponseModel.setTotalDocuments(field.getDocuments().size());
+        return fieldResponseModel;
     }
 }

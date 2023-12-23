@@ -295,6 +295,25 @@ public class InitController {
                 .build());
     }
 
+    @PostMapping("/likes/refresh")
+    public ResponseEntity<?> refreshLikes() {
+        List<Document> documents = documentService.findAll();
+        for (Document doc : documents) {
+            int totalLikes = (int) doc.getFavorites()
+                    .stream()
+                    .filter(Favorite::isLiked)
+                    .count();
+            doc.setTotalFavorite(totalLikes);
+            documentService.save(doc);
+        }
+
+        return ResponseEntity.ok(ResponseModel.builder()
+                .status(200)
+                .error(false)
+                .message("Refresh likes successfully")
+                .build());
+    }
+
     @PostMapping("/reviews")
     public ResponseEntity<?> initReviews() throws IOException {
         FileInputStream file = new FileInputStream("D:/Nam4/Ky1/TieuLuanChuyenNganh/ReviewsInit.xlsx");

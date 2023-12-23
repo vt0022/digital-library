@@ -192,6 +192,21 @@ public class DocumentServiceImpl implements IDocumentService {
             "AND (d.category = :category OR :category IS NULL) " +
             "AND (d.field = :field OR :field IS NULL) " +
             "AND (d.organization = :organization OR :organization IS NULL) " +
+            "AND (LOWER(d.docName) LIKE LOWER(CONCAT('%', :query, '%')) " +
+            "OR LOWER(d.docIntroduction) LIKE LOWER(CONCAT('%', :query, '%'))) " +
+            "AND MONTH(d.uploadedAt) = MONTH(CURRENT_DATE) AND YEAR(d.uploadedAt) = YEAR(CURRENT_DATE)")
+    public Page<Document> searchLatestDocuments(Boolean isDeleted, Boolean isInternal, Integer verifiedStatus, Category category, Field field, Organization organization, String query, Pageable pageable) {
+        return documentRepository.searchLatestDocuments(isDeleted, isInternal, verifiedStatus, category, field, organization, query, pageable);
+    }
+
+    @Override
+    @Query("SELECT d FROM Document d " +
+            "WHERE (d.isDeleted = :isDeleted OR :isDeleted IS NULL) " +
+            "AND (d.isInternal = :isInternal OR :isInternal IS NULL) " +
+            "AND (d.verifiedStatus = :verifiedStatus OR :verifiedStatus IS NULL) " +
+            "AND (d.category = :category OR :category IS NULL) " +
+            "AND (d.field = :field OR :field IS NULL) " +
+            "AND (d.organization = :organization OR :organization IS NULL) " +
             "AND MONTH(d.uploadedAt) = MONTH(CURRENT_DATE) AND YEAR(d.uploadedAt) = YEAR(CURRENT_DATE)")
     public Page<Document> findLatestDocuments(Boolean isDeleted, Boolean isInternal, Integer verifiedStatus, Category category, Field field, Organization organization, Pageable pageable) {
         return documentRepository.findLatestDocuments(isDeleted, isInternal, verifiedStatus, category, field, organization, pageable);

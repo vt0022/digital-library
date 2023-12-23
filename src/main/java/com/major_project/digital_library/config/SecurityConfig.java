@@ -77,9 +77,11 @@ public class SecurityConfig {
                                 "/api/v1/auth/*").permitAll()
 
                         .requestMatchers(
-                                "/api/v1/init/*",
+                                "/api/v1/init/**",
                                 "/api/v1/users/pass/all").permitAll()
 
+                        .requestMatchers(
+                                "/api/v1/categories/search").permitAll()
                         .requestMatchers(
                                 "/api/v1/categories/all").hasAnyAuthority("ROLE_ADMIN", "ROLE_MANAGER")
                         .requestMatchers(HttpMethod.PUT,
@@ -95,6 +97,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST,
                                 "/api/v1/categories").hasAuthority("ROLE_ADMIN")
 
+                        .requestMatchers(
+                                "/api/v1/fields/search").permitAll()
                         .requestMatchers(
                                 "/api/v1/fields/all").hasAnyAuthority("ROLE_ADMIN", "ROLE_MANAGER")
                         .requestMatchers(HttpMethod.PUT,
@@ -177,6 +181,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET,
                                 "/api/v1/documents").hasAuthority("ROLE_ADMIN")
 
+                        .requestMatchers(
+                                "/api/v1/users/search").permitAll()
                         .requestMatchers(
                                 "/api/v1/users/password/reset").permitAll()
                         .requestMatchers(

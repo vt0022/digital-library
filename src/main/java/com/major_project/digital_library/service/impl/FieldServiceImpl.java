@@ -6,6 +6,7 @@ import com.major_project.digital_library.service.IFieldService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -53,5 +54,13 @@ public class FieldServiceImpl implements IFieldService {
     @Override
     public Page<Field> findByIsDeleted(boolean isDeleted, Pageable pageable) {
         return fieldRepository.findByIsDeleted(isDeleted, pageable);
+    }
+
+    @Override
+    @Query("SELECT f FROM Field f " +
+            "WHERE (f.isDeleted = :isDeleted OR :isDeleted IS NULL) " +
+            "AND LOWER(f.fieldName) LIKE LOWER(CONCAT('%', :query, '%'))")
+    public Page<Field> searchFields(Boolean isDeleted, String query, Pageable pageable) {
+        return fieldRepository.searchFields(isDeleted, query, pageable);
     }
 }
