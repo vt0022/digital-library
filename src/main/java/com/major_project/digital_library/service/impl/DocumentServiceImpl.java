@@ -292,4 +292,40 @@ public class DocumentServiceImpl implements IDocumentService {
     public long countByVerifiedStatusAndOrganization(int verifiedStatus, Organization organization) {
         return documentRepository.countByVerifiedStatusAndOrganization(verifiedStatus, organization);
     }
+
+    @Override
+    @Query("SELECT MONTH(d.uploadedAt) as month, COUNT(d) as count " +
+            "FROM Document d " +
+            "WHERE (d.organization = :organization OR :organization IS NULL) " +
+            "AND YEAR(d.uploadedAt) = YEAR(CURRENT_DATE) " +
+            "GROUP BY MONTH(d.uploadedAt)")
+    public List<Object[]> countDocumentsByMonth(Organization organization) {
+        return documentRepository.countDocumentsByMonth(organization);
+    }
+
+    @Override
+    @Query("SELECT d.category.categoryName as category, COUNT(d) as count " +
+            "FROM Document d " +
+            "WHERE (d.organization = :organization OR :organization IS NULL) " +
+            "GROUP BY d.category")
+    public List<Object[]> countDocumentsByCategory(Organization organization) {
+        return documentRepository.countDocumentsByCategory(organization);
+    }
+
+    @Override
+    @Query("SELECT d.field.fieldName as category, COUNT(d) as count " +
+            "FROM Document d " +
+            "WHERE (d.organization = :organization OR :organization IS NULL) " +
+            "GROUP BY d.field")
+    public List<Object[]> countDocumentsByField(Organization organization) {
+        return documentRepository.countDocumentsByField(organization);
+    }
+
+    @Override
+    @Query("SELECT d.organization.orgName as organization, COUNT(d) as count " +
+            "FROM Document d " +
+            "GROUP BY d.organization")
+    public List<Object[]> countDocumentsByOrganization() {
+        return documentRepository.countDocumentsByOrganization();
+    }
 }

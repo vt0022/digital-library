@@ -87,6 +87,9 @@ public class Document {
     @OneToMany(mappedBy = "document", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Review> reviews = new ArrayList<>();
 
+    @OneToMany(mappedBy = "document", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Recency> recencies = new ArrayList<>();
+
     @PrePersist
     protected void onCreate() {
         uploadedAt = new Timestamp(System.currentTimeMillis());

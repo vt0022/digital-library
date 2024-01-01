@@ -143,8 +143,10 @@ public class SecurityConfig {
                                 "/api/v1/documents/*/review",
                                 "/api/v1/documents/*/saved",
                                 "/api/v1/documents/*/save",
+                                "/api/v1/documents/*/recent",
                                 "/api/v1/documents/saved",
                                 "/api/v1/documents/liked",
+                                "/api/v1/documents/recent",
                                 "/api/v1/documents/students/search",
                                 "/api/v1/documents/students",
                                 "/api/v1/documents/myuploads").hasAuthority("ROLE_STUDENT")

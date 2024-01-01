@@ -41,12 +41,13 @@ public class InitController {
     private final ISaveService saveService;
     private final IReviewService reviewService;
     private final IFavoriteService favoriteService;
+    private final IRecencyService recencyService;
     private final GoogleDriveUpload googleDriveUpload;
     private final ModelMapper modelMapper;
     private final SlugGenerator slugGenerator;
 
     @Autowired
-    public InitController(IUserService userService, IDocumentService documentService, IFieldService fieldService, ICategoryService categoryService, IOrganizationService organizationService, IRoleService roleService, ISaveService saveService, IReviewService reviewService, IFavoriteService favoriteService, GoogleDriveUpload googleDriveUpload, ModelMapper modelMapper, SlugGenerator slugGenerator) {
+    public InitController(IUserService userService, IDocumentService documentService, IFieldService fieldService, ICategoryService categoryService, IOrganizationService organizationService, IRoleService roleService, ISaveService saveService, IReviewService reviewService, IFavoriteService favoriteService, IRecencyService recencyService, GoogleDriveUpload googleDriveUpload, ModelMapper modelMapper, SlugGenerator slugGenerator) {
         this.userService = userService;
         this.documentService = documentService;
         this.fieldService = fieldService;
@@ -56,6 +57,7 @@ public class InitController {
         this.saveService = saveService;
         this.reviewService = reviewService;
         this.favoriteService = favoriteService;
+        this.recencyService = recencyService;
         this.googleDriveUpload = googleDriveUpload;
         this.modelMapper = modelMapper;
         this.slugGenerator = slugGenerator;
@@ -410,6 +412,55 @@ public class InitController {
                 .status(200)
                 .error(false)
                 .message("Create likes successfully")
+                .build());
+    }
+
+    @PostMapping("/recencies")
+    public ResponseEntity<?> initRecencies() throws IOException {
+        FileInputStream file = new FileInputStream("D:/Nam4/Ky1/TieuLuanChuyenNganh/RecenciesInit.xlsx");
+        Workbook workbook = new XSSFWorkbook(file);
+        Sheet sheet = workbook.getSheetAt(0);
+
+        // Duyệt qua các hàng trong sheet
+        for (Row row : sheet) {
+            if (row.getRowNum() == 0) {
+                continue;
+            }
+            Cell userCell = row.getCell(0);
+            Cell docCell = row.getCell(1);
+            Cell accessCell = row.getCell(2);
+
+            DataFormatter formatter = new DataFormatter();
+
+            if (userCell != null) {
+                UUID userId = FastUuidParser.fromString(formatter.formatCellValue(userCell));
+                UUID docId = FastUuidParser.fromString(formatter.formatCellValue(docCell));
+                Timestamp accessedAt = Timestamp.valueOf(formatter.formatCellValue(accessCell));
+
+                Recency recency = new Recency();
+                try {
+
+                    User user = userService.findById(userId).orElse(null);
+                    Document document = documentService.findById(docId).orElse(null);
+
+                    recency.setDocument(document);
+                    recency.setAccessedAt(accessedAt);
+                    recency.setUser(user);
+
+                    recencyService.save(recency);
+                } catch (Exception e) {
+                    System.out.println(e);
+                }
+            }
+        }
+
+        workbook.close();
+        file.close();
+
+        return ResponseEntity.ok(ResponseModel.builder()
+                .status(200)
+                .error(false)
+                .message("Create recencies successfully")
                 .build());
     }
 

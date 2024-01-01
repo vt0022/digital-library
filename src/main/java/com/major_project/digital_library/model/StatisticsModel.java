@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Map;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -15,4 +17,14 @@ public class StatisticsModel {
     private int totalUsers;
 
     private int totalPendingDocuments;
+
+    Map<Integer, Long> documentsByMonth;
+
+    Map<Integer, Long> usersByMonth;
+
+    Map<String, Long> documentsByCategory;
+
+    Map<String, Long> documentsByField;
+
+    Map<String, Long> documentsByOrganization;
 }

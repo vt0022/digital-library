@@ -11,7 +11,6 @@ import java.util.Optional;
 public interface IFavoriteService {
     <S extends Favorite> S save(S entity);
 
-
     boolean existsByUserAndDocument(User user, Document document);
 
     Optional<Favorite> findByUserAndDocument(User user, Document document);

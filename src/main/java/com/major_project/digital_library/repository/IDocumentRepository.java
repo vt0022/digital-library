@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -256,4 +257,27 @@ public interface IDocumentRepository extends JpaRepository<Document, UUID> {
 
     long countByOrganization(Organization organization);
 
+    @Query("SELECT MONTH(d.uploadedAt) as month, COUNT(d) as count " +
+            "FROM Document d " +
+            "WHERE (d.organization = :organization OR :organization IS NULL) " +
+            "AND YEAR(d.uploadedAt) = YEAR(CURRENT_DATE) " +
+            "GROUP BY MONTH(d.uploadedAt)")
+    List<Object[]> countDocumentsByMonth(Organization organization);
+
+    @Query("SELECT d.category.categoryName as category, COUNT(d) as count " +
+            "FROM Document d " +
+            "WHERE (d.organization = :organization OR :organization IS NULL) " +
+            "GROUP BY d.category")
+    List<Object[]> countDocumentsByCategory(Organization organization);
+
+    @Query("SELECT d.field.fieldName as category, COUNT(d) as count " +
+            "FROM Document d " +
+            "WHERE (d.organization = :organization OR :organization IS NULL) " +
+            "GROUP BY d.field")
+    List<Object[]> countDocumentsByField(Organization organization);
+
+    @Query("SELECT d.organization.orgName as organization, COUNT(d) as count " +
+            "FROM Document d " +
+            "GROUP BY d.organization")
+    List<Object[]> countDocumentsByOrganization();
 }
