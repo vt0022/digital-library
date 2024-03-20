@@ -5,19 +5,13 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.io.Serial;
-import java.io.Serializable;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 
 @Entity
-@IdClass(UserDocument.class)
-public class Favorite implements Serializable {
-    @Serial
-    private static final long serialVersionUID = 1L;
-
+@IdClass(UserReply.class)
+public class ReplyLike {
     @Id
     @ManyToOne
     @JoinColumn(name = "userId")
@@ -25,9 +19,6 @@ public class Favorite implements Serializable {
 
     @Id
     @ManyToOne
-    @JoinColumn(name = "docId")
-    private Document document;
-
-    private boolean isLiked;
-    
+    @JoinColumn(name = "replyId")
+    private Reply reply;
 }

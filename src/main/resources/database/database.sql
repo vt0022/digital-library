@@ -63,7 +63,7 @@ create table if not exists user
     email         varchar(50)  not null,
     first_name    varchar(50)  null,
     gender        int          not null,
-    image         varchar(255) null,
+    postImage         varchar(255) null,
     is_deleted    bit          not null,
     last_name     varchar(50)  null,
     password      varchar(255) not null,
@@ -118,7 +118,7 @@ create table if not exists document
     foreign key (category_id) references category (category_id)
     );
 
-create table if not exists favorite
+create table if not exists documentLike
 (
     doc_id   binary(16) not null,
     user_id  binary(16) not null,
@@ -241,7 +241,7 @@ values  (0xC0A801B98AC01A60818AC04A8FB50038, 'ROLE_ADMIN'),
         (0xC0A801B98AC01A60818AC04A8FA60037, 'ROLE_MANAGER'),
         (0xC0A801B98AC01A60818AC04A8F950035, 'ROLE_STUDENT');
 
-insert into digital_library.user (user_id, created_at, date_of_birth, email, first_name, gender, image, is_deleted, last_name, password, phone, updated_at, org_id, role_id)
+insert into digital_library.user (user_id, created_at, date_of_birth, email, first_name, gender, postImage, is_deleted, last_name, password, phone, updated_at, org_id, role_id)
 values  (0xAC1C20018C5D19A7818C5EF63A840122, '2023-12-12 23:57:24.356000', '1995-02-12 00:00:00.000000', 'thanhminh1203@gmail.com', 'Thành Minh', 0, null, false, 'Lê', '$2a$10$THPrBzBUMyI2ospNwy4nleGkuG3CiDNpVbrN8Tdq8jylXvnGWouhi', '0987887941', '2023-12-13 12:33:29.004000', null, 0xC0A801B98AC01A60818AC04A8FB50038),
         (0xAC1C20018C5D19A7818C5EF63B1F0123, '2023-12-12 23:57:24.511000', '1992-06-05 00:00:00.000000', 'anhtu0506@gmail.com', 'Anh Tú', 0, null, false, 'Văn', '$2a$10$BGBoIoU5gCBdBTNU62prQOoA.vGqwXljwqnaaOeNrzc2ZecFxaI1m', '0386548411', '2023-12-13 12:33:29.157000', null, 0xC0A801B98AC01A60818AC04A8FB50038),
         (0xAC1C20018C5D19A7818C5EF63BE70124, '2023-12-12 23:57:24.711000', '1997-11-17 00:00:00.000000', 'ngocngan1711@gmail.com', 'Ngọc Ngân', 1, null, false, 'Trần Lê', '$2a$10$GD8/tJEJLXktd61ew0ynl.5dJASdzCPQ8gknAHfyV8L1W3yLZ38dK', '0123456789', '2023-12-13 12:33:29.296000', null, 0xC0A801B98AC01A60818AC04A8FB50038),
@@ -780,7 +780,7 @@ Vẽ kỹ thuật: Vẽ kỹ thuật đòi hỏi sự chính xác cao, nét vẽ
         (0xC0A801B98AC41577818AC509C1150059, 'Đặc điểm: + Chất màu có dạng bột hòa tan được trong nước (các dạng bột này không gây phản ứng hóa học nữa). Khi sử dụng cần giữ được ưu điểm của màu bột là độ xốp. + Là một trong những vật liệu cơ bản nhất của hội họa vì từ bột màu, người ta có thể tạo ra sơn dầu, màu nước và một số loại màu vẽ khác. + Trộn với keo dính...', 'Giáo trình vẽ mỹ thuật Vẽ màu', 'https://drive.google.com/uc?id=1K0O-MzTErk4x1Dn9iON27t8U0AFjyvkU&export=download', false, false, 'giao-trinh-ve-my-thuat-ve-mau-850055f2e6', 'https://drive.google.com/uc?id=1SfLOm5N1NnKuYOlsGIYLsYJ8xMVyOGda', 1, 93, '2023-12-13 12:22:56.767000', '2023-09-24 09:34:25.429000', 'https://drive.google.com/uc?id=1K0O-MzTErk4x1Dn9iON27t8U0AFjyvkU', 0xC0A801B98AC01A60818AC04A8D6F0000, 0xC0A801B98AC01A60818AC04A8E640011, 0xC0A801B98AC01A60818AC04A8EA90019, 0xC0A801B98AC51120818AC531341E0001, 0xC0A801B98AC51120818AC531378C0008, 1, null, null, 0),
         (0xC0A801B98AC41577818AC509E35D005A, 'Âm nhạc là nghệ thuật lấy âm thanh làm phương tiện biểu hiện, khắc họa cuộc sống và thể hiện tư tưởng tình cảm của con người. Âm nhạc có tính trừu tượng nó không thể hiện đầy đủ các chi tiết thực thi mô tả chung chung nhưng tạo cho ta cảm giác, hứng thú mạnh mẽ và sự liên tưởng phong phú.', 'Giáo trình âm nhạc cơ bản', 'https://drive.google.com/uc?id=1JHHxIIKSPYZNsh6CR1wG8YDbQ6HzlZa3&export=download', false, false, 'giao-trinh-am-nhac-co-ban-5e64343a6f', 'https://drive.google.com/uc?id=18c2QzrZPN8m8LDpg0bDl665uXskuV-RG', 2, 175, '2023-12-14 09:59:05.728000', '2023-09-24 09:34:34.205000', 'https://drive.google.com/uc?id=1JHHxIIKSPYZNsh6CR1wG8YDbQ6HzlZa3', 0xC0A801B98AC01A60818AC04A8D6F0000, 0xC0A801B98AC01A60818AC04A8E640011, 0xC0A801B98AC01A60818AC04A8EA90019, 0xC0A801B98AC51120818AC531341E0001, 0xC0A801B98AC51120818AC531378C0008, 1, null, null, 4);
 
-insert into digital_library.favorite (doc_id, user_id, is_liked)
+insert into digital_library.documentLike (doc_id, user_id, is_liked)
 values  (0xAC1C20018C2519D8818C2651D60E0000, 0xC0A801B98AC51120818AC53136950006, true),
         (0xAC1C20018C2519D8818C2651D60E0000, 0xC0A801B98AC51120818AC5313AEA000F, true),
         (0xAC1C20018C2519D8818C2651D60E0000, 0xC0A801B98AC51120818AC5313BE80011, true),

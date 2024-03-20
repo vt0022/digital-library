@@ -1,5 +1,5 @@
 ACCESS_TOKEN_LIFE: 86400000
-API_KEY: VanThuan.HoangAnh.dmFudGh1YW5ob2FuZ2FuaDIwMjM=
+API_KEY: Vthgn.dmFudGh1YW5ob2FuZ2FuaDIwMjM=
 REFRESH_TOKEN_LIFE: 86400000
 EMAIL_SENDER: thuanmyhoa7a2@gmail.com
 
@@ -10,10 +10,10 @@ server:
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    password: eBE1a1e26g6c62A1D-ge2EcF3b6Dca-e
-    url: jdbc:mysql://viaduct.proxy.rlwy.net:25888/digital_library
-    #    password: 01669871043
-    #    url: jdbc:mysql://localhost:3306/digital_library
+    #    password: eBE1a1e26g6c62A1D-ge2EcF3b6Dca-e
+    #    url: jdbc:mysql://viaduct.proxy.rlwy.net:25888/digital_library
+    password: 01669871043
+    url: jdbc:mysql://localhost:3306/digital_library
     username: root
   devtools:
     restart:
@@ -28,6 +28,8 @@ spring:
         dialect: org.hibernate.dialect.MySQLDialect
         format_sql: true
         globally_quoted_identifiers: true
+        globally_quoted_identifiers_skip_column_definitions: true
+
       show_sql: true
   servlet:
     multipart:

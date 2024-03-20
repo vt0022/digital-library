@@ -40,14 +40,14 @@ public class InitController {
     private final IRoleService roleService;
     private final ISaveService saveService;
     private final IReviewService reviewService;
-    private final IFavoriteService favoriteService;
+    private final IDocumentLikeService favoriteService;
     private final IRecencyService recencyService;
     private final GoogleDriveUpload googleDriveUpload;
     private final ModelMapper modelMapper;
     private final SlugGenerator slugGenerator;
 
     @Autowired
-    public InitController(IUserService userService, IDocumentService documentService, IFieldService fieldService, ICategoryService categoryService, IOrganizationService organizationService, IRoleService roleService, ISaveService saveService, IReviewService reviewService, IFavoriteService favoriteService, IRecencyService recencyService, GoogleDriveUpload googleDriveUpload, ModelMapper modelMapper, SlugGenerator slugGenerator) {
+    public InitController(IUserService userService, IDocumentService documentService, IFieldService fieldService, ICategoryService categoryService, IOrganizationService organizationService, IRoleService roleService, ISaveService saveService, IReviewService reviewService, IDocumentLikeService favoriteService, IRecencyService recencyService, GoogleDriveUpload googleDriveUpload, ModelMapper modelMapper, SlugGenerator slugGenerator) {
         this.userService = userService;
         this.documentService = documentService;
         this.fieldService = fieldService;
@@ -270,17 +270,16 @@ public class InitController {
                 UUID userId = FastUuidParser.fromString(formatter.formatCellValue(userCell));
                 UUID docId = FastUuidParser.fromString(formatter.formatCellValue(docCell));
 
-                Favorite favorite = new Favorite();
+                DocumentLike documentLike = new DocumentLike();
                 try {
 
                     User user = userService.findById(userId).orElse(null);
                     Document document = documentService.findById(docId).orElse(null);
 
-                    favorite.setLiked(true);
-                    favorite.setDocument(document);
-                    favorite.setUser(user);
+                    documentLike.setDocument(document);
+                    documentLike.setUser(user);
 
-                    favoriteService.save(favorite);
+                    favoriteService.save(documentLike);
                 } catch (Exception e) {
                     System.out.println(e);
                 }
@@ -301,10 +300,7 @@ public class InitController {
     public ResponseEntity<?> refreshLikes() {
         List<Document> documents = documentService.findAll();
         for (Document doc : documents) {
-            int totalLikes = (int) doc.getFavorites()
-                    .stream()
-                    .filter(Favorite::isLiked)
-                    .count();
+            int totalLikes = doc.getDocumentLikes().size();
             doc.setTotalFavorite(totalLikes);
             documentService.save(doc);
         }
@@ -471,7 +467,7 @@ public class InitController {
         List<Document> updatedDocuments = new ArrayList<>();
 
         for (Document document : documents) {
-            int totalLikes = document.getFavorites().size();
+            int totalLikes = document.getDocumentLikes().size();
             List<Review> reviewList = document.getReviews();
             int totalRating = 0;
             for (Review review : reviewList) totalRating += review.getStar();

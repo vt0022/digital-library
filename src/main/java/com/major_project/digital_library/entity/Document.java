@@ -82,7 +82,7 @@ public class Document {
     private List<Save> saves = new ArrayList<>();
 
     @OneToMany(mappedBy = "document", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Favorite> favorites = new ArrayList<>();
+    private List<DocumentLike> documentLikes = new ArrayList<>();
 
     @OneToMany(mappedBy = "document", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Review> reviews = new ArrayList<>();
@@ -96,10 +96,10 @@ public class Document {
         updatedAt = new Timestamp(System.currentTimeMillis());
     }
 
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = new Timestamp(System.currentTimeMillis());
-    }
+//    @PreUpdate
+//    protected void onUpdate() {
+//        updatedAt = new Timestamp(System.currentTimeMillis());
+//    }
 
     @PreRemove
     protected void onRemove() {

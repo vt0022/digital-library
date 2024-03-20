@@ -1,6 +1,9 @@
 package com.major_project.digital_library.controller;
 
-import com.major_project.digital_library.entity.*;
+import com.major_project.digital_library.entity.Document;
+import com.major_project.digital_library.entity.Organization;
+import com.major_project.digital_library.entity.Role;
+import com.major_project.digital_library.entity.User;
 import com.major_project.digital_library.exception_handler.exception.ModelNotFoundException;
 import com.major_project.digital_library.model.FileModel;
 import com.major_project.digital_library.model.request_model.PasswordRequestModel;
@@ -189,9 +192,13 @@ public class UserController {
                 .mapToLong(Document::getTotalView)
                 .sum();
         int totalLikes = (int) user.getUploadedDocuments().stream()
-                .flatMap(document -> document.getFavorites().stream()) // Chuyển từng list like của mỗi document thành một stream
-                .filter(Favorite::isLiked) // Lọc những like có trạng thái là true
-                .count(); // Đếm số lượng lượt like có trạng thái là true
+                .flatMap(document -> document.getDocumentLikes().stream())
+                .count();
+
+//        int totalLikes = (int) user.getUploadedDocuments().stream()
+//                .flatMap(document -> document.getDocumentLikes().stream()) // Chuyển từng list like của mỗi document thành một stream
+//                .filter(DocumentLike::isLiked) // Lọc những like có trạng thái là true
+//                .count(); // Đếm số lượng lượt like có trạng thái là true
 
         userResponseModel.setTotalDocuments(totalDocuments);
         userResponseModel.setTotalViews(totalViews);
@@ -228,7 +235,7 @@ public class UserController {
             throw new RuntimeException("Password not match");
         }
 
-        FileModel gd = googleDriveUpload.uploadImage(file, stringHandler.getEmailUsername(newUser.getEmail()), null);
+        FileModel gd = googleDriveUpload.uploadImage(file, stringHandler.getEmailUsername(newUser.getEmail()), null, "avatar");
         newUser.setImage(gd.getViewUrl());
 
         newUser = userService.save(newUser);
@@ -292,10 +299,10 @@ public class UserController {
 
         if (file != null) {
             if (user.getImage() != null) {
-                FileModel gd = googleDriveUpload.uploadImage(file, stringHandler.getEmailUsername(user.getEmail()), stringHandler.getFileId(user.getImage()));
+                FileModel gd = googleDriveUpload.uploadImage(file, stringHandler.getEmailUsername(user.getEmail()), stringHandler.getFileId(user.getImage()), "avatar");
                 user.setImage(gd.getViewUrl());
             } else {
-                FileModel gd = googleDriveUpload.uploadImage(file, stringHandler.getEmailUsername(user.getEmail()), null);
+                FileModel gd = googleDriveUpload.uploadImage(file, stringHandler.getEmailUsername(user.getEmail()), null, "avatar");
                 user.setImage(gd.getViewUrl());
             }
         }
@@ -349,9 +356,8 @@ public class UserController {
                 .mapToLong(Document::getTotalView)
                 .sum();
         int totalLikes = (int) user.getUploadedDocuments().stream()
-                .flatMap(document -> document.getFavorites().stream()) // Chuyển từng list like của mỗi document thành một stream
-                .filter(Favorite::isLiked) // Lọc những like có trạng thái là true
-                .count(); // Đếm số lượng lượt like có trạng thái là true
+                .flatMap(document -> document.getDocumentLikes().stream())
+                .count();
 
         userResponseModel.setTotalDocuments(totalDocuments);
         userResponseModel.setTotalViews(totalViews);
@@ -399,10 +405,10 @@ public class UserController {
         User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not found"));
 
         if (user.getImage() != null) {
-            FileModel gd = googleDriveUpload.uploadImage(file, stringHandler.getEmailUsername(user.getEmail()), stringHandler.getFileId(user.getImage()));
+            FileModel gd = googleDriveUpload.uploadImage(file, stringHandler.getEmailUsername(user.getEmail()), stringHandler.getFileId(user.getImage()), "avatar");
             user.setImage(gd.getViewUrl());
         } else {
-            FileModel gd = googleDriveUpload.uploadImage(file, stringHandler.getEmailUsername(user.getEmail()), null);
+            FileModel gd = googleDriveUpload.uploadImage(file, stringHandler.getEmailUsername(user.getEmail()), null, "avatar");
             user.setImage(gd.getViewUrl());
         }
 

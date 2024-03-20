@@ -64,7 +64,7 @@ public class CategoryController {
             description = "Trả về danh sách tất cả danh mục chưa bị xoá")
     @GetMapping
     public ResponseEntity<?> getAvailableCategories(@RequestParam(defaultValue = "0") int page,
-                                                    @RequestParam(defaultValue = "20") int size) {
+                                                    @RequestParam(defaultValue = "100") int size) {
         Pageable pageable = PageRequest.of(page, size);
         List<Category> categories = categoryService.findByIsDeleted(false, pageable).getContent();
         List<CategoryResponseModel> categoryResponseModels = categories.stream()

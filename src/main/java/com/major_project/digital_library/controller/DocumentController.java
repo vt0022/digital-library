@@ -24,6 +24,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.sql.Timestamp;
 import java.util.UUID;
 
 @RestController
@@ -687,6 +688,7 @@ public class DocumentController {
             document.setVerifiedStatus(1);
             document.setUserVerified(user);
         }
+        document.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
         // Save
         document = documentService.save(document);
         // Map to model to return

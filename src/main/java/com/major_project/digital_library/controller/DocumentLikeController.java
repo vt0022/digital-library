@@ -1,12 +1,12 @@
 package com.major_project.digital_library.controller;
 
 import com.major_project.digital_library.entity.Document;
-import com.major_project.digital_library.entity.Favorite;
+import com.major_project.digital_library.entity.DocumentLike;
 import com.major_project.digital_library.entity.User;
 import com.major_project.digital_library.model.response_model.DocumentResponseModel;
 import com.major_project.digital_library.model.response_model.ResponseModel;
+import com.major_project.digital_library.service.IDocumentLikeService;
 import com.major_project.digital_library.service.IDocumentService;
-import com.major_project.digital_library.service.IFavoriteService;
 import com.major_project.digital_library.service.IUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import org.modelmapper.ModelMapper;
@@ -19,19 +19,20 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1")
-public class FavoriteController {
-    private final IFavoriteService favoriteService;
+public class DocumentLikeController {
+    private final IDocumentLikeService documentLikeService;
     private final IUserService userService;
     private final IDocumentService documentService;
     private final ModelMapper modelMapper;
 
     @Autowired
-    public FavoriteController(IFavoriteService favoriteService, IUserService userService, IDocumentService documentService, ModelMapper modelMapper) {
-        this.favoriteService = favoriteService;
+    public DocumentLikeController(IDocumentLikeService documentLikeService, IUserService userService, IDocumentService documentService, ModelMapper modelMapper) {
+        this.documentLikeService = documentLikeService;
         this.userService = userService;
         this.documentService = documentService;
         this.modelMapper = modelMapper;
@@ -46,36 +47,23 @@ public class FavoriteController {
 
         Document document = documentService.findBySlug(slug).orElseThrow(() -> new RuntimeException("Document not found"));
 
-        int totalFavorite = (int) document.getFavorites()
-                .stream()
-                .filter(favorite -> favorite.isLiked())
-                .count();
-        ;
+        int totalFavorite = document.getDocumentLikes().size();
 
         String message = "";
-        // Đã từng thích hoặc bỏ thích
-        if (favoriteService.existsByUserAndDocument(user, document)) {
-            Favorite favorite = favoriteService.findByUserAndDocument(user, document).orElseThrow(() -> new RuntimeException("Error while processing"));
-            if (favorite.isLiked()) {
-                // Bỏ thích
-                document.setTotalFavorite(totalFavorite - 1);
-                favorite.setLiked(false);
-                message = "Unlike document successfully";
-            } else {
-                document.setTotalFavorite(totalFavorite + 1);
-                favorite.setLiked(true);
-                message = "Like document successfully";
-            }
-            favoriteService.save(favorite);
-        } else { // Thích
+
+        Optional<DocumentLike> documentLike = documentLikeService.findByUserAndDocument(user, document);
+        if (documentLike.isPresent()) {
+            // Bỏ thích
+            document.setTotalFavorite(totalFavorite - 1);
+            documentLikeService.delete(documentLike.get());
+            message = "Unlike document successfully";
+        } else {
             document.setTotalFavorite(totalFavorite + 1);
-            Favorite favorite = new Favorite();
-            favorite.setDocument(document);
-            favorite.setUser(user);
-            favorite.setLiked(true);
-            favoriteService.save(favorite);
+            DocumentLike newDocumentLike = new DocumentLike(user, document);
+            documentLikeService.save(newDocumentLike);
             message = "Like document successfully";
         }
+        documentService.save(document);
 
         return ResponseEntity.ok(ResponseModel.builder()
                 .status(200)
@@ -94,18 +82,11 @@ public class FavoriteController {
         Document document = documentService.findBySlug(slug).orElseThrow(() -> new RuntimeException("Document not found"));
 
         String message = "";
-        // Đã từng thích hoặc bỏ thích
-        if (favoriteService.existsByUserAndDocument(user, document)) {
-            Favorite favorite = favoriteService.findByUserAndDocument(user, document).orElseThrow(() -> new RuntimeException("Error while processing"));
-            if (favorite.isLiked()) {
-                message = "Liked";
-            } else {
-                document.setTotalFavorite(document.getTotalFavorite() + 1);
-                favorite.setLiked(true);
-                message = "Not liked";
-            }
-            favoriteService.save(favorite);
-        } else { // Thích
+
+        Optional<DocumentLike> documentLike = documentLikeService.findByUserAndDocument(user, document);
+        if (documentLike.isPresent()) {
+            message = "Liked";
+        } else {
             message = "Not liked";
         }
 
@@ -128,11 +109,11 @@ public class FavoriteController {
         // Find user info
         User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not found"));
 
-        Page<Favorite> favorites = favoriteService.findByUserAndIsLiked(user, true, pageable);
+//        Page<DocumentLike> documentLikes = documentLikeService.findByUserAndIsLiked(user, true, pageable);
         // Tìm theo người dùng với điều kiện tài liệu đó chưa xoá, công khai và được chia sẻ
-        List<Document> documents = favorites.getContent()
+        List<Document> documents = user.getDocumentLikes()
                 .stream()
-                .map(Favorite::getDocument)
+                .map(DocumentLike::getDocument)
                 .filter(document ->
                         (!document.isInternal() || document.getOrganization() == user.getOrganization()) &&
                                 !document.isDeleted() &&
@@ -142,13 +123,13 @@ public class FavoriteController {
                                 (document.getDocName().toLowerCase().contains(s.toLowerCase()) ||
                                         document.getDocIntroduction().toLowerCase().contains(s.toLowerCase())))
                 .collect(Collectors.toList());
-        Page<Document> documentPage = new PageImpl<>(documents, pageable, favorites.getTotalElements());
+        Page<Document> documentPage = new PageImpl<>(documents, pageable, user.getDocumentLikes().size());
 //        Page<Document> documents = documentService.findLikedDocuments(user, s, pageable);
         Page<DocumentResponseModel> documentModels = documentPage.map(this::convertToDocumentModel);
         return ResponseEntity.ok(ResponseModel.builder()
                 .error(false)
                 .status(200)
-                .message("Get favorites successfully")
+                .message("Get documentLikes successfully")
                 .data(documentModels)
                 .build());
     }

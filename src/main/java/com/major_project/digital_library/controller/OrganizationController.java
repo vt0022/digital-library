@@ -85,7 +85,7 @@ public class OrganizationController {
             description = "Trả về danh sách tất cả trường học chưa bị xoá")
     @GetMapping
     public ResponseEntity<?> getAvailableOrganizations(@RequestParam(defaultValue = "0") int page,
-                                                       @RequestParam(defaultValue = "20") int size) {
+                                                       @RequestParam(defaultValue = "100") int size) {
         Pageable pageable = PageRequest.of(page, size);
         List<Organization> organizations = organizationService.findByIsDeleted(false, pageable).getContent();
         List<OrganizationResponseModel> organizationResponseModels = organizations.stream()

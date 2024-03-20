@@ -213,6 +213,9 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/v1/reviews/*").hasAuthority("ROLE_MANAGER")
 
+                        .requestMatchers(
+                                "/api/v1/post/*").hasAuthority("ROLE_ADMIN")
+
                         .anyRequest().authenticated())
 
                 .securityContext((securityContext) -> securityContext.securityContextRepository(securityContextRepository())) // Add Security Context Holder Repository

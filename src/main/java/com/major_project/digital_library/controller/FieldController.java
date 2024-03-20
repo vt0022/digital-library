@@ -64,7 +64,7 @@ public class FieldController {
             description = "Trả về danh sách tất cả lĩnh vực chưa bị xoá")
     @GetMapping
     public ResponseEntity<?> getAvailableFields(@RequestParam(defaultValue = "0") int page,
-                                                @RequestParam(defaultValue = "20") int size) {
+                                                @RequestParam(defaultValue = "100") int size) {
         Pageable pageable = PageRequest.of(page, size);
         List<Field> fields = fieldService.findByIsDeleted(false, pageable).getContent();
         List<FieldResponseModel> fieldResponseModels = fields.stream()
