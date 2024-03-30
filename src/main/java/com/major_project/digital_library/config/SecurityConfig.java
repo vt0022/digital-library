@@ -51,7 +51,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable()) // Xem xét lại nếu bị lỗi 403
-
+//
 //                .cors(cors -> cors.configurationSource(request -> {
 //                    final CorsConfiguration cs = new CorsConfiguration();
 //                    cs.setAllowedOrigins(List.of(request.getHeader("Origin")));
@@ -193,7 +193,8 @@ public class SecurityConfig {
                                 "/api/v1/users/avatar").authenticated()
                         .requestMatchers(
                                 "/api/v1/user/organizations/*/latest",
-                                "/api/v1/user/organizations/*").hasAuthority("ROLE_MANGAER")
+                                "/api/v1/user/organizations/*").hasAuthority("ROLE_MANAGER")
+
                         .requestMatchers(
                                 "/api/v1/user/latest").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(HttpMethod.POST,
@@ -214,7 +215,23 @@ public class SecurityConfig {
                                 "/api/v1/reviews/*").hasAuthority("ROLE_MANAGER")
 
                         .requestMatchers(
-                                "/api/v1/post/*").hasAuthority("ROLE_ADMIN")
+                                "/api/v1/posts/*/replies/guest",
+                                "/api/v1/posts/*/guest").permitAll()
+                        .requestMatchers(
+                                "/api/v1/posts/*/replies",
+                                "/api/v1/posts/*/reply",
+                                "/api/v1/posts/*/like").hasAuthority("ROLE_STUDENT")
+                        .requestMatchers(
+                                "/api/v1/posts/*").hasAuthority("ROLE_STUDENT")
+                        .requestMatchers(HttpMethod.PUT,
+                                "/api/v1/posts").hasAuthority("ROLE_STUDENT")
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/posts").permitAll()
+
+                        .requestMatchers(
+                                "/api/v1/replies/image").permitAll()
+                        .requestMatchers(
+                                "/api/v1/replies/*").hasAuthority("ROLE_STUDENT")
 
                         .anyRequest().authenticated())
 

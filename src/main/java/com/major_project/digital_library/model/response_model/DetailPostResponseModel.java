@@ -13,7 +13,7 @@ import java.util.UUID;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class PostResponseModel implements Serializable {
+public class DetailPostResponseModel implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
@@ -33,5 +33,9 @@ public class PostResponseModel implements Serializable {
 
     private int totalLikes;
 
+    private boolean isLiked;
+
     private int totalViews;
+
+    //private List<ReplyResponseModel> replies = new ArrayList<>();
 }

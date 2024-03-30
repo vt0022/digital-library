@@ -15,4 +15,6 @@ public interface IPostService {
     void deleteById(UUID uuid);
 
     Page<Post> findAll(Pageable pageable);
+
+    Page<Post> findPosts(int page, int size, String order, String query);
 }

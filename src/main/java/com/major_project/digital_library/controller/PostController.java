@@ -5,14 +5,17 @@ import com.major_project.digital_library.entity.PostImage;
 import com.major_project.digital_library.entity.User;
 import com.major_project.digital_library.model.FileModel;
 import com.major_project.digital_library.model.request_model.PostRequestModel;
+import com.major_project.digital_library.model.response_model.DetailPostResponseModel;
 import com.major_project.digital_library.model.response_model.PostResponseModel;
 import com.major_project.digital_library.model.response_model.ResponseModel;
+import com.major_project.digital_library.service.IPostLikeService;
 import com.major_project.digital_library.service.IPostService;
 import com.major_project.digital_library.service.IUserService;
 import com.major_project.digital_library.util.GoogleDriveUpload;
 import io.swagger.v3.oas.annotations.Operation;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,15 +29,50 @@ import java.util.UUID;
 public class PostController {
     private final IPostService postService;
     private final IUserService userService;
+    private final IPostLikeService postLikeService;
     private final ModelMapper modelMapper;
     private final GoogleDriveUpload googleDriveUpload;
 
     @Autowired
-    public PostController(IPostService postService, IUserService userService, ModelMapper modelMapper, GoogleDriveUpload googleDriveUpload) {
+    public PostController(IPostService postService, IUserService userService, IPostLikeService postLikeService, ModelMapper modelMapper, GoogleDriveUpload googleDriveUpload) {
         this.postService = postService;
         this.userService = userService;
+        this.postLikeService = postLikeService;
         this.modelMapper = modelMapper;
         this.googleDriveUpload = googleDriveUpload;
+    }
+
+    @Operation(summary = "Hiển thị chi tiết bài viết cho khách")
+    @GetMapping("/{postId}/guest")
+    public ResponseEntity<?> getPostDetailForGuest(@PathVariable UUID postId) {
+        Post post = postService.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
+        PostResponseModel postResponseModel = convertToPostModel(post);
+        return ResponseEntity.ok(
+                ResponseModel
+                        .builder()
+                        .status(200)
+                        .error(false)
+                        .message("Get post detail successfully")
+                        .data(postResponseModel)
+                        .build());
+    }
+
+    @Operation(summary = "Hiển thị chi tiết bài viết cho người dùng đăng nhập")
+    @GetMapping("/{postId}")
+    public ResponseEntity<?> getPostDetail(@PathVariable UUID postId) {
+
+        Post post = postService.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
+
+        DetailPostResponseModel detailPostResponseModel = convertToDetailPostModel(post);
+        
+        return ResponseEntity.ok(
+                ResponseModel
+                        .builder()
+                        .status(200)
+                        .error(false)
+                        .message("Get post detail successfully")
+                        .data(detailPostResponseModel)
+                        .build());
     }
 
     @Operation(summary = "Hiển thị danh sách bài viết")
@@ -42,29 +80,16 @@ public class PostController {
     public ResponseEntity<?> getAllPosts(@RequestParam(defaultValue = "0") int page,
                                          @RequestParam(defaultValue = "10") int size,
                                          @RequestParam(defaultValue = "newest") String order) {
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not logged in"));
+        Page<Post> posts = postService.findPosts(page, size, order, "");
+        Page<PostResponseModel> postResponseModels = posts.map(this::convertToPostModel);
 
-        Post post = modelMapper.map(postRequestModel, Post.class);
-        post.setUserPosted(user);
-
-        if (multipartFiles != null)
-            for (MultipartFile file : multipartFiles) {
-                FileModel gd = googleDriveUpload.uploadImage(file, file.getOriginalFilename(), null, "post");
-                PostImage postImage = new PostImage();
-                postImage.setUrl(gd.getViewUrl());
-                post.getPostImages().add(postImage);
-            }
-
-        postService.save(post);
-
-        PostResponseModel postResponseModel = modelMapper.map(post, PostResponseModel.class);
         return ResponseEntity.ok(
                 ResponseModel
                         .builder()
                         .status(200)
                         .error(false)
-                        .message("Create post successfully")
-                        .data(postResponseModel)
+                        .message("Get posts successfully")
+                        .data(postResponseModels)
                         .build());
     }
 
@@ -144,8 +169,23 @@ public class PostController {
                         .build());
     }
 
-    private PostResponseModel convertToPostModel(Object o) {
-        PostResponseModel postResponseModel = modelMapper.map(o, PostResponseModel.class);
+    private PostResponseModel convertToPostModel(Post post) {
+        PostResponseModel postResponseModel = modelMapper.map(post, PostResponseModel.class);
+        postResponseModel.setTotalLikes(post.getPostLikes().size());
+        postResponseModel.setTotalReplies(post.getReplies().size());
         return postResponseModel;
+    }
+
+    private DetailPostResponseModel convertToDetailPostModel(Post post) {
+        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not logged in"));
+
+        DetailPostResponseModel detailPostResponseModel = modelMapper.map(post, DetailPostResponseModel.class);
+
+        boolean isLiked = postLikeService.existsByUserAndPost(user, post);
+        detailPostResponseModel.setLiked(isLiked);
+        detailPostResponseModel.setTotalLikes(post.getPostLikes().size());
+        detailPostResponseModel.setTotalReplies(post.getReplies().size());
+
+        return detailPostResponseModel;
     }
 }

@@ -42,10 +42,15 @@ public class Reply {
     @JoinColumn(name = "repliedBy")
     private User user;
 
+    @OneToMany(mappedBy = "reply", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ReplyImage> replyImages = new ArrayList<>();
+
+    @OneToMany(mappedBy = "reply", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ReplyLike> replyLikes = new ArrayList<>();
+
     @PrePersist
     protected void onCreate() {
         createdAt = new Timestamp(System.currentTimeMillis());
-        updatedAt = new Timestamp(System.currentTimeMillis());
     }
 
     @PreUpdate

@@ -13,13 +13,11 @@ import java.util.UUID;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class PostResponseModel implements Serializable {
+public class ReplyResponseModel implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    private UUID postId;
-
-    private String title;
+    private UUID replyId;
 
     private String content;
 
@@ -27,11 +25,13 @@ public class PostResponseModel implements Serializable {
 
     private Timestamp updatedAt;
 
-    private UserLeanModel userPosted;
+    private ReplyResponseModel parentReply;
 
-    private int totalReplies;
+    private UserLeanModel user;
+
+    private boolean isLiked;
 
     private int totalLikes;
 
-    private int totalViews;
+    private boolean isMy;
 }

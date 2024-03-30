@@ -66,7 +66,7 @@ public class GoogleDriveUpload {
             FileModel gd = new FileModel();
             gd.setName(fileName);
             gd.setThumbnail(generateThumbnail(tempFile, name.concat(".jpg"), thumbnailId));
-            gd.setViewUrl("https://drive.google.com/uc?id=" + file.getId());
+            gd.setViewUrl("https://drive.google.com/d/" + file.getId() + "/preview");
             gd.setDownloadUrl(file.getWebContentLink());
             tempFile.delete();
             return gd;
@@ -110,7 +110,7 @@ public class GoogleDriveUpload {
                     .execute();
 
             tempThumbnail.delete();
-            return "https://drive.google.com/uc?id=" + uploadFile.getId();
+            return "https://drive.google.com/thumbnail?id=" + uploadFile.getId();
         } catch (IOException e) {
             // Handle exceptions
             e.printStackTrace();
@@ -156,7 +156,7 @@ public class GoogleDriveUpload {
                     .setFields("id, webContentLink")
                     .execute();
             FileModel gd = new FileModel();
-            gd.setViewUrl("https://drive.google.com/uc?id=" + file.getId());
+            gd.setViewUrl("https://drive.google.com/thumbnail?id=" + file.getId());
 
             tempFile.delete();
             return gd;

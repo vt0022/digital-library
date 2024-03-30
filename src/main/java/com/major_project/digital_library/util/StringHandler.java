@@ -6,7 +6,6 @@ import org.springframework.stereotype.Component;
 public class StringHandler {
     public String getEmailUsername(String email) {
         return email.split("@")[0];
-
     }
 
     public String getFileId(String url) {

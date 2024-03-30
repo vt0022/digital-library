@@ -48,7 +48,6 @@ public class Post {
     @PrePersist
     protected void onCreate() {
         createdAt = new Timestamp(System.currentTimeMillis());
-        updatedAt = new Timestamp(System.currentTimeMillis());
     }
 
     @PreUpdate

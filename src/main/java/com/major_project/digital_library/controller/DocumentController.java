@@ -19,8 +19,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -608,9 +606,7 @@ public class DocumentController {
     public ResponseEntity<?> uploadDocument(@RequestPart("document") DocumentRequestModel documentRequestModel,
                                             @RequestPart("file") MultipartFile multipartFile) {
         // Find user info
-        UsernamePasswordAuthenticationToken auth = (UsernamePasswordAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
-        String email = String.valueOf(auth.getPrincipal());
-        User user = userService.findByEmail(email).orElseThrow(() -> new RuntimeException("Email is not valid"));
+        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not found"));
         // Get data
         Document document = modelMapper.map(documentRequestModel, Document.class);
         // Upload file document

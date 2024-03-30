@@ -1,6 +1,5 @@
 package com.major_project.digital_library.repository;
 
-import com.major_project.digital_library.entity.Document;
 import com.major_project.digital_library.entity.Post;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,9 +12,8 @@ import java.util.UUID;
 @Repository
 public interface IPostRepository extends JpaRepository<Post, UUID> {
     @Query("SELECT p FROM Post p " +
-            "WHERE (LOWER(p.title) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(p.content) LIKE LOWER(CONCAT('%', :query, '%'))) " +
-            "ORDER BY p.createdAt")
-    Page<Document> findAllPostsOrderByCreatedAt(
+            "WHERE (LOWER(p.title) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(p.content) LIKE LOWER(CONCAT('%', :query, '%'))) ")
+    Page<Post> findAllPosts(
             String query,
             Pageable pageable
     );
@@ -23,7 +21,7 @@ public interface IPostRepository extends JpaRepository<Post, UUID> {
     @Query("SELECT p FROM Post p " +
             "WHERE (LOWER(p.title) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(p.content) LIKE LOWER(CONCAT('%', :query, '%'))) " +
             "ORDER BY SIZE(p.postLikes) DESC")
-    Page<Document> findAllPostsOrderByTotalLikesDesc(
+    Page<Post> findAllPostsOrderByTotalLikesDesc(
             String query,
             Pageable pageable
     );
@@ -31,7 +29,7 @@ public interface IPostRepository extends JpaRepository<Post, UUID> {
     @Query("SELECT p FROM Post p " +
             "WHERE (LOWER(p.title) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(p.content) LIKE LOWER(CONCAT('%', :query, '%'))) " +
             "ORDER BY SIZE(p.postLikes) ASC")
-    Page<Document> findAllPostsOrderByTotalLikesAsc(
+    Page<Post> findAllPostsOrderByTotalLikesAsc(
             String query,
             Pageable pageable
     );
@@ -39,7 +37,7 @@ public interface IPostRepository extends JpaRepository<Post, UUID> {
     @Query("SELECT p FROM Post p " +
             "WHERE (LOWER(p.title) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(p.content) LIKE LOWER(CONCAT('%', :query, '%'))) " +
             "ORDER BY SIZE(p.replies) DESC")
-    Page<Document> findAllPostsOrderByTotalRepliesDesc(
+    Page<Post> findAllPostsOrderByTotalRepliesDesc(
             String query,
             Pageable pageable
     );
@@ -47,16 +45,16 @@ public interface IPostRepository extends JpaRepository<Post, UUID> {
     @Query("SELECT p FROM Post p " +
             "WHERE (LOWER(p.title) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(p.content) LIKE LOWER(CONCAT('%', :query, '%'))) " +
             "ORDER BY SIZE(p.replies) ASC")
-    Page<Document> findAllPostsOrderByTotalRepliesAsc(
+    Page<Post> findAllPostsOrderByTotalRepliesAsc(
             String query,
             Pageable pageable
     );
-
-    @Query("SELECT p FROM Post p " +
-            "WHERE (LOWER(p.title) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(p.content) LIKE LOWER(CONCAT('%', :query, '%'))) " +
-            "ORDER BY p.totalViews")
-    Page<Document> findAllPostsOrderByTotalViews(
-            String query,
-            Pageable pageable
-    );
+//
+//    @Query("SELECT p FROM Post p " +
+//            "WHERE (LOWER(p.title) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(p.content) LIKE LOWER(CONCAT('%', :query, '%'))) " +
+//            "ORDER BY p.totalViews")
+//    Page<Post> findAllPostsOrderByTotalViews(
+//            String query,
+//            Pageable pageable
+//    );
 }

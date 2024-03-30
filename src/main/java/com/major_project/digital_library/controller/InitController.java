@@ -12,6 +12,8 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.komamitsu.fastuuidparser.FastUuidParser;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,6 +30,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/api/v1/init")
@@ -42,12 +46,16 @@ public class InitController {
     private final IReviewService reviewService;
     private final IDocumentLikeService favoriteService;
     private final IRecencyService recencyService;
+    private final IPostLikeService postLikeService;
+    private final IReplyService replyService;
+    private final IPostService postService;
+    private final IReplyLikeService replyLikeService;
     private final GoogleDriveUpload googleDriveUpload;
     private final ModelMapper modelMapper;
     private final SlugGenerator slugGenerator;
 
     @Autowired
-    public InitController(IUserService userService, IDocumentService documentService, IFieldService fieldService, ICategoryService categoryService, IOrganizationService organizationService, IRoleService roleService, ISaveService saveService, IReviewService reviewService, IDocumentLikeService favoriteService, IRecencyService recencyService, GoogleDriveUpload googleDriveUpload, ModelMapper modelMapper, SlugGenerator slugGenerator) {
+    public InitController(IUserService userService, IDocumentService documentService, IFieldService fieldService, ICategoryService categoryService, IOrganizationService organizationService, IRoleService roleService, ISaveService saveService, IReviewService reviewService, IDocumentLikeService favoriteService, IRecencyService recencyService, IPostLikeService postLikeService, IReplyService replyService, IPostService postService, IReplyLikeService replyLikeService, GoogleDriveUpload googleDriveUpload, ModelMapper modelMapper, SlugGenerator slugGenerator) {
         this.userService = userService;
         this.documentService = documentService;
         this.fieldService = fieldService;
@@ -58,6 +66,10 @@ public class InitController {
         this.reviewService = reviewService;
         this.favoriteService = favoriteService;
         this.recencyService = recencyService;
+        this.postLikeService = postLikeService;
+        this.replyService = replyService;
+        this.postService = postService;
+        this.replyLikeService = replyLikeService;
         this.googleDriveUpload = googleDriveUpload;
         this.modelMapper = modelMapper;
         this.slugGenerator = slugGenerator;
@@ -242,6 +254,48 @@ public class InitController {
 
         workbook.close();
         file.close();
+
+        return ResponseEntity.ok(ResponseModel.builder()
+                .status(200)
+                .error(false)
+                .message("Update users successfully")
+                .build());
+    }
+
+    @PutMapping("/auth/123")
+    public ResponseEntity<?> refactorUserImage() throws IOException {
+        Pageable pageable = PageRequest.of(0, 1000);
+        List<User> users = userService.findAll(pageable).getContent();
+
+        for (User user : users) {
+            if (user.getImage() != null) {
+                String url = user.getImage().replace("https://drive.google.com/uc", "https://drive.google.com/thumbnail");
+                user.setImage(url);
+                userService.update(user);
+            }
+        }
+
+        return ResponseEntity.ok(ResponseModel.builder()
+                .status(200)
+                .error(false)
+                .message("Update users successfully")
+                .build());
+    }
+
+    @PutMapping("/auth/456")
+    public ResponseEntity<?> refactorDoc() throws IOException {
+        Pageable pageable = PageRequest.of(0, 1000);
+        List<Document> documents = documentService.findAll();
+
+        for (Document document : documents) {
+            if (document.getThumbnail() != null) {
+                String url = document.getThumbnail().replace("https://drive.google.com/uc", "https://drive.google.com/thumbnail");
+                String id = getId(document.getViewUrl());
+                document.setThumbnail(url);
+                document.setViewUrl("https://drive.google.com/file/d/" + id + "/preview");
+                documentService.save(document);
+            }
+        }
 
         return ResponseEntity.ok(ResponseModel.builder()
                 .status(200)
@@ -486,5 +540,251 @@ public class InitController {
                 .error(false)
                 .message("Update total like and average rating successfully")
                 .build());
+    }
+
+    @PostMapping("/posts")
+    public ResponseEntity<?> initPosts() throws IOException {
+        FileInputStream file = new FileInputStream("D:\\Nam4\\Ky1\\TieuLuanChuyenNganh\\digital-library\\src\\main\\resources\\database\\PostsInit.xlsx");
+        Workbook workbook = new XSSFWorkbook(file);
+        Sheet sheet = workbook.getSheetAt(0);
+
+        // Duyệt qua các hàng trong sheet
+        for (Row row : sheet) {
+            if (row.getRowNum() == 0) {
+                continue;
+            }
+            Cell titleCell = row.getCell(0);
+            Cell contentCell = row.getCell(1);
+            Cell totalViewsCell = row.getCell(2);
+            Cell userCell = row.getCell(3);
+
+            DataFormatter formatter = new DataFormatter();
+
+            if (titleCell != null) {
+                String title = formatter.formatCellValue(titleCell);
+                String content = formatter.formatCellValue(contentCell);
+                Integer totalViews = Integer.valueOf(formatter.formatCellValue(totalViewsCell));
+                UUID userId = UUID.fromString(formatter.formatCellValue(userCell));
+
+                Post post = new Post();
+                try {
+                    User user = userService.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+
+                    post.setUserPosted(user);
+                    post.setContent(content);
+                    post.setTitle(title);
+                    post.setTotalViews(totalViews);
+
+                    postService.save(post);
+                } catch (Exception e) {
+                    System.out.println(e);
+                }
+            }
+        }
+
+        workbook.close();
+        file.close();
+
+        return ResponseEntity.ok(ResponseModel.builder()
+                .status(200)
+                .error(false)
+                .message("Create posts successfully")
+                .build());
+    }
+
+    @PostMapping("/reply")
+    public ResponseEntity<?> initReplies() throws IOException {
+        FileInputStream file = new FileInputStream("D:\\Nam4\\Ky1\\TieuLuanChuyenNganh\\digital-library\\src\\main\\resources\\database\\RepliesInit.xlsx");
+        Workbook workbook = new XSSFWorkbook(file);
+        Sheet sheet = workbook.getSheetAt(0);
+
+        // Duyệt qua các hàng trong sheet
+        for (Row row : sheet) {
+            Cell idCell = row.getCell(0);
+            Cell contentCell = row.getCell(1);
+            Cell postCell = row.getCell(2);
+            Cell userReplyCell = row.getCell(3);
+            Cell parentCell = row.getCell(4);
+
+            DataFormatter formatter = new DataFormatter();
+
+            if (idCell != null) {
+                UUID id = UUID.fromString(formatter.formatCellValue(idCell));
+                String content = formatter.formatCellValue(contentCell);
+                UUID postId = UUID.fromString(formatter.formatCellValue(postCell));
+                UUID userReplyId = UUID.fromString(formatter.formatCellValue(userReplyCell));
+                UUID parentId = parentCell != null ? UUID.fromString(formatter.formatCellValue(parentCell)) : null;
+
+                Reply reply = new Reply();
+                try {
+                    User userReply = userService.findById(userReplyId).orElseThrow(() -> new RuntimeException("User not found"));
+                    Post post = postService.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
+
+                    reply.setReplyId(id);
+                    reply.setContent(content);
+                    reply.setPost(post);
+                    reply.setUser(userReply);
+
+                    replyService.save(reply);
+                } catch (Exception e) {
+                    System.out.println(e);
+                }
+            }
+        }
+
+        workbook.close();
+        file.close();
+
+        return ResponseEntity.ok(ResponseModel.builder()
+                .status(200)
+                .error(false)
+                .message("Create replies successfully")
+                .build());
+    }
+
+    @PutMapping("/reply")
+    public ResponseEntity<?> addParentReplies() throws IOException {
+        FileInputStream file = new FileInputStream("D:\\Nam4\\Ky1\\TieuLuanChuyenNganh\\digital-library\\src\\main\\resources\\database\\RepliesInit.xlsx");
+        Workbook workbook = new XSSFWorkbook(file);
+        Sheet sheet = workbook.getSheetAt(0);
+
+        // Duyệt qua các hàng trong sheet
+        for (Row row : sheet) {
+            Cell idCell = row.getCell(0);
+            Cell parentCell = row.getCell(4);
+
+            DataFormatter formatter = new DataFormatter();
+
+            if (parentCell != null) {
+                UUID id = UUID.fromString(formatter.formatCellValue(idCell));
+                UUID parentId = UUID.fromString(formatter.formatCellValue(parentCell));
+
+                try {
+                    Reply reply = replyService.findById(id).orElseThrow(() -> new RuntimeException("Reply not found"));
+                    Reply parentReply = replyService.findById(parentId).orElseThrow(() -> new RuntimeException("Parent reply not found"));
+
+                    reply.setParentReply(parentReply);
+
+                    System.out.println(row.getRowNum());
+                    replyService.save(reply);
+                } catch (Exception e) {
+                    System.out.println(e);
+                }
+            }
+        }
+
+        workbook.close();
+        file.close();
+
+        return ResponseEntity.ok(ResponseModel.builder()
+                .status(200)
+                .error(false)
+                .message("Add parent reply successfully")
+                .build());
+    }
+
+    @PostMapping("/replyLike")
+    public ResponseEntity<?> addReplyLikes() throws IOException {
+        FileInputStream file = new FileInputStream("D:\\Nam4\\Ky1\\TieuLuanChuyenNganh\\digital-library\\src\\main\\resources\\database\\ReplyLikesInit.xlsx");
+        Workbook workbook = new XSSFWorkbook(file);
+        Sheet sheet = workbook.getSheetAt(0);
+
+        // Duyệt qua các hàng trong sheet
+        for (Row row : sheet) {
+            if (row.getRowNum() == 0) {
+                continue;
+            }
+
+            Cell replyCell = row.getCell(0);
+            Cell userCell = row.getCell(1);
+
+            DataFormatter formatter = new DataFormatter();
+
+            if (replyCell != null) {
+                UUID replyId = UUID.fromString(formatter.formatCellValue(replyCell));
+                UUID userId = UUID.fromString(formatter.formatCellValue(userCell));
+
+                try {
+                    Reply reply = replyService.findById(replyId).orElseThrow(() -> new RuntimeException("Reply not found"));
+                    User user = userService.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+
+                    ReplyLike replyLike = new ReplyLike();
+                    replyLike.setReply(reply);
+                    replyLike.setUser(user);
+
+                    replyLikeService.save(replyLike);
+                } catch (Exception e) {
+                    System.out.println(e);
+                }
+            }
+        }
+
+        workbook.close();
+        file.close();
+
+        return ResponseEntity.ok(ResponseModel.builder()
+                .status(200)
+                .error(false)
+                .message("Add reply likes successfully")
+                .build());
+    }
+
+    @PostMapping("/postLike")
+    public ResponseEntity<?> addPostLikes() throws IOException {
+        FileInputStream file = new FileInputStream("D:\\Nam4\\Ky1\\TieuLuanChuyenNganh\\digital-library\\src\\main\\resources\\database\\PostLikesInit.xlsx");
+        Workbook workbook = new XSSFWorkbook(file);
+        Sheet sheet = workbook.getSheetAt(0);
+
+        // Duyệt qua các hàng trong sheet
+        for (Row row : sheet) {
+            if (row.getRowNum() == 0) {
+                continue;
+            }
+
+            Cell postCell = row.getCell(0);
+            Cell userCell = row.getCell(1);
+
+            DataFormatter formatter = new DataFormatter();
+
+            if (postCell != null) {
+                UUID postId = UUID.fromString(formatter.formatCellValue(postCell));
+                UUID userId = UUID.fromString(formatter.formatCellValue(userCell));
+
+                try {
+                    Post post = postService.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
+                    User user = userService.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+
+                    PostLike postLike = new PostLike();
+                    postLike.setPost(post);
+                    postLike.setUser(user);
+
+                    postLikeService.save(postLike);
+                } catch (Exception e) {
+                    System.out.println(e);
+                }
+            }
+        }
+
+        workbook.close();
+        file.close();
+
+        return ResponseEntity.ok(ResponseModel.builder()
+                .status(200)
+                .error(false)
+                .message("Add reply likes successfully")
+                .build());
+    }
+
+    private String getId(String url) {
+        Pattern pattern = Pattern.compile("id=([^&]+)");
+        Matcher matcher = pattern.matcher(url);
+
+        // Tìm và trích xuất ID từ đường link
+        String id = "";
+        if (matcher.find()) {
+            id = matcher.group(1);
+        }
+
+        return id;
     }
 }

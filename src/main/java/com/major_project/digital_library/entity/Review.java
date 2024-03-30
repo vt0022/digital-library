@@ -27,6 +27,8 @@ public class Review {
 
     private Timestamp updatedAt;
 
+    private boolean isVerified;
+
     @ManyToOne
     @JoinColumn(name = "userId")
     private User user;

@@ -23,4 +23,6 @@ public class UserLeanModel implements Serializable {
     private String lastName;
 
     private String email;
+    
+    private String image;
 }
