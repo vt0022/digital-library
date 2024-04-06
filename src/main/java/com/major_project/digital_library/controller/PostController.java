@@ -1,9 +1,9 @@
 package com.major_project.digital_library.controller;
 
 import com.major_project.digital_library.entity.Post;
-import com.major_project.digital_library.entity.PostImage;
+import com.major_project.digital_library.entity.Reply;
 import com.major_project.digital_library.entity.User;
-import com.major_project.digital_library.model.FileModel;
+import com.major_project.digital_library.model.lean_model.ReplyLeanModel;
 import com.major_project.digital_library.model.request_model.PostRequestModel;
 import com.major_project.digital_library.model.response_model.DetailPostResponseModel;
 import com.major_project.digital_library.model.response_model.PostResponseModel;
@@ -16,12 +16,12 @@ import io.swagger.v3.oas.annotations.Operation;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.http.MediaType;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
+import java.util.Comparator;
 import java.util.UUID;
 
 @RestController
@@ -64,7 +64,7 @@ public class PostController {
         Post post = postService.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
 
         DetailPostResponseModel detailPostResponseModel = convertToDetailPostModel(post);
-        
+
         return ResponseEntity.ok(
                 ResponseModel
                         .builder()
@@ -79,8 +79,29 @@ public class PostController {
     @GetMapping
     public ResponseEntity<?> getAllPosts(@RequestParam(defaultValue = "0") int page,
                                          @RequestParam(defaultValue = "10") int size,
-                                         @RequestParam(defaultValue = "newest") String order) {
-        Page<Post> posts = postService.findPosts(page, size, order, "");
+                                         @RequestParam(defaultValue = "newest") String order,
+                                         @RequestParam(defaultValue = "") String s) {
+        Page<Post> posts = postService.findPosts(page, size, order, s);
+        Page<PostResponseModel> postResponseModels = posts.map(this::convertToPostModel);
+
+        return ResponseEntity.ok(
+                ResponseModel
+                        .builder()
+                        .status(200)
+                        .error(false)
+                        .message("Get posts successfully")
+                        .data(postResponseModels)
+                        .build());
+    }
+
+    @Operation(summary = "Lấy danh sách bài đăng của một người dùng")
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<?> getPostsByUser(@PathVariable UUID userId,
+                                            @RequestParam(defaultValue = "0") int page,
+                                            @RequestParam(defaultValue = "10") int size) {
+        User user = userService.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Post> posts = postService.findAllByUserPostedOrderByCreatedAtDesc(user, pageable);
         Page<PostResponseModel> postResponseModels = posts.map(this::convertToPostModel);
 
         return ResponseEntity.ok(
@@ -94,21 +115,12 @@ public class PostController {
     }
 
     @Operation(summary = "Tạo bài viết mới")
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> createPost(@RequestPart("post") PostRequestModel postRequestModel,
-                                        @RequestPart(name = "images", required = false) List<MultipartFile> multipartFiles) {
+    @PostMapping
+    public ResponseEntity<?> createPost(@RequestBody PostRequestModel postRequestModel) {
         User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not logged in"));
 
         Post post = modelMapper.map(postRequestModel, Post.class);
         post.setUserPosted(user);
-
-        if (multipartFiles != null)
-            for (MultipartFile file : multipartFiles) {
-                FileModel gd = googleDriveUpload.uploadImage(file, file.getOriginalFilename(), null, "post");
-                PostImage postImage = new PostImage();
-                postImage.setUrl(gd.getViewUrl());
-                post.getPostImages().add(postImage);
-            }
 
         postService.save(post);
 
@@ -124,22 +136,23 @@ public class PostController {
     }
 
     @Operation(summary = "Chỉnh sửa một bài viết")
-    @PutMapping(path = "/{postId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> updatePost(@PathVariable UUID postId,
-                                        @RequestPart("post") PostRequestModel postRequestModel,
-                                        @RequestPart(name = "images", required = false) List<MultipartFile> multipartFiles) {
+    @PutMapping("/{postId}")
+    public ResponseEntity<?> editPost(@PathVariable UUID postId,
+                                      @RequestBody PostRequestModel postRequestModel) {
+        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not logged in"));
+
         Post post = postService.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
+
+        if (!post.getUserPosted().getUserId().equals(user.getUserId()))
+            return ResponseEntity.ok(ResponseModel
+                    .builder()
+                    .status(404)
+                    .error(true)
+                    .message("Post not accessible")
+                    .build());
 
         post.setTitle(postRequestModel.getTitle());
         post.setContent(postRequestModel.getContent());
-
-        if (multipartFiles != null)
-            for (MultipartFile file : multipartFiles) {
-                FileModel gd = googleDriveUpload.uploadImage(file, file.getOriginalFilename(), null, "post");
-                PostImage postImage = new PostImage();
-                postImage.setUrl(gd.getViewUrl());
-                post.getPostImages().add(postImage);
-            }
 
         postService.save(post);
 
@@ -149,7 +162,7 @@ public class PostController {
                         .builder()
                         .status(200)
                         .error(false)
-                        .message("Update post successfully")
+                        .message("Edit post successfully")
                         .data(postResponseModel)
                         .build());
     }
@@ -171,8 +184,17 @@ public class PostController {
 
     private PostResponseModel convertToPostModel(Post post) {
         PostResponseModel postResponseModel = modelMapper.map(post, PostResponseModel.class);
+
+        Reply latestReply = post.getReplies()
+                .stream()
+                .max(Comparator.comparing(Reply::getCreatedAt)).orElse(null);
+
         postResponseModel.setTotalLikes(post.getPostLikes().size());
         postResponseModel.setTotalReplies(post.getReplies().size());
+        postResponseModel.setLatestReply(
+                latestReply == null ? null :
+                        modelMapper.map(latestReply, ReplyLeanModel.class));
+
         return postResponseModel;
     }
 
@@ -182,7 +204,10 @@ public class PostController {
         DetailPostResponseModel detailPostResponseModel = modelMapper.map(post, DetailPostResponseModel.class);
 
         boolean isLiked = postLikeService.existsByUserAndPost(user, post);
+        boolean isMy = post.getUserPosted().getUserId().equals(user.getUserId());
+
         detailPostResponseModel.setLiked(isLiked);
+        detailPostResponseModel.setMy(isMy);
         detailPostResponseModel.setTotalLikes(post.getPostLikes().size());
         detailPostResponseModel.setTotalReplies(post.getReplies().size());
 

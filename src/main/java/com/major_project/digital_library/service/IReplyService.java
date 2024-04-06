@@ -2,6 +2,7 @@ package com.major_project.digital_library.service;
 
 import com.major_project.digital_library.entity.Post;
 import com.major_project.digital_library.entity.Reply;
+import com.major_project.digital_library.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -14,6 +15,8 @@ public interface IReplyService {
     <S extends Reply> S save(S entity);
 
     Optional<Reply> findById(UUID uuid);
+
+    Page<Reply> findAllByUserOrderByCreatedAtDesc(User user, Pageable pageable);
 
     void deleteById(UUID uuid);
 }

@@ -23,7 +23,7 @@ public class Post {
 
     private String title;
 
-    @Column(columnDefinition = "text not null")
+    @Column(columnDefinition = "text")
     private String content;
 
     private int totalViews;
@@ -36,6 +36,14 @@ public class Post {
     @JoinColumn(name = "postedBy")
     private User userPosted;
 
+    @ManyToOne
+    @JoinColumn(name = "subsectionId")
+    private Subsection subsection;
+
+    @ManyToOne
+    @JoinColumn(name = "labelId")
+    private Label label;
+
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Reply> replies = new ArrayList<>();
 
@@ -44,6 +52,9 @@ public class Post {
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PostImage> postImages = new ArrayList<>();
+
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PostHistory> postHistories = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {

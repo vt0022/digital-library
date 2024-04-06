@@ -1,6 +1,7 @@
 package com.major_project.digital_library.service;
 
 import com.major_project.digital_library.entity.Post;
+import com.major_project.digital_library.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -17,4 +18,6 @@ public interface IPostService {
     Page<Post> findAll(Pageable pageable);
 
     Page<Post> findPosts(int page, int size, String order, String query);
+
+    Page<Post> findAllByUserPostedOrderByCreatedAtDesc(User user, Pageable pageable);
 }

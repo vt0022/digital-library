@@ -1,6 +1,7 @@
 package com.major_project.digital_library.service.impl;
 
 import com.major_project.digital_library.entity.Post;
+import com.major_project.digital_library.entity.User;
 import com.major_project.digital_library.repository.IPostRepository;
 import com.major_project.digital_library.service.IPostService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,5 +74,10 @@ public class PostServiceImpl implements IPostService {
             Pageable pageable = PageRequest.of(page, size, sort);
             return postRepository.findAllPosts(query, pageable);
         }
+    }
+
+    @Override
+    public Page<Post> findAllByUserPostedOrderByCreatedAtDesc(User user, Pageable pageable) {
+        return postRepository.findAllByUserPostedOrderByCreatedAtDesc(user, pageable);
     }
 }

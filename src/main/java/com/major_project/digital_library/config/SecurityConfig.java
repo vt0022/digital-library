@@ -215,6 +215,7 @@ public class SecurityConfig {
                                 "/api/v1/reviews/*").hasAuthority("ROLE_MANAGER")
 
                         .requestMatchers(
+                                "/api/v1/posts/user/*",
                                 "/api/v1/posts/*/replies/guest",
                                 "/api/v1/posts/*/guest").permitAll()
                         .requestMatchers(
@@ -229,7 +230,8 @@ public class SecurityConfig {
                                 "/api/v1/posts").permitAll()
 
                         .requestMatchers(
-                                "/api/v1/replies/image").permitAll()
+                                "/api/v1/replies/image",
+                                "/api/v1/replies/user/*").permitAll()
                         .requestMatchers(
                                 "/api/v1/replies/*").hasAuthority("ROLE_STUDENT")
 

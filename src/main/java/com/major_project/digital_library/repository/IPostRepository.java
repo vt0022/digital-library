@@ -1,6 +1,7 @@
 package com.major_project.digital_library.repository;
 
 import com.major_project.digital_library.entity.Post;
+import com.major_project.digital_library.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -49,12 +50,6 @@ public interface IPostRepository extends JpaRepository<Post, UUID> {
             String query,
             Pageable pageable
     );
-//
-//    @Query("SELECT p FROM Post p " +
-//            "WHERE (LOWER(p.title) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(p.content) LIKE LOWER(CONCAT('%', :query, '%'))) " +
-//            "ORDER BY p.totalViews")
-//    Page<Post> findAllPostsOrderByTotalViews(
-//            String query,
-//            Pageable pageable
-//    );
+
+    Page<Post> findAllByUserPostedOrderByCreatedAtDesc(User user, Pageable pageable);
 }

@@ -1,7 +1,5 @@
-package com.major_project.digital_library.model.response_model;
+package com.major_project.digital_library.model.lean_model;
 
-import com.major_project.digital_library.model.lean_model.PostLeanModel;
-import com.major_project.digital_library.model.lean_model.UserLeanModel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -14,7 +12,7 @@ import java.util.UUID;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ReplyResponseModel implements Serializable {
+public class ReplyLeanModel implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
@@ -26,15 +24,5 @@ public class ReplyResponseModel implements Serializable {
 
     private Timestamp updatedAt;
 
-    private ReplyResponseModel parentReply;
-
     private UserLeanModel user;
-
-    private boolean isLiked;
-
-    private int totalLikes;
-
-    private boolean isMy;
-
-    private PostLeanModel post;
 }

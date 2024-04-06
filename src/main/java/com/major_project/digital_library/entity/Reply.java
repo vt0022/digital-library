@@ -21,6 +21,7 @@ public class Reply {
     @UuidGenerator(style = UuidGenerator.Style.TIME)
     private UUID replyId;
 
+    @Column(columnDefinition = "text")
     private String content;
 
     private Timestamp createdAt;
@@ -47,6 +48,9 @@ public class Reply {
 
     @OneToMany(mappedBy = "reply", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ReplyLike> replyLikes = new ArrayList<>();
+
+    @OneToMany(mappedBy = "reply", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ReplyHistory> replyHistories = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {

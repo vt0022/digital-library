@@ -2,9 +2,7 @@ package com.major_project.digital_library.controller;
 
 import com.major_project.digital_library.entity.Post;
 import com.major_project.digital_library.entity.Reply;
-import com.major_project.digital_library.entity.ReplyImage;
 import com.major_project.digital_library.entity.User;
-import com.major_project.digital_library.model.FileModel;
 import com.major_project.digital_library.model.request_model.ReplyRequestModel;
 import com.major_project.digital_library.model.response_model.ReplyResponseModel;
 import com.major_project.digital_library.model.response_model.ResponseModel;
@@ -19,12 +17,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -159,24 +155,12 @@ public class ReplyController {
 //    }
 
     @Operation(summary = "Chỉnh sửa một bình luận")
-    @PutMapping(path = "/replies/{replyId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PutMapping("/replies/{replyId}")
     public ResponseEntity<?> editReply(@PathVariable UUID replyId,
-                                       @RequestPart(name = "reply") ReplyRequestModel replyRequestModel,
-                                       @RequestPart(name = "images", required = false) List<MultipartFile> multipartFiles) {
-
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not logged in"));
-
+                                       @RequestBody Map<String, String> replyContent) {
         Reply reply = replyService.findById(replyId).orElseThrow(() -> new RuntimeException("Reply not found"));
 
-        modelMapper.map(replyRequestModel, reply);
-
-        if (multipartFiles != null)
-            for (MultipartFile file : multipartFiles) {
-                FileModel gd = googleDriveUpload.uploadImage(file, file.getOriginalFilename(), null, "reply");
-                ReplyImage replyImage = new ReplyImage();
-                replyImage.setUrl(gd.getViewUrl());
-                reply.getReplyImages().add(replyImage);
-            }
+        reply.setContent(replyContent.get("content"));
 
         replyService.save(reply);
 
@@ -204,6 +188,28 @@ public class ReplyController {
                         .status(200)
                         .error(false)
                         .message("Delete reply successfully")
+                        .build());
+    }
+
+    @Operation(summary = "Xem tất cả phản hồi của một người dùng")
+    @GetMapping("/replies/user/{userId}")
+    public ResponseEntity<?> getRepliesOfUser(@PathVariable UUID userId,
+                                              @RequestParam(defaultValue = "0") int page,
+                                              @RequestParam(defaultValue = "5") int size) {
+        User user = userService.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Reply> replies = replyService.findAllByUserOrderByCreatedAtDesc(user, pageable);
+
+        Page<ReplyResponseModel> replyResponseModels = replies.map(this::convertToReplyModelForGuest);
+
+        return ResponseEntity.ok(
+                ResponseModel
+                        .builder()
+                        .status(200)
+                        .error(false)
+                        .message("Get user's replies successfully")
+                        .data(replyResponseModels)
                         .build());
     }
 

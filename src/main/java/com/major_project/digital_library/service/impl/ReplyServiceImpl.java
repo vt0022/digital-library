@@ -2,6 +2,7 @@ package com.major_project.digital_library.service.impl;
 
 import com.major_project.digital_library.entity.Post;
 import com.major_project.digital_library.entity.Reply;
+import com.major_project.digital_library.entity.User;
 import com.major_project.digital_library.repository.IReplyRepository;
 import com.major_project.digital_library.service.IReplyService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +35,11 @@ public class ReplyServiceImpl implements IReplyService {
     @Override
     public Optional<Reply> findById(UUID uuid) {
         return replyRepository.findById(uuid);
+    }
+
+    @Override
+    public Page<Reply> findAllByUserOrderByCreatedAtDesc(User user, Pageable pageable) {
+        return replyRepository.findAllByUserOrderByCreatedAtDesc(user, pageable);
     }
 
     @Override

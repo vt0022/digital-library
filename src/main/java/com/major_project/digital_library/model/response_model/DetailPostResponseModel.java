@@ -37,5 +37,7 @@ public class DetailPostResponseModel implements Serializable {
 
     private int totalViews;
 
+    private boolean isMy;
+
     //private List<ReplyResponseModel> replies = new ArrayList<>();
 }
