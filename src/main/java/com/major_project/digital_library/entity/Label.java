@@ -25,9 +25,13 @@ public class Label {
 
     private String slug;
 
+    private String color;
+
     private Timestamp createdAt;
 
     private Timestamp updatedAt;
+
+    private boolean isDisabled;
 
     @OneToMany(mappedBy = "label", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Post> posts = new ArrayList<>();

@@ -217,7 +217,8 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/v1/posts/user/*",
                                 "/api/v1/posts/*/replies/guest",
-                                "/api/v1/posts/*/guest").permitAll()
+                                "/api/v1/posts/*/guest",
+                                "/api/v1/posts/*/history").permitAll()
                         .requestMatchers(
                                 "/api/v1/posts/*/replies",
                                 "/api/v1/posts/*/reply",
@@ -231,9 +232,13 @@ public class SecurityConfig {
 
                         .requestMatchers(
                                 "/api/v1/replies/image",
-                                "/api/v1/replies/user/*").permitAll()
+                                "/api/v1/replies/user/*",
+                                "/api/v1/replies/*/history").permitAll()
                         .requestMatchers(
                                 "/api/v1/replies/*").hasAuthority("ROLE_STUDENT")
+
+                        .requestMatchers(
+                                "/api/v1/sections/active").permitAll()
 
                         .anyRequest().authenticated())
 

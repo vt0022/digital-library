@@ -27,6 +27,8 @@ public class Section {
 
     private Timestamp updatedAt;
 
+    private boolean isDisabled;
+
     @OneToMany(mappedBy = "section", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Subsection> subsections = new ArrayList<>();
 

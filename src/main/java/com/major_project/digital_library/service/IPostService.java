@@ -1,7 +1,9 @@
 package com.major_project.digital_library.service;
 
 import com.major_project.digital_library.entity.Post;
-import com.major_project.digital_library.entity.User;
+import com.major_project.digital_library.model.request_model.PostRequestModel;
+import com.major_project.digital_library.model.response_model.DetailPostResponseModel;
+import com.major_project.digital_library.model.response_model.PostResponseModel;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -17,7 +19,17 @@ public interface IPostService {
 
     Page<Post> findAll(Pageable pageable);
 
-    Page<Post> findPosts(int page, int size, String order, String query);
+    DetailPostResponseModel getPostDetail(UUID postId);
 
-    Page<Post> findAllByUserPostedOrderByCreatedAtDesc(User user, Pageable pageable);
+    PostResponseModel getPostDetailForGuest(UUID postId);
+
+    Page<PostResponseModel> findPosts(int page, int size, String order, String subsection, String label, String query);
+
+    Page<PostResponseModel> findPostsOfUser(UUID userId, int page, int size, String query);
+
+    PostResponseModel addPost(PostRequestModel postRequestModel);
+
+    PostResponseModel editPost(UUID postId, PostRequestModel postRequestModel);
+
+    void deletePost(UUID postId);
 }

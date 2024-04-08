@@ -5,6 +5,7 @@ import com.major_project.digital_library.entity.ReplyLike;
 import com.major_project.digital_library.entity.User;
 
 import java.util.Optional;
+import java.util.UUID;
 
 public interface IReplyLikeService {
     boolean existsByUserAndReply(User user, Reply reply);
@@ -14,4 +15,6 @@ public interface IReplyLikeService {
     Optional<ReplyLike> findByUserAndReply(User user, Reply reply);
 
     void delete(ReplyLike entity);
+
+    boolean likeReply(UUID replyId);
 }

@@ -3,6 +3,9 @@ package com.major_project.digital_library.controller;
 import com.major_project.digital_library.entity.*;
 import com.major_project.digital_library.model.FileModel;
 import com.major_project.digital_library.model.response_model.ResponseModel;
+import com.major_project.digital_library.repository.ILabelRepository;
+import com.major_project.digital_library.repository.ISectionRepository;
+import com.major_project.digital_library.repository.ISubsectionRepository;
 import com.major_project.digital_library.service.*;
 import com.major_project.digital_library.util.GoogleDriveUpload;
 import com.major_project.digital_library.util.SlugGenerator;
@@ -50,12 +53,15 @@ public class InitController {
     private final IReplyService replyService;
     private final IPostService postService;
     private final IReplyLikeService replyLikeService;
+    private final ISubsectionRepository subsectionRepository;
+    private final ISectionRepository sectionRepository;
+    private final ILabelRepository labelRepository;
     private final GoogleDriveUpload googleDriveUpload;
     private final ModelMapper modelMapper;
     private final SlugGenerator slugGenerator;
 
     @Autowired
-    public InitController(IUserService userService, IDocumentService documentService, IFieldService fieldService, ICategoryService categoryService, IOrganizationService organizationService, IRoleService roleService, ISaveService saveService, IReviewService reviewService, IDocumentLikeService favoriteService, IRecencyService recencyService, IPostLikeService postLikeService, IReplyService replyService, IPostService postService, IReplyLikeService replyLikeService, GoogleDriveUpload googleDriveUpload, ModelMapper modelMapper, SlugGenerator slugGenerator) {
+    public InitController(IUserService userService, IDocumentService documentService, IFieldService fieldService, ICategoryService categoryService, IOrganizationService organizationService, IRoleService roleService, ISaveService saveService, IReviewService reviewService, IDocumentLikeService favoriteService, IRecencyService recencyService, IPostLikeService postLikeService, IReplyService replyService, IPostService postService, IReplyLikeService replyLikeService, ISubsectionRepository subsectionRepository, ISectionRepository sectionRepository, ILabelRepository labelRepository, GoogleDriveUpload googleDriveUpload, ModelMapper modelMapper, SlugGenerator slugGenerator) {
         this.userService = userService;
         this.documentService = documentService;
         this.fieldService = fieldService;
@@ -70,6 +76,9 @@ public class InitController {
         this.replyService = replyService;
         this.postService = postService;
         this.replyLikeService = replyLikeService;
+        this.subsectionRepository = subsectionRepository;
+        this.sectionRepository = sectionRepository;
+        this.labelRepository = labelRepository;
         this.googleDriveUpload = googleDriveUpload;
         this.modelMapper = modelMapper;
         this.slugGenerator = slugGenerator;
@@ -772,6 +781,141 @@ public class InitController {
                 .status(200)
                 .error(false)
                 .message("Add reply likes successfully")
+                .build());
+    }
+
+    @PostMapping("/subsections")
+    public ResponseEntity<?> addSubsections() throws IOException {
+        FileInputStream file = new FileInputStream("D:\\Nam4\\Ky1\\TieuLuanChuyenNganh\\digital-library\\src\\main\\resources\\database\\SubsectionsInit.xlsx");
+        Workbook workbook = new XSSFWorkbook(file);
+        Sheet sheet = workbook.getSheetAt(0);
+
+        // Duyệt qua các hàng trong sheet
+        for (Row row : sheet) {
+            if (row.getRowNum() == 0) {
+                continue;
+            }
+
+            Cell cellName = row.getCell(0);
+            Cell cellSection = row.getCell(1);
+            Cell cellSlug = row.getCell(2);
+
+            DataFormatter formatter = new DataFormatter();
+
+            if (cellName != null) {
+                UUID sectionId = UUID.fromString(formatter.formatCellValue(cellSection));
+                String name = formatter.formatCellValue(cellName);
+                String slug = formatter.formatCellValue(cellSlug);
+
+                try {
+                    Section section = sectionRepository.findById(sectionId).orElseThrow(() -> new RuntimeException("Reply not found"));
+                    Subsection subsection = new Subsection();
+                    subsection.setSlug(slug);
+                    subsection.setSubName(name);
+                    subsection.setSection(section);
+                    subsectionRepository.save(subsection);
+                } catch (Exception e) {
+                    System.out.println(e);
+                }
+            }
+        }
+
+        workbook.close();
+        file.close();
+
+        return ResponseEntity.ok(ResponseModel.builder()
+                .status(200)
+                .error(false)
+                .message("Add subsections successfully")
+                .build());
+    }
+
+    @PostMapping("/labels")
+    public ResponseEntity<?> addLabels() throws IOException {
+        FileInputStream file = new FileInputStream("D:\\Nam4\\Ky1\\TieuLuanChuyenNganh\\digital-library\\src\\main\\resources\\database\\LabelsInit.xlsx");
+        Workbook workbook = new XSSFWorkbook(file);
+        Sheet sheet = workbook.getSheetAt(0);
+
+        // Duyệt qua các hàng trong sheet
+        for (Row row : sheet) {
+            if (row.getRowNum() == 0) {
+                continue;
+            }
+
+            Cell cellName = row.getCell(0);
+            Cell cellSlug = row.getCell(1);
+
+            DataFormatter formatter = new DataFormatter();
+
+            if (cellName != null) {
+                String name = formatter.formatCellValue(cellName);
+                String slug = formatter.formatCellValue(cellSlug);
+
+                try {
+                    Label label = new Label();
+                    label.setLabelName(name);
+                    label.setSlug(slug);
+                    labelRepository.save(label);
+                } catch (Exception e) {
+                    System.out.println(e);
+                }
+            }
+        }
+
+        workbook.close();
+        file.close();
+
+        return ResponseEntity.ok(ResponseModel.builder()
+                .status(200)
+                .error(false)
+                .message("Add labels successfully")
+                .build());
+    }
+
+    @PutMapping("/post/labelsubsection")
+    public ResponseEntity<?> addLabelAndSubsectionForPost() throws IOException {
+        FileInputStream file = new FileInputStream("D:\\Nam4\\Ky1\\TieuLuanChuyenNganh\\digital-library\\src\\main\\resources\\database\\PostLabelSubsectionInit.xlsx");
+        Workbook workbook = new XSSFWorkbook(file);
+        Sheet sheet = workbook.getSheetAt(0);
+
+        // Duyệt qua các hàng trong sheet
+        for (Row row : sheet) {
+            if (row.getRowNum() == 0) {
+                continue;
+            }
+
+            Cell cellPost = row.getCell(0);
+            Cell cellSubsection = row.getCell(1);
+            Cell cellLabel = row.getCell(2);
+
+            DataFormatter formatter = new DataFormatter();
+
+            if (cellPost != null) {
+                UUID postId = UUID.fromString(formatter.formatCellValue(cellPost));
+                UUID subId = UUID.fromString(formatter.formatCellValue(cellSubsection));
+                UUID labelId = cellLabel == null ? null : UUID.fromString(formatter.formatCellValue(cellLabel));
+
+                try {
+                    Post post = postService.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
+                    Subsection subsection = subsectionRepository.findById(subId).orElseThrow(() -> new RuntimeException("Subsection not found"));
+                    Label label = labelId == null ? null : labelRepository.findById(labelId).orElseThrow(() -> new RuntimeException("Label not found"));
+
+                    post.setSubsection(subsection);
+                    post.setLabel(label);
+                    postService.save(post);
+                } catch (Exception e) {
+                    System.out.println(e);
+                }
+            }
+        }
+
+        workbook.close();
+        file.close();
+
+        return ResponseEntity.ok(ResponseModel.builder()
+                .status(200)
+                .error(false)
+                .message("Add labels and subsections for posts successfully")
                 .build());
     }
 

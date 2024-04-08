@@ -29,6 +29,8 @@ public class Subsection {
 
     private Timestamp updatedAt;
 
+    private boolean isDisabled;
+
     @ManyToOne
     @JoinColumn(name = "sectionId")
     private Section section;

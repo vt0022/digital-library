@@ -3,9 +3,12 @@ package com.major_project.digital_library.service;
 import com.major_project.digital_library.entity.Post;
 import com.major_project.digital_library.entity.Reply;
 import com.major_project.digital_library.entity.User;
+import com.major_project.digital_library.model.request_model.ReplyRequestModel;
+import com.major_project.digital_library.model.response_model.ReplyResponseModel;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -19,4 +22,16 @@ public interface IReplyService {
     Page<Reply> findAllByUserOrderByCreatedAtDesc(User user, Pageable pageable);
 
     void deleteById(UUID uuid);
+
+    Page<ReplyResponseModel> getRepliesOfPostForGuest(UUID postId, int page, int size);
+
+    Page<ReplyResponseModel> getRepliesOfPost(UUID postId, int page, int size);
+
+    ReplyResponseModel addReply(UUID postId, ReplyRequestModel replyRequestModel);
+
+    ReplyResponseModel editReply(UUID replyId, Map<String, String> replyContent);
+
+    void deleteReply(UUID replyId);
+
+    Page<ReplyResponseModel> getRepliesOfUser(UUID userId, int page, int size);
 }

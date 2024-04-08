@@ -5,6 +5,7 @@ import com.major_project.digital_library.entity.PostLike;
 import com.major_project.digital_library.entity.User;
 
 import java.util.Optional;
+import java.util.UUID;
 
 public interface IPostLikeService {
     boolean existsByUserAndPost(User user, Post post);
@@ -16,4 +17,6 @@ public interface IPostLikeService {
     void delete(PostLike entity);
 
     Optional<PostLike> findByUserAndPost(User user, Post post);
+
+    boolean likePost(UUID postId);
 }

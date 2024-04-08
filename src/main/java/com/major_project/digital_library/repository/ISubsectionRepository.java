@@ -4,8 +4,10 @@ import com.major_project.digital_library.entity.Subsection;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
 public interface ISubsectionRepository extends JpaRepository<Subsection, UUID> {
+    Optional<Subsection> findBySlug(String slug);
 }

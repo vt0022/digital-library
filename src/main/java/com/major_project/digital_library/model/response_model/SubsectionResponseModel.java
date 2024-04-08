@@ -1,5 +1,6 @@
 package com.major_project.digital_library.model.response_model;
 
+import com.major_project.digital_library.model.lean_model.PostLeanModel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,15 +11,15 @@ import java.sql.Timestamp;
 import java.util.UUID;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
-public class CategoryResponseModel implements Serializable {
+@NoArgsConstructor
+public class SubsectionResponseModel implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    private UUID categoryId;
+    private UUID subId;
 
-    private String categoryName;
+    private String subName;
 
     private String slug;
 
@@ -26,7 +27,9 @@ public class CategoryResponseModel implements Serializable {
 
     private Timestamp updatedAt;
 
-    private boolean isDeleted;
+    private int totalPosts;
 
-    private int totalDocuments;
+    private int totalReplies;
+
+    private PostLeanModel latestPost;
 }
