@@ -56,6 +56,8 @@ public class Document {
 
     private boolean isInternal;
 
+    private boolean isShared;
+
     private String thumbnail;
 
     @ManyToOne
@@ -90,6 +92,17 @@ public class Document {
     @OneToMany(mappedBy = "document", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Recency> recencies = new ArrayList<>();
 
+    @ManyToMany()
+    @JoinTable(
+            name = "document_tag",
+            joinColumns = {@JoinColumn(name = "doc_id")},
+            inverseJoinColumns = {@JoinColumn(name = "tag_id")}
+    )
+    private List<Tag> tags = new ArrayList<>();
+
+    @OneToMany(mappedBy = "document", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CollectionDocument> collectionDocuments = new ArrayList<>();
+
     @PrePersist
     protected void onCreate() {
         uploadedAt = new Timestamp(System.currentTimeMillis());
@@ -100,10 +113,5 @@ public class Document {
 //    protected void onUpdate() {
 //        updatedAt = new Timestamp(System.currentTimeMillis());
 //    }
-
-    @PreRemove
-    protected void onRemove() {
-        isDeleted = true;
-    }
 
 }

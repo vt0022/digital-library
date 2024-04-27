@@ -13,7 +13,7 @@ import java.io.Serializable;
 @NoArgsConstructor
 
 @Entity
-@IdClass(UserPost.class)
+@IdClass(UserPostKey.class)
 public class PostLike implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;

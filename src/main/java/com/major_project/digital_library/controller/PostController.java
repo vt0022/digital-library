@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/posts")
+@RequestMapping("/api/v2/posts")
 public class PostController {
     private final IPostService postService;
     private final IUserService userService;
@@ -185,6 +185,21 @@ public class PostController {
                         .error(false)
                         .message("Get history of post successfully")
                         .data(postHistoryResponseModels)
+                        .build());
+    }
+
+    @Operation(summary = "Tìm bài viết liên quan")
+    @GetMapping("/related")
+    public ResponseEntity<?> getRelatedPosts(@RequestParam(defaultValue = "") String query) {
+        Page<PostResponseModel> postResponseModels = postService.findRelatedPosts(query);
+
+        return ResponseEntity.ok(
+                ResponseModel
+                        .builder()
+                        .status(200)
+                        .error(false)
+                        .message("Get related posts successfully")
+                        .data(postResponseModels)
                         .build());
     }
 }

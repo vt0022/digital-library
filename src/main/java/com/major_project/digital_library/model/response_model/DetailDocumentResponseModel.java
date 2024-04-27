@@ -52,6 +52,12 @@ public class DetailDocumentResponseModel implements Serializable {
 
     private String thumbnail;
 
+    private boolean isLiked;
+
+    private boolean isSaved;
+
+    private boolean isReviewed;
+
     private UserResponseModel userUploaded;
 
     private UserResponseModel userVerified;

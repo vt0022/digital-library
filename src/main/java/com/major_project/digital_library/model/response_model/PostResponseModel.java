@@ -1,5 +1,6 @@
 package com.major_project.digital_library.model.response_model;
 
+import com.major_project.digital_library.model.lean_model.LabelLeanModel;
 import com.major_project.digital_library.model.lean_model.ReplyLeanModel;
 import com.major_project.digital_library.model.lean_model.UserLeanModel;
 import lombok.AllArgsConstructor;
@@ -37,4 +38,6 @@ public class PostResponseModel implements Serializable {
     private int totalViews;
 
     private ReplyLeanModel latestReply;
+
+    private LabelLeanModel label;
 }

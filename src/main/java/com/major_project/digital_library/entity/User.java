@@ -89,10 +89,22 @@ public class User implements Serializable, UserDetails {
     private VerificationCode verificationCode;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Reply> replies = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ReplyLike> replyLikes = new ArrayList<>();
+
+    @OneToMany(mappedBy = "userPosted", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Post> posts = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PostLike> postLikes = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<BadgeReward> badgeRewards = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<com.major_project.digital_library.entity.Collection> collections = new ArrayList<>();
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -140,10 +152,5 @@ public class User implements Serializable, UserDetails {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = new Timestamp(System.currentTimeMillis());
-    }
-
-    @PreRemove
-    protected void onRemove() {
-        isDeleted = true;
     }
 }

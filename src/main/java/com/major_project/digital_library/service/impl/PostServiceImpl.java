@@ -1,13 +1,19 @@
 package com.major_project.digital_library.service.impl;
 
+import com.major_project.digital_library.constant.BadgeUnit;
 import com.major_project.digital_library.entity.*;
+import com.major_project.digital_library.model.lean_model.BadgeLeanModel;
 import com.major_project.digital_library.model.lean_model.ReplyLeanModel;
 import com.major_project.digital_library.model.request_model.PostRequestModel;
 import com.major_project.digital_library.model.response_model.DetailPostResponseModel;
 import com.major_project.digital_library.model.response_model.PostResponseModel;
 import com.major_project.digital_library.repository.*;
+import com.major_project.digital_library.service.IBadgeRewardService;
+import com.major_project.digital_library.service.IBadgeService;
 import com.major_project.digital_library.service.IPostService;
 import com.major_project.digital_library.service.IUserService;
+import com.major_project.digital_library.util.SlugGenerator;
+import com.major_project.digital_library.yake.TagExtractor;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -16,9 +22,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.util.Comparator;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class PostServiceImpl implements IPostService {
@@ -28,19 +32,27 @@ public class PostServiceImpl implements IPostService {
     private final IUserRepositoty userRepository;
     private final ISubsectionRepository subsectionRepository;
     private final ILabelRepository labelRepository;
+    private final ITagRepository tagRepository;
     private final IUserService userService;
+    private final IBadgeService badgeService;
+    private final IBadgeRewardService badgeRewardService;
     private final ModelMapper modelMapper;
+    private final TagExtractor tagExtractor;
 
     @Autowired
-    public PostServiceImpl(IPostRepository postRepository, IPostLikeRepository postLikeRepository, IPostHistoryRepository postHistoryRepository, IUserRepositoty userRepository, ISubsectionRepository subsectionRepository, ILabelRepository labelRepository, IUserService userService, ModelMapper modelMapper) {
+    public PostServiceImpl(IPostRepository postRepository, IPostLikeRepository postLikeRepository, IPostHistoryRepository postHistoryRepository, IUserRepositoty userRepository, ISubsectionRepository subsectionRepository, ILabelRepository labelRepository, ITagRepository tagRepository, IUserService userService, IBadgeService badgeService, IBadgeRewardService badgeRewardService, ModelMapper modelMapper, TagExtractor tagExtractor) {
         this.postRepository = postRepository;
         this.postLikeRepository = postLikeRepository;
         this.postHistoryRepository = postHistoryRepository;
         this.userRepository = userRepository;
         this.subsectionRepository = subsectionRepository;
         this.labelRepository = labelRepository;
+        this.tagRepository = tagRepository;
         this.userService = userService;
+        this.badgeService = badgeService;
+        this.badgeRewardService = badgeRewardService;
         this.modelMapper = modelMapper;
+        this.tagExtractor = tagExtractor;
     }
 
     @Override
@@ -66,6 +78,7 @@ public class PostServiceImpl implements IPostService {
     @Override
     public DetailPostResponseModel getPostDetail(UUID postId) {
         Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
+        badgeRewardService.rewardBadge(post.getUserPosted(), String.valueOf(BadgeUnit.TOTAL_POST_VIEWS));
         DetailPostResponseModel detailPostResponseModel = convertToDetailPostModel(post);
         return detailPostResponseModel;
     }
@@ -73,6 +86,7 @@ public class PostServiceImpl implements IPostService {
     @Override
     public PostResponseModel getPostDetailForGuest(UUID postId) {
         Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
+        badgeRewardService.rewardBadge(post.getUserPosted(), String.valueOf(BadgeUnit.TOTAL_POST_VIEWS));
         PostResponseModel postResponseModel = convertToPostModel(post);
         return postResponseModel;
     }
@@ -132,12 +146,53 @@ public class PostServiceImpl implements IPostService {
     }
 
     @Override
+    public Page<PostResponseModel> findRelatedPosts(String query) {
+        Pageable pageable = PageRequest.of(0, 100);
+
+        List<String> tags = tagExtractor.findKeywords(query);
+
+        Page<Post> posts = postRepository.findAllByTags(tags, pageable);
+        Page<PostResponseModel> postResponseModels = posts.map(this::convertToPostModel);
+
+        return postResponseModels;
+    }
+
+    @Override
     public PostResponseModel addPost(PostRequestModel postRequestModel) {
         User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not logged in"));
 
+        Subsection subsection = subsectionRepository.findById(postRequestModel.getSubsectionId()).orElseThrow(() -> new RuntimeException("Subsection not found"));
+        Label label = postRequestModel.getLabelId() == null ? null : labelRepository.findById(postRequestModel.getLabelId()).orElseThrow(() -> new RuntimeException("Label not found"));
+
+        List<String> keywords = tagExtractor.findKeywords(postRequestModel.getTitle()
+                .concat(". ")
+                .concat(postRequestModel.getContent().replace("<[^>]*>", "")));
+
         Post post = modelMapper.map(postRequestModel, Post.class);
         post.setUserPosted(user);
+        post.setSubsection(subsection);
+        post.setLabel(label);
+
+        for (String keyword : keywords) {
+            boolean isExisted = tagRepository.existsByTagName(keyword);
+            Tag tag = new Tag();
+            if (isExisted) {
+                tag = tagRepository.findByTagName(keyword).orElseThrow(() -> new RuntimeException("Tag not found"));
+            } else {
+                tag.setTagName(keyword);
+                tag.setSlug(SlugGenerator.generateSlug(keyword, false));
+                tag = tagRepository.save(tag);
+            }
+
+            if (!post.getTags().contains(tag)) {
+                post.getTags().add(tag);
+                postRepository.save(post);
+            }
+        }
+
         postRepository.save(post);
+
+        badgeRewardService.rewardBadge(user, BadgeUnit.TOTAL_POSTS.name());
 
         PostResponseModel postResponseModel = modelMapper.map(post, PostResponseModel.class);
 
@@ -194,12 +249,38 @@ public class PostServiceImpl implements IPostService {
 
         boolean isLiked = postLikeRepository.existsByUserAndPost(user, post);
         boolean isMy = post.getUserPosted().getUserId().equals(user.getUserId());
+        BadgeLeanModel badge = badgeService.findBestBadge(post.getUserPosted().getUserId());
 
         detailPostResponseModel.setLiked(isLiked);
         detailPostResponseModel.setMy(isMy);
         detailPostResponseModel.setTotalLikes(post.getPostLikes().size());
         detailPostResponseModel.setTotalReplies(post.getReplies().size());
+        detailPostResponseModel.getUserPosted().setBadge(badge);
 
         return detailPostResponseModel;
+    }
+
+    //    @PostConstruct
+    public void test() {
+        List<String> tags = Arrays.asList("ngôn ngữ", "ngôn ngữ tự nhiên", "ai", "ml");
+        Post post = postRepository.findById(UUID.fromString("c0a80064-8e78-115a-818e-78e76d6c0004")).get();
+
+        tags.forEach(tag -> {
+            if (tagRepository.existsByTagName(tag)) {
+                Tag tag1 = tagRepository.findByTagName(tag).orElse(null);
+
+                if (!post.getTags().contains(tag)) {
+                    post.getTags().add(tag1);
+                    postRepository.save(post);
+                }
+            }
+        });
+
+        List<Post> posts = postRepository.findAll();
+        posts.forEach(post1 -> {
+            if (post1.getPostHistories().size() == 0)
+                post1.setUpdatedAt(null);
+            postRepository.save(post1);
+        });
     }
 }

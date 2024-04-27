@@ -19,7 +19,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/v1/statistics")
+@RequestMapping("/api/v2/statistics")
 public class StatisticsController {
     private final IUserService userService;
     private final IDocumentService documentService;

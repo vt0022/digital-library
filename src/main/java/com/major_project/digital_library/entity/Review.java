@@ -27,7 +27,9 @@ public class Review {
 
     private Timestamp updatedAt;
 
-    private boolean isVerified;
+    private int verifiedStatus;
+
+    private String note;
 
     @ManyToOne
     @JoinColumn(name = "userId")
@@ -40,7 +42,6 @@ public class Review {
     @PrePersist
     protected void onCreate() {
         createdAt = new Timestamp(System.currentTimeMillis());
-        updatedAt = new Timestamp(System.currentTimeMillis());
     }
 
     @PreUpdate

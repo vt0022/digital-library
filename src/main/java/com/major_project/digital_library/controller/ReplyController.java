@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v2")
 public class ReplyController {
     private final IReplyService replyService;
     private final IReplyHistoryService replyHistoryService;

@@ -22,7 +22,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/v1/fields")
+@RequestMapping("/api/v2/fields")
 public class FieldController {
     private final IFieldService fieldService;
     private final ModelMapper modelMapper;

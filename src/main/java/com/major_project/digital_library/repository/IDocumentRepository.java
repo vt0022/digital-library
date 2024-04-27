@@ -280,4 +280,35 @@ public interface IDocumentRepository extends JpaRepository<Document, UUID> {
             "FROM Document d " +
             "GROUP BY d.organization")
     List<Object[]> countDocumentsByOrganization();
+
+    @Query("SELECT d FROM Document d JOIN d.tags t " +
+            "WHERE t IN :tags " +
+            "AND d <> :document " +
+            "GROUP BY d.docId " +
+            "ORDER BY COUNT(t) DESC")
+    Page<Document> findRelatedDocumentsByTags(Document document, List<Tag> tags, Pageable pageable);
+
+    @Query("SELECT d FROM Document d " +
+            "JOIN d.collectionDocuments c " +
+            "WHERE c.collection = :collection " +
+            "AND d.isInternal = false " +
+            "AND d.category.isDeleted = false " +
+            "AND d.field.isDeleted = false " +
+            "AND d.organization.isDeleted = false " +
+            "AND d.verifiedStatus = 1 " +
+            "ORDER BY c.addedAt DESC"
+    )
+    Page<Document> findByCollectionForGuest(Collection collection, Pageable pageable);
+
+    @Query("SELECT d FROM Document d " +
+            "JOIN d.collectionDocuments c " +
+            "WHERE c.collection = :collection " +
+            "AND (d.isInternal = false OR d.organization = :organization) " +
+            "AND d.category.isDeleted = false " +
+            "AND d.field.isDeleted = false " +
+            "AND d.organization.isDeleted = false " +
+            "AND d.verifiedStatus = 1 " +
+            "ORDER BY c.addedAt DESC"
+    )
+    Page<Document> findByCollectionForUser(Collection collection, Organization organization, Pageable pageable);
 }

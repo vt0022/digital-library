@@ -1,5 +1,7 @@
 package com.major_project.digital_library.model.response_model;
 
+import com.major_project.digital_library.model.lean_model.LabelLeanModel;
+import com.major_project.digital_library.model.lean_model.SubsectionLeanModel;
 import com.major_project.digital_library.model.lean_model.UserLeanModel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -39,5 +41,7 @@ public class DetailPostResponseModel implements Serializable {
 
     private boolean isMy;
 
-    //private List<ReplyResponseModel> replies = new ArrayList<>();
+    private SubsectionLeanModel subsection;
+
+    private LabelLeanModel label;
 }

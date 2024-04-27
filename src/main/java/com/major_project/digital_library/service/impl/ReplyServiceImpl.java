@@ -4,12 +4,14 @@ import com.major_project.digital_library.entity.Post;
 import com.major_project.digital_library.entity.Reply;
 import com.major_project.digital_library.entity.ReplyHistory;
 import com.major_project.digital_library.entity.User;
+import com.major_project.digital_library.model.lean_model.BadgeLeanModel;
 import com.major_project.digital_library.model.request_model.ReplyRequestModel;
 import com.major_project.digital_library.model.response_model.ReplyResponseModel;
 import com.major_project.digital_library.repository.IPostRepository;
 import com.major_project.digital_library.repository.IReplyHistoryRepository;
 import com.major_project.digital_library.repository.IReplyLikeRepository;
 import com.major_project.digital_library.repository.IReplyRepository;
+import com.major_project.digital_library.service.IBadgeService;
 import com.major_project.digital_library.service.IReplyService;
 import com.major_project.digital_library.service.IUserService;
 import org.modelmapper.ModelMapper;
@@ -30,15 +32,17 @@ public class ReplyServiceImpl implements IReplyService {
     private final IPostRepository postRepository;
     private final IReplyHistoryRepository replyHistoryRepository;
     private final IUserService userService;
+    private final IBadgeService badgeService;
     private final ModelMapper modelMapper;
 
     @Autowired
-    public ReplyServiceImpl(IReplyRepository replyRepository, IUserService userService, IReplyLikeRepository replyLikeRepository, IPostRepository postRepository, IReplyHistoryRepository replyHistoryRepository, ModelMapper modelMapper) {
+    public ReplyServiceImpl(IReplyRepository replyRepository, IUserService userService, IReplyLikeRepository replyLikeRepository, IPostRepository postRepository, IReplyHistoryRepository replyHistoryRepository, IBadgeService badgeService, ModelMapper modelMapper) {
         this.replyRepository = replyRepository;
         this.userService = userService;
         this.replyLikeRepository = replyLikeRepository;
         this.postRepository = postRepository;
         this.replyHistoryRepository = replyHistoryRepository;
+        this.badgeService = badgeService;
         this.modelMapper = modelMapper;
     }
 
@@ -149,7 +153,12 @@ public class ReplyServiceImpl implements IReplyService {
 
     private ReplyResponseModel convertToReplyModelForGuest(Reply reply) {
         ReplyResponseModel replyResponseModel = modelMapper.map(reply, ReplyResponseModel.class);
+
+        BadgeLeanModel badge = badgeService.findBestBadge(reply.getUser().getUserId());
+
         replyResponseModel.setTotalLikes(reply.getReplyLikes().size());
+        replyResponseModel.getUser().setBadge(badge);
+
         return replyResponseModel;
     }
 
@@ -157,11 +166,13 @@ public class ReplyServiceImpl implements IReplyService {
         User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not logged in"));
         boolean isLiked = replyLikeRepository.existsByUserAndReply(user, reply);
         boolean isMy = reply.getUser().getUserId().equals(user.getUserId());
+        BadgeLeanModel badge = badgeService.findBestBadge(reply.getUser().getUserId());
 
         ReplyResponseModel replyResponseModel = modelMapper.map(reply, ReplyResponseModel.class);
         replyResponseModel.setLiked(isLiked);
         replyResponseModel.setMy(isMy);
         replyResponseModel.setTotalLikes(reply.getReplyLikes().size());
+        replyResponseModel.getUser().setBadge(badge);
 
         return replyResponseModel;
     }

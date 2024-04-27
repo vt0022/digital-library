@@ -1,10 +1,12 @@
 package com.major_project.digital_library.service.impl;
 
+import com.major_project.digital_library.constant.BadgeUnit;
 import com.major_project.digital_library.entity.Post;
 import com.major_project.digital_library.entity.PostLike;
 import com.major_project.digital_library.entity.User;
 import com.major_project.digital_library.repository.IPostLikeRepository;
 import com.major_project.digital_library.repository.IPostRepository;
+import com.major_project.digital_library.service.IBadgeRewardService;
 import com.major_project.digital_library.service.IPostLikeService;
 import com.major_project.digital_library.service.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,12 +20,14 @@ public class PostLikeServiceImpl implements IPostLikeService {
     private final IPostLikeRepository postLikeRepository;
     private final IPostRepository postRepository;
     private final IUserService userService;
+    private final IBadgeRewardService badgeRewardService;
 
     @Autowired
-    public PostLikeServiceImpl(IPostLikeRepository postLikeRepository, IPostRepository postRepository, IUserService userService) {
+    public PostLikeServiceImpl(IPostLikeRepository postLikeRepository, IPostRepository postRepository, IUserService userService, IBadgeRewardService badgeRewardService) {
         this.postLikeRepository = postLikeRepository;
         this.postRepository = postRepository;
         this.userService = userService;
+        this.badgeRewardService = badgeRewardService;
     }
 
     @Override
@@ -66,6 +70,9 @@ public class PostLikeServiceImpl implements IPostLikeService {
             newPostLike.setUser(user);
             newPostLike.setPost(post);
             postLikeRepository.save(newPostLike);
+
+            badgeRewardService.rewardBadge(post.getUserPosted(), BadgeUnit.TOTAL_POST_LIKES.name());
+            
             return false;
         }
     }

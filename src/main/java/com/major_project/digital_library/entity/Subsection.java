@@ -31,6 +31,8 @@ public class Subsection {
 
     private boolean isDisabled;
 
+    private boolean isEditable;
+
     @ManyToOne
     @JoinColumn(name = "sectionId")
     private Section section;

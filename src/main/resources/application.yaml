@@ -49,8 +49,8 @@ spring:
 
 springdoc:
   api-docs:
-    path: /api/v1/api-docs
+    path: /api/v2/api-docs
   swagger-ui:
     operationsSorter: method
-    path: /api/v1/swagger-ui
+    path: /api/v2/swagger-ui
     try-it-out-enabled: true

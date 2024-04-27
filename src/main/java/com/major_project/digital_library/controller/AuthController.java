@@ -35,7 +35,7 @@ import java.sql.Timestamp;
 import java.util.*;
 
 @RestController
-@RequestMapping("/api/v1/auth")
+@RequestMapping("/api/v2/auth")
 public class AuthController {
     private final ModelMapper modelMapper;
     private final IUserService userService;

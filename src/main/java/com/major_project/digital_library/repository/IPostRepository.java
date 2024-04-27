@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.UUID;
 
 @Repository
@@ -78,4 +79,10 @@ public interface IPostRepository extends JpaRepository<Post, UUID> {
             "AND p.userPosted = :user " +
             "ORDER BY p.createdAt DESC")
     Page<Post> findAllByUser(User user, String query, Pageable pageable);
+
+    @Query("SELECT p FROM Post p JOIN p.tags t " +
+            "WHERE t.tagName IN :tags " +
+            "GROUP BY p.postId " +
+            "ORDER BY COUNT(t) DESC")
+    Page<Post> findAllByTags(List<String> tags, Pageable pageable);
 }

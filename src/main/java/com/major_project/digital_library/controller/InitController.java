@@ -1,14 +1,15 @@
 package com.major_project.digital_library.controller;
 
+import com.major_project.digital_library.constant.BadgeUnit;
+import com.major_project.digital_library.entity.Collection;
 import com.major_project.digital_library.entity.*;
 import com.major_project.digital_library.model.FileModel;
 import com.major_project.digital_library.model.response_model.ResponseModel;
-import com.major_project.digital_library.repository.ILabelRepository;
-import com.major_project.digital_library.repository.ISectionRepository;
-import com.major_project.digital_library.repository.ISubsectionRepository;
+import com.major_project.digital_library.repository.*;
 import com.major_project.digital_library.service.*;
 import com.major_project.digital_library.util.GoogleDriveUpload;
 import com.major_project.digital_library.util.SlugGenerator;
+import com.major_project.digital_library.yake.TagExtractor;
 import org.apache.commons.io.IOUtils;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -29,15 +30,14 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @RestController
-@RequestMapping("/api/v1/init")
+@RequestMapping("/api/v2/init")
 public class InitController {
     private final IUserService userService;
     private final IDocumentService documentService;
@@ -56,12 +56,21 @@ public class InitController {
     private final ISubsectionRepository subsectionRepository;
     private final ISectionRepository sectionRepository;
     private final ILabelRepository labelRepository;
+    private final IBadgeTypeRepository badgeTypeRepository;
+    private final IBadgeRepository badgeRepository;
     private final GoogleDriveUpload googleDriveUpload;
     private final ModelMapper modelMapper;
     private final SlugGenerator slugGenerator;
+    private final IUserRepositoty userRepositoty;
+    private final IBadgeRewardRepository badgeRewardRepository;
+    private final ITagRepository tagRepository;
+    private final IPostRepository postRepository;
+    private final ICollectionRepository collectionRepository;
+    private final ICollectionDocumentRepository collectionDocumentRepository;
+    private final TagExtractor tagExtractor;
 
     @Autowired
-    public InitController(IUserService userService, IDocumentService documentService, IFieldService fieldService, ICategoryService categoryService, IOrganizationService organizationService, IRoleService roleService, ISaveService saveService, IReviewService reviewService, IDocumentLikeService favoriteService, IRecencyService recencyService, IPostLikeService postLikeService, IReplyService replyService, IPostService postService, IReplyLikeService replyLikeService, ISubsectionRepository subsectionRepository, ISectionRepository sectionRepository, ILabelRepository labelRepository, GoogleDriveUpload googleDriveUpload, ModelMapper modelMapper, SlugGenerator slugGenerator) {
+    public InitController(IUserService userService, IDocumentService documentService, IFieldService fieldService, ICategoryService categoryService, IOrganizationService organizationService, IRoleService roleService, ISaveService saveService, IReviewService reviewService, IDocumentLikeService favoriteService, IRecencyService recencyService, IPostLikeService postLikeService, IReplyService replyService, IPostService postService, IReplyLikeService replyLikeService, ISubsectionRepository subsectionRepository, ISectionRepository sectionRepository, ILabelRepository labelRepository, IBadgeTypeRepository badgeTypeRepository, IBadgeRepository badgeRepository, GoogleDriveUpload googleDriveUpload, ModelMapper modelMapper, SlugGenerator slugGenerator, IUserRepositoty userRepositoty, IBadgeRewardRepository badgeRewardRepository, ITagRepository tagRepository, IPostRepository postRepository, ICollectionRepository collectionRepository, ICollectionDocumentRepository collectionDocumentRepository, TagExtractor tagExtractor) {
         this.userService = userService;
         this.documentService = documentService;
         this.fieldService = fieldService;
@@ -79,9 +88,18 @@ public class InitController {
         this.subsectionRepository = subsectionRepository;
         this.sectionRepository = sectionRepository;
         this.labelRepository = labelRepository;
+        this.badgeTypeRepository = badgeTypeRepository;
+        this.badgeRepository = badgeRepository;
         this.googleDriveUpload = googleDriveUpload;
         this.modelMapper = modelMapper;
         this.slugGenerator = slugGenerator;
+        this.userRepositoty = userRepositoty;
+        this.badgeRewardRepository = badgeRewardRepository;
+        this.tagRepository = tagRepository;
+        this.postRepository = postRepository;
+        this.collectionRepository = collectionRepository;
+        this.collectionDocumentRepository = collectionDocumentRepository;
+        this.tagExtractor = tagExtractor;
     }
 
     @PostMapping("/documents")
@@ -916,6 +934,359 @@ public class InitController {
                 .status(200)
                 .error(false)
                 .message("Add labels and subsections for posts successfully")
+                .build());
+    }
+
+    @PostMapping("/badgeTypes")
+    public ResponseEntity<?> addBadgeTypes() throws IOException {
+        FileInputStream file = new FileInputStream("D:\\Nam4\\Ky1\\TieuLuanChuyenNganh\\digital-library\\src\\main\\resources\\database\\BadgesInit.xlsx");
+        Workbook workbook = new XSSFWorkbook(file);
+        Sheet sheet = workbook.getSheetAt(1);
+
+        // Duyệt qua các hàng trong sheet
+        for (Row row : sheet) {
+            if (row.getRowNum() == 0) {
+                continue;
+            }
+
+            Cell cellUnit = row.getCell(0);
+
+            DataFormatter formatter = new DataFormatter();
+
+            if (cellUnit != null) {
+                String unit = formatter.formatCellValue(cellUnit);
+
+                try {
+                    BadgeType badgeType = new BadgeType();
+                    badgeType.setUnit(unit);
+                    badgeTypeRepository.save(badgeType);
+                } catch (Exception e) {
+                    System.out.println(e);
+                }
+            }
+        }
+
+        workbook.close();
+        file.close();
+
+        return ResponseEntity.ok(ResponseModel.builder()
+                .status(200)
+                .error(false)
+                .message("Add badge type successfully")
+                .build());
+    }
+
+    @PostMapping("/badges")
+    public ResponseEntity<?> addBadges() throws IOException {
+        FileInputStream file = new FileInputStream("D:\\Nam4\\Ky1\\TieuLuanChuyenNganh\\digital-library\\src\\main\\resources\\database\\BadgesInit.xlsx");
+        Workbook workbook = new XSSFWorkbook(file);
+        Sheet sheet = workbook.getSheetAt(0);
+
+        // Duyệt qua các hàng trong sheet
+        for (Row row : sheet) {
+            if (row.getRowNum() == 0) {
+                continue;
+            }
+
+            Cell cellName = row.getCell(0);
+            Cell cellValue = row.getCell(1);
+            Cell cellType = row.getCell(2);
+
+            DataFormatter formatter = new DataFormatter();
+
+            if (cellName != null) {
+                String name = formatter.formatCellValue(cellName);
+                int value = Integer.parseInt(formatter.formatCellValue(cellValue));
+                UUID type = UUID.fromString(formatter.formatCellValue(cellType));
+
+                try {
+                    BadgeType badgeType = badgeTypeRepository.findById(type).orElse(null);
+                    Badge badge = new Badge();
+                    badge.setBadgeName(name);
+                    badge.setBadgeType(badgeType);
+                    badge.setValue(value);
+                    badgeRepository.save(badge);
+                } catch (Exception e) {
+                    System.out.println(e);
+                }
+            }
+        }
+
+        workbook.close();
+        file.close();
+
+        return ResponseEntity.ok(ResponseModel.builder()
+                .status(200)
+                .error(false)
+                .message("Add badges successfully")
+                .build());
+    }
+
+    @PostMapping("/badges/all")
+    public ResponseEntity<?> rewardBadgesForAll() {
+        List<User> users = userRepositoty.findAll();
+        List<BadgeType> badgeTypes = badgeTypeRepository.findAll();
+        for (User user : users) {
+            for (BadgeType badgeType : badgeTypes) {
+                int value = 0;
+                if (badgeType.getUnit().equals(BadgeUnit.TOTAL_POSTS.name()))
+                    value = user.getPosts().size();
+                else if (badgeType.getUnit().equals(BadgeUnit.TOTAL_REPLIES.name()))
+                    value = user.getReplies().size();
+                else if (badgeType.getUnit().equals(BadgeUnit.TOTAL_POST_LIKES.name()))
+                    value = user.getPosts().stream()
+                            .flatMapToInt(post -> IntStream.of(post.getPostLikes().size()))
+                            .sum();
+                else if (badgeType.getUnit().equals(BadgeUnit.TOTAL_REPLY_LIKES.name()))
+                    value = user.getReplies().stream()
+                            .flatMapToInt(reply -> IntStream.of(reply.getReplyLikes().size()))
+                            .sum();
+                else
+                    value = user.getPosts().stream().mapToInt(Post::getTotalViews).sum();
+
+                List<Badge> badges = badgeRepository.findByBadgeTypeAndValueLessThanEqual(badgeType, value);
+                for (Badge badge : badges) {
+                    BadgeReward badgeReward = new BadgeReward();
+                    badgeReward.setBadge(badge);
+                    badgeReward.setUser(user);
+                    badgeRewardRepository.save(badgeReward);
+                }
+            }
+        }
+
+        return ResponseEntity.ok(ResponseModel.builder()
+                .status(200)
+                .error(false)
+                .message("Add badges successfully")
+                .build());
+    }
+
+    @PostMapping("/tags/post")
+    public ResponseEntity<?> addTagsForPost() {
+        List<Post> posts = postRepository.findAll();
+        for (Post post : posts) {
+            String filteredContent = post.getContent().replaceAll("<[^>]*>", "");
+            try {
+                List<String> keywords = tagExtractor.findKeywords(post.getTitle().concat(". ").concat(filteredContent));
+                for (String keyword : keywords) {
+                    boolean isExisted = tagRepository.existsByTagName(keyword);
+                    Tag tag = new Tag();
+                    if (isExisted) {
+                        tag = tagRepository.findByTagName(keyword).orElseThrow(() -> new RuntimeException("Tag not found"));
+                    } else {
+                        tag.setTagName(keyword);
+                        tag.setSlug(SlugGenerator.generateSlug(keyword, false));
+                        tag = tagRepository.save(tag);
+                    }
+
+                    if (!post.getTags().contains(tag)) {
+                        post.getTags().add(tag);
+                        postService.save(post);
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        test();
+
+        return ResponseEntity.ok(ResponseModel.builder()
+                .status(200)
+                .error(false)
+                .message("Add tags for post successfully")
+                .build());
+    }
+
+    public void test() {
+        List<String> tags = Arrays.asList("ngôn ngữ", "ngôn ngữ tự nhiên", "ai", "ml");
+        Post post = postRepository.findById(UUID.fromString("c0a80064-8e78-115a-818e-78e76d6c0004")).get();
+
+        tags.forEach(tag -> {
+            if (tagRepository.existsByTagName(tag)) {
+                Tag tag1 = tagRepository.findByTagName(tag).orElse(null);
+
+                if (!post.getTags().stream().map(t -> t.getTagId()).collect(Collectors.toList()).contains(tag1.getTagId())) {
+                    post.getTags().add(tag1);
+                    postRepository.save(post);
+                }
+            } else {
+                Tag tag1 = new Tag();
+                tag1.setTagName(tag);
+                tag1.setSlug(SlugGenerator.generateSlug(tag, false));
+                tag1 = tagRepository.save(tag1);
+
+                if (!post.getTags().stream().map(t -> t.getTagId()).collect(Collectors.toList()).contains(tag1.getTagId())) {
+                    post.getTags().add(tag1);
+                    postRepository.save(post);
+                }
+            }
+        });
+
+        List<Post> posts = postRepository.findAll();
+        posts.forEach(post1 -> {
+            if (post1.getPostHistories().size() == 0)
+                post1.setUpdatedAt(null);
+            postRepository.save(post1);
+        });
+    }
+
+    @PostMapping("/tags/document")
+    public ResponseEntity<?> addTagsForDocument() {
+        List<Document> documents = documentService.findAll();
+        for (Document document : documents) {
+            try {
+                List<String> keywords = tagExtractor.findKeywords(document.getDocName().concat(". ").concat(document.getDocIntroduction()));
+                for (String keyword : keywords) {
+                    boolean isExisted = tagRepository.existsByTagName(keyword);
+                    Tag tag = new Tag();
+                    if (isExisted) {
+                        tag = tagRepository.findByTagName(keyword).orElseThrow(() -> new RuntimeException("Tag not found"));
+                    } else {
+                        tag.setTagName(keyword);
+                        tag.setSlug(SlugGenerator.generateSlug(keyword, false));
+                        tag = tagRepository.save(tag);
+                    }
+
+                    if (!document.getTags().contains(tag)) {
+                        document.getTags().add(tag);
+                        documentService.save(document);
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        return ResponseEntity.ok(ResponseModel.builder()
+                .status(200)
+                .error(false)
+                .message("Add tags for document successfully")
+                .build());
+    }
+
+    @PostMapping("/document/share")
+    public ResponseEntity<?> refactorShare() {
+        List<Document> documents = documentService.findAll();
+        for (Document document : documents) {
+            if (document.getUserUploaded().getRole().getRoleName().equals("ROLE_STUDENT")) {
+                document.setShared(true);
+                documentService.save(document);
+            }
+        }
+
+        return ResponseEntity.ok(ResponseModel.builder()
+                .status(200)
+                .error(false)
+                .message("Refactor share for document successfully")
+                .build());
+    }
+
+    @PostMapping("/user/lecturer")
+    public ResponseEntity<?> refactorLecturers() {
+        List<User> users = userRepositoty.findAll();
+        for (User user : users) {
+            if (user.getRole().getRoleName().equals("ROLE_LECTURER")) {
+                Role role = roleService.findById(UUID.fromString("c0a801b9-8ac0-1a60-818a-c04a8f950035")).orElse(null);
+                user.setRole(role);
+                userRepositoty.save(user);
+            }
+        }
+
+        return ResponseEntity.ok(ResponseModel.builder()
+                .status(200)
+                .error(false)
+                .message("Refactor lecturer successfully")
+                .build());
+    }
+
+    @PostMapping("/collections")
+    public ResponseEntity<?> addCollections() throws IOException {
+        FileInputStream file = new FileInputStream("D:\\Nam4\\Ky1\\TieuLuanChuyenNganh\\digital-library\\src\\main\\resources\\database\\CollectionsInit.xlsx");
+        Workbook workbook = new XSSFWorkbook(file);
+        Sheet sheet = workbook.getSheetAt(0);
+
+        // Duyệt qua các hàng trong sheet
+        for (Row row : sheet) {
+            if (row.getRowNum() == 0) {
+                continue;
+            }
+
+            Cell cellName = row.getCell(0);
+            Cell cellUser = row.getCell(1);
+
+            DataFormatter formatter = new DataFormatter();
+
+            if (cellName != null) {
+                String name = formatter.formatCellValue(cellName);
+                UUID userId = UUID.fromString(formatter.formatCellValue(cellUser));
+
+                try {
+                    User user = userService.findById(userId).orElse(null);
+
+                    Collection collection = new Collection();
+                    collection.setCollectionName(name);
+                    collection.setUser(user);
+                    collectionRepository.save(collection);
+                } catch (Exception e) {
+                    System.out.println(e);
+                }
+            }
+        }
+
+        workbook.close();
+        file.close();
+
+        return ResponseEntity.ok(ResponseModel.builder()
+                .status(200)
+                .error(false)
+                .message("Add collections successfully")
+                .build());
+    }
+
+    @PostMapping("/collections/document")
+    public ResponseEntity<?> addDocumentsToCollection() throws IOException {
+        FileInputStream file = new FileInputStream("D:\\Nam4\\Ky1\\TieuLuanChuyenNganh\\digital-library\\src\\main\\resources\\database\\CollectionsInit.xlsx");
+        Workbook workbook = new XSSFWorkbook(file);
+        Sheet sheet = workbook.getSheetAt(1);
+
+        // Duyệt qua các hàng trong sheet
+        for (Row row : sheet) {
+            if (row.getRowNum() == 0) {
+                continue;
+            }
+
+            Cell cellCollection = row.getCell(0);
+            Cell cellDocument = row.getCell(1);
+
+            DataFormatter formatter = new DataFormatter();
+
+            if (cellCollection != null) {
+                UUID collectionId = UUID.fromString(formatter.formatCellValue(cellCollection));
+                UUID docId = UUID.fromString(formatter.formatCellValue(cellDocument));
+
+                try {
+                    Collection collection = collectionRepository.findById(collectionId).orElse(null);
+                    Document document = documentService.findById(docId).orElse(null);
+
+                    CollectionDocument collectionDocument = new CollectionDocument();
+                    collectionDocument.setCollection(collection);
+                    collectionDocument.setDocument(document);
+                    collectionDocumentRepository.save(collectionDocument);
+
+                } catch (Exception e) {
+                    System.out.println(e);
+                }
+            }
+        }
+
+        workbook.close();
+        file.close();
+
+        return ResponseEntity.ok(ResponseModel.builder()
+                .status(200)
+                .error(false)
+                .message("Add documents for collection successfully")
                 .build());
     }
 

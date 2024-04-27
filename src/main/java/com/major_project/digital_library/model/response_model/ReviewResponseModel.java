@@ -20,6 +20,8 @@ public class ReviewResponseModel implements Serializable {
 
     private String content;
 
+    private int verifiedStatus;
+
     private Timestamp createdAt;
 
     private Timestamp updatedAt;

@@ -27,6 +27,8 @@ public interface IPostService {
 
     Page<PostResponseModel> findPostsOfUser(UUID userId, int page, int size, String query);
 
+    Page<PostResponseModel> findRelatedPosts(String query);
+
     PostResponseModel addPost(PostRequestModel postRequestModel);
 
     PostResponseModel editPost(UUID postId, PostRequestModel postRequestModel);

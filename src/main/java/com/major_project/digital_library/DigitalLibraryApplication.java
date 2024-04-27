@@ -6,13 +6,11 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.drive.Drive;
-import com.major_project.digital_library.service.IUserService;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.servers.Server;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -27,15 +25,12 @@ import java.util.Collection;
 @OpenAPIDefinition(servers = {@Server(url = "${server.servlet.context-path}", description = "Default Server URL")})
 
 @SpringBootApplication
-public class DigitalLibraryApplication implements CommandLineRunner {
-
-    private final IUserService userService;
+public class DigitalLibraryApplication {
     private final GoogleCredential googleCredential;
 
     @Lazy
     @Autowired
-    public DigitalLibraryApplication(IUserService userService, GoogleCredential googleCredential) {
-        this.userService = userService;
+    public DigitalLibraryApplication(GoogleCredential googleCredential) {
         this.googleCredential = googleCredential;
     }
 
@@ -72,11 +67,6 @@ public class DigitalLibraryApplication implements CommandLineRunner {
                 .setServiceAccountScopes(elenco)
                 .setServiceAccountPrivateKeyFromP12File(new File("src/main/resources/keys/uploadfiles.p12"))
                 .build();
-    }
-
-    @Override
-    public void run(String... args) throws Exception {
-
     }
 
 

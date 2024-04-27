@@ -1,6 +1,7 @@
 package com.major_project.digital_library.model.response_model;
 
 import com.major_project.digital_library.model.RoleModel;
+import com.major_project.digital_library.model.lean_model.BadgeLeanModel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -45,7 +46,15 @@ public class UserResponseModel implements Serializable {
 
     private int totalDocuments;
 
+    private int totalPostLikes;
+
+    private int totalPosts;
+
+    private int totalReplies;
+
     private RoleModel role;
 
     private OrganizationResponseModel organization;
+
+    private BadgeLeanModel badge;
 }

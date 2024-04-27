@@ -13,7 +13,7 @@ import java.io.Serializable;
 @AllArgsConstructor
 
 @Entity
-@IdClass(UserDocument.class)
+@IdClass(UserDocumentKey.class)
 public class Save implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;

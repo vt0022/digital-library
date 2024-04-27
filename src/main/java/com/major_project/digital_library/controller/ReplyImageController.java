@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
-@RequestMapping("/api/v1/replies")
+@RequestMapping("/api/v2/replies")
 public class ReplyImageController {
     private final IReplyImageService replyImageService;
     private final GoogleDriveUpload googleDriveUpload;
@@ -34,7 +34,7 @@ public class ReplyImageController {
         ReplyImage replyImage = new ReplyImage();
         replyImage.setUrl(gd.getViewUrl());
         replyImageService.save(replyImage);
-        
+
         return ResponseEntity.ok(
                 ResponseModel
                         .builder()

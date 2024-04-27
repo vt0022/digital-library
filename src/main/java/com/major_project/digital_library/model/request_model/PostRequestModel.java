@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.UUID;
 
 @Data
 @AllArgsConstructor
@@ -17,4 +18,8 @@ public class PostRequestModel implements Serializable {
     private String title;
 
     private String content;
+
+    private UUID subsectionId;
+
+    private UUID labelId;
 }

@@ -14,7 +14,7 @@ import java.sql.Timestamp;
 @AllArgsConstructor
 
 @Entity
-@IdClass(UserDocument.class)
+@IdClass(UserDocumentKey.class)
 public class Recency implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;

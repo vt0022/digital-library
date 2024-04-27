@@ -6,12 +6,14 @@ import com.major_project.digital_library.entity.Role;
 import com.major_project.digital_library.entity.User;
 import com.major_project.digital_library.exception_handler.exception.ModelNotFoundException;
 import com.major_project.digital_library.model.FileModel;
+import com.major_project.digital_library.model.lean_model.BadgeLeanModel;
 import com.major_project.digital_library.model.request_model.PasswordRequestModel;
 import com.major_project.digital_library.model.request_model.PasswordResetRequestModel;
 import com.major_project.digital_library.model.request_model.UserProfileRequestModel;
 import com.major_project.digital_library.model.request_model.UserRequestModel;
 import com.major_project.digital_library.model.response_model.ResponseModel;
 import com.major_project.digital_library.model.response_model.UserResponseModel;
+import com.major_project.digital_library.service.IBadgeService;
 import com.major_project.digital_library.service.IOrganizationService;
 import com.major_project.digital_library.service.IRoleService;
 import com.major_project.digital_library.service.IUserService;
@@ -34,23 +36,26 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.IntStream;
 
 @RestController
-@RequestMapping("/api/v1/users")
+@RequestMapping("/api/v2/users")
 public class UserController {
     private final IUserService userService;
     private final IOrganizationService organizationService;
     private final IRoleService roleService;
+    private final IBadgeService badgeService;
     private final ModelMapper modelMapper;
     private final PasswordEncoder passwordEncoder;
     private final GoogleDriveUpload googleDriveUpload;
     private final StringHandler stringHandler;
 
     @Autowired
-    public UserController(IUserService userService, IOrganizationService organizationService, IRoleService roleService, ModelMapper modelMapper, PasswordEncoder passwordEncoder, GoogleDriveUpload googleDriveUpload, StringHandler stringHandler) {
+    public UserController(IUserService userService, IOrganizationService organizationService, IRoleService roleService, IBadgeService badgeService, ModelMapper modelMapper, PasswordEncoder passwordEncoder, GoogleDriveUpload googleDriveUpload, StringHandler stringHandler) {
         this.userService = userService;
         this.organizationService = organizationService;
         this.roleService = roleService;
+        this.badgeService = badgeService;
         this.modelMapper = modelMapper;
         this.passwordEncoder = passwordEncoder;
         this.googleDriveUpload = googleDriveUpload;
@@ -194,15 +199,20 @@ public class UserController {
         int totalLikes = (int) user.getUploadedDocuments().stream()
                 .flatMap(document -> document.getDocumentLikes().stream())
                 .count();
-
-//        int totalLikes = (int) user.getUploadedDocuments().stream()
-//                .flatMap(document -> document.getDocumentLikes().stream()) // Chuyển từng list like của mỗi document thành một stream
-//                .filter(DocumentLike::isLiked) // Lọc những like có trạng thái là true
-//                .count(); // Đếm số lượng lượt like có trạng thái là true
+        int totalPosts = user.getPosts().size();
+        int totalReplies = user.getReplies().size();
+        int totalPostLikes = user.getPosts().stream()
+                .flatMapToInt(post -> IntStream.of(post.getPostLikes().size()))
+                .sum();
+        BadgeLeanModel badge = badgeService.findBestBadge(userId);
 
         userResponseModel.setTotalDocuments(totalDocuments);
         userResponseModel.setTotalViews(totalViews);
         userResponseModel.setTotalLikes(totalLikes);
+        userResponseModel.setTotalPosts(totalPosts);
+        userResponseModel.setTotalReplies(totalReplies);
+        userResponseModel.setTotalPostLikes(totalPostLikes);
+        userResponseModel.setBadge(badge);
 
         return ResponseEntity.ok(ResponseModel.builder()
                 .status(200)

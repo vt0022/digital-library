@@ -22,9 +22,9 @@ public class OpenAPIConfig {
                         .addList("Bearer Authentication"))
                 .components(new Components().addSecuritySchemes
                         ("Bearer Authentication", createAPIKeyScheme()))
-                .info(new Info().title("My REST API for Digital Library")
-                        .description("My main project")
-                        .version("1.0").contact(new Contact().name("Van Thuan Nguyen")
+                .info(new Info().title("My REST API for Digital Library And Document Sharing Forum")
+                        .description("My graduation project")
+                        .version("2.0").contact(new Contact().name("Van Thuan Nguyen")
                                 .email("vanthuan2004@gmail.com").url("https://github.com/vt0022"))
                         .license(new License().name("License of API")
                                 .url("None")));

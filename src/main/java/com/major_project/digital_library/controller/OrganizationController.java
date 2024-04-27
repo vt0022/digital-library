@@ -22,7 +22,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/v1/organizations")
+@RequestMapping("/api/v2/organizations")
 public class OrganizationController {
     private final IOrganizationService organizationService;
     private final ModelMapper modelMapper;

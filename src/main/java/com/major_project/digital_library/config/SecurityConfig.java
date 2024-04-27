@@ -68,177 +68,203 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/api/v1/swagger-ui",
-                                "/api/v1/swagger-ui/**",
-                                "/api/v1/api-docs",
-                                "/api/v1/api-docs/**").permitAll()
+                                "/api/v2/swagger-ui",
+                                "/api/v2/swagger-ui/**",
+                                "/api/v2/api-docs",
+                                "/api/v2/api-docs/**").permitAll()
 
                         .requestMatchers(
-                                "/api/v1/auth/*").permitAll()
+                                "/api/v2/auth/*").permitAll()
 
                         .requestMatchers(
-                                "/api/v1/init/**",
-                                "/api/v1/users/pass/all").permitAll()
+                                "/api/v2/init/**",
+                                "/api/v2/users/pass/all").permitAll()
 
                         .requestMatchers(
-                                "/api/v1/categories/search").permitAll()
+                                "/api/v2/categories/search").permitAll()
                         .requestMatchers(
-                                "/api/v1/categories/all").hasAnyAuthority("ROLE_ADMIN", "ROLE_MANAGER")
+                                "/api/v2/categories/all").hasAnyAuthority("ROLE_ADMIN", "ROLE_MANAGER")
                         .requestMatchers(HttpMethod.PUT,
-                                "/api/v1/categories/*/activation").hasAuthority("ROLE_ADMIN")
+                                "/api/v2/categories/*/activation").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(HttpMethod.DELETE,
-                                "/api/v1/categories/*").hasAuthority("ROLE_ADMIN")
+                                "/api/v2/categories/*").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(HttpMethod.PUT,
-                                "/api/v1/categories/*").hasAuthority("ROLE_ADMIN")
+                                "/api/v2/categories/*").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(HttpMethod.GET,
-                                "/api/v1/categories/*").hasAuthority("ROLE_ADMIN")
+                                "/api/v2/categories/*").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(HttpMethod.GET,
-                                "/api/v1/categories").permitAll()
+                                "/api/v2/categories").permitAll()
                         .requestMatchers(HttpMethod.POST,
-                                "/api/v1/categories").hasAuthority("ROLE_ADMIN")
+                                "/api/v2/categories").hasAuthority("ROLE_ADMIN")
 
                         .requestMatchers(
-                                "/api/v1/fields/search").permitAll()
+                                "/api/v2/fields/search").permitAll()
                         .requestMatchers(
-                                "/api/v1/fields/all").hasAnyAuthority("ROLE_ADMIN", "ROLE_MANAGER")
+                                "/api/v2/fields/all").hasAnyAuthority("ROLE_ADMIN", "ROLE_MANAGER")
                         .requestMatchers(HttpMethod.PUT,
-                                "/api/v1/fields/*/activation").hasAuthority("ROLE_ADMIN")
+                                "/api/v2/fields/*/activation").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(HttpMethod.DELETE,
-                                "/api/v1/fields/*").hasAuthority("ROLE_ADMIN")
+                                "/api/v2/fields/*").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(HttpMethod.PUT,
-                                "/api/v1/fields/*").hasAuthority("ROLE_ADMIN")
+                                "/api/v2/fields/*").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(HttpMethod.GET,
-                                "/api/v1/fields/*").hasAuthority("ROLE_ADMIN")
+                                "/api/v2/fields/*").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(HttpMethod.GET,
-                                "/api/v1/fields").permitAll()
+                                "/api/v2/fields").permitAll()
                         .requestMatchers(HttpMethod.POST,
-                                "/api/v1/fields").hasAuthority("ROLE_ADMIN")
+                                "/api/v2/fields").hasAuthority("ROLE_ADMIN")
 
                         .requestMatchers(
-                                "/api/v1/organizations/search").permitAll()
+                                "/api/v2/organizations/search").permitAll()
                         .requestMatchers(
-                                "/api/v1/organizations/all").hasAuthority("ROLE_ADMIN")
+                                "/api/v2/organizations/all").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(HttpMethod.PUT,
-                                "/api/v1/organizations/*/activation").hasAuthority("ROLE_ADMIN")
+                                "/api/v2/organizations/*/activation").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(HttpMethod.PUT,
-                                "/api/v1/organizations/*/reviews").hasAuthority("ROLE_MANAGER")
+                                "/api/v2/organizations/*/reviews").hasAuthority("ROLE_MANAGER")
                         .requestMatchers(HttpMethod.DELETE,
-                                "/api/v1/organizations/*").hasAuthority("ROLE_ADMIN")
+                                "/api/v2/organizations/*").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(HttpMethod.PUT,
-                                "/api/v1/organizations/*").hasAuthority("ROLE_ADMIN")
+                                "/api/v2/organizations/*").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(HttpMethod.GET,
-                                "/api/v1/organizations/*").hasAuthority("ROLE_ADMIN")
+                                "/api/v2/organizations/*").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(HttpMethod.GET,
-                                "/api/v1/organizations").permitAll()
+                                "/api/v2/organizations").permitAll()
                         .requestMatchers(HttpMethod.POST,
-                                "/api/v1/organizations").hasAuthority("ROLE_ADMIN")
+                                "/api/v2/organizations").hasAuthority("ROLE_ADMIN")
 
                         .requestMatchers(
-                                "/api/v1/documents/public/search",
-                                "/api/v1/documents/public").permitAll()
+                                "/api/v2/documents/public/search",
+                                "/api/v2/documents/related/*",
+                                "/api/v2/documents/public").permitAll()
                         .requestMatchers(
-                                "/api/v1/documents/*/liked",
-                                "/api/v1/documents/*/like",
-                                "/api/v1/documents/*/reviewed",
-                                "/api/v1/documents/*/review",
-                                "/api/v1/documents/*/saved",
-                                "/api/v1/documents/*/save",
-                                "/api/v1/documents/*/recent",
-                                "/api/v1/documents/saved",
-                                "/api/v1/documents/liked",
-                                "/api/v1/documents/recent",
-                                "/api/v1/documents/students/search",
-                                "/api/v1/documents/students",
-                                "/api/v1/documents/myuploads").hasAuthority("ROLE_STUDENT")
+                                "/api/v2/documents/*/liked",
+                                "/api/v2/documents/*/like",
+                                "/api/v2/documents/*/reviewed",
+                                "/api/v2/documents/*/review",
+                                "/api/v2/documents/*/saved",
+                                "/api/v2/documents/*/save",
+                                "/api/v2/documents/*/recent",
+                                "/api/v2/documents/saved",
+                                "/api/v2/documents/liked",
+                                "/api/v2/documents/recent",
+                                "/api/v2/documents/students/search",
+                                "/api/v2/documents/students",
+                                "/api/v2/documents/myuploads").hasAuthority("ROLE_STUDENT")
                         .requestMatchers(
-                                "/api/v1/documents/mine").authenticated()
+                                "/api/v2/documents/mine").authenticated()
                         .requestMatchers(
-                                "/api/v1/documents/latest",
-                                "/api/v1/documents/cateFalse",
-                                "/api/v1/documents/search").hasAuthority("ROLE_ADMIN")
+                                "/api/v2/documents/latest",
+                                "/api/v2/documents/cateFalse",
+                                "/api/v2/documents/search").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(
-                                "/api/v1/documents/organizations/*/latest",
-                                "/api/v1/documents/organizations/*/search").hasAuthority("ROLE_MANAGER")
+                                "/api/v2/documents/organizations/*/latest",
+                                "/api/v2/documents/organizations/*/search").hasAuthority("ROLE_MANAGER")
                         .requestMatchers(
-                                "/api/v1/documents/*/reviews",
-                                "/api/v1/documents/view/user/*/public").permitAll()
+                                "/api/v2/documents/*/reviews/count",
+                                "/api/v2/documents/*/reviews",
+                                "/api/v2/documents/view/user/*/public").permitAll()
                         .requestMatchers(
-                                "/api/v1/documents/view/user/*").hasAuthority("ROLE_STUDENT")
+                                "/api/v2/documents/view/user/*").hasAuthority("ROLE_STUDENT")
                         .requestMatchers(
-                                "/api/v1/documents/*/approval",
-                                "/api/v1/documents/user/*",
-                                "/api/v1/documents/pending").hasAnyAuthority("ROLE_ADMIN", "ROLE_MANAGER")
+                                "/api/v2/documents/*/approval",
+                                "/api/v2/documents/user/*",
+                                "/api/v2/documents/pending").hasAnyAuthority("ROLE_ADMIN", "ROLE_MANAGER")
                         .requestMatchers(
-                                "/api/v1/documents/organizations/*").hasAuthority("ROLE_MANAGER")
+                                "/api/v2/documents/organizations/*").hasAuthority("ROLE_MANAGER")
                         .requestMatchers(HttpMethod.GET,
-                                "/api/v1/documents/*/public").permitAll()
+                                "/api/v2/documents/*/public").permitAll()
                         .requestMatchers(HttpMethod.GET,
-                                "/api/v1/documents/*").authenticated()
+                                "/api/v2/documents/*").authenticated()
                         .requestMatchers(HttpMethod.PUT,
-                                "/api/v1/documents/*").authenticated()
+                                "/api/v2/documents/*").authenticated()
                         .requestMatchers(HttpMethod.DELETE,
-                                "/api/v1/documents/*").authenticated()
+                                "/api/v2/documents/*").authenticated()
                         .requestMatchers(HttpMethod.POST,
-                                "/api/v1/documents").authenticated()
+                                "/api/v2/documents").authenticated()
                         .requestMatchers(HttpMethod.GET,
-                                "/api/v1/documents").hasAuthority("ROLE_ADMIN")
+                                "/api/v2/documents").hasAuthority("ROLE_ADMIN")
 
                         .requestMatchers(
-                                "/api/v1/users/search").permitAll()
+                                "/api/v2/users/search").permitAll()
                         .requestMatchers(
-                                "/api/v1/users/password/reset").permitAll()
+                                "/api/v2/users/password/reset").permitAll()
                         .requestMatchers(
-                                "/api/v1/users/profile",
-                                "/api/v1/users/password",
-                                "/api/v1/users/avatar").authenticated()
+                                "/api/v2/users/profile",
+                                "/api/v2/users/password",
+                                "/api/v2/users/avatar").authenticated()
                         .requestMatchers(
-                                "/api/v1/user/organizations/*/latest",
-                                "/api/v1/user/organizations/*").hasAuthority("ROLE_MANAGER")
+                                "/api/v2/user/organizations/*/latest",
+                                "/api/v2/user/organizations/*").hasAuthority("ROLE_MANAGER")
 
                         .requestMatchers(
-                                "/api/v1/user/latest").hasAuthority("ROLE_ADMIN")
+                                "/api/v2/user/latest").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(HttpMethod.POST,
-                                "/api/v1/users/*").hasAnyAuthority("ROLE_ADMIN", "ROLE_MANAGER")
+                                "/api/v2/users/*").hasAnyAuthority("ROLE_ADMIN", "ROLE_MANAGER")
                         .requestMatchers(HttpMethod.DELETE,
-                                "/api/v1/users/*").hasAnyAuthority("ROLE_ADMIN", "ROLE_MANAGER")
+                                "/api/v2/users/*").hasAnyAuthority("ROLE_ADMIN", "ROLE_MANAGER")
                         .requestMatchers(HttpMethod.GET,
-                                "/api/v1/users/*").permitAll()
+                                "/api/v2/users/*").permitAll()
                         .requestMatchers(
-                                "/api/v1/users").hasAuthority("ROLE_ADMIN")
+                                "/api/v2/users").hasAuthority("ROLE_ADMIN")
 
                         .requestMatchers(
-                                "/api/v1/statistics/admin").hasAuthority("ROLE_ADMIN")
+                                "/api/v2/statistics/admin").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(
-                                "/api/v1/statistics/manager").hasAuthority("ROLE_MANAGER")
+                                "/api/v2/statistics/manager").hasAuthority("ROLE_MANAGER")
 
                         .requestMatchers(
-                                "/api/v1/reviews/*").hasAuthority("ROLE_MANAGER")
+                                "/api/v2/reviews/*/approval").hasAnyAuthority("ROLE_ADMIN", "ROLE_MANAGER")
+                        .requestMatchers(
+                                "/api/v2/reviews/mine").hasAuthority("ROLE_STUDENT")
+                        .requestMatchers(
+                                "/api/v2/reviews/*").authenticated()
 
                         .requestMatchers(
-                                "/api/v1/posts/user/*",
-                                "/api/v1/posts/*/replies/guest",
-                                "/api/v1/posts/*/guest",
-                                "/api/v1/posts/*/history").permitAll()
+                                "/api/v2/posts/user/*",
+                                "/api/v2/posts/*/replies/guest",
+                                "/api/v2/posts/*/guest",
+                                "/api/v2/posts/*/history").permitAll()
                         .requestMatchers(
-                                "/api/v1/posts/*/replies",
-                                "/api/v1/posts/*/reply",
-                                "/api/v1/posts/*/like").hasAuthority("ROLE_STUDENT")
+                                "/api/v2/posts/*/replies",
+                                "/api/v2/posts/*/reply",
+                                "/api/v2/posts/*/like").hasAuthority("ROLE_STUDENT")
                         .requestMatchers(
-                                "/api/v1/posts/*").hasAuthority("ROLE_STUDENT")
+                                "/api/v2/posts/related").permitAll()
+                        .requestMatchers(
+                                "/api/v2/posts/*").hasAuthority("ROLE_STUDENT")
                         .requestMatchers(HttpMethod.PUT,
-                                "/api/v1/posts").hasAuthority("ROLE_STUDENT")
+                                "/api/v2/posts").hasAuthority("ROLE_STUDENT")
                         .requestMatchers(HttpMethod.GET,
-                                "/api/v1/posts").permitAll()
+                                "/api/v2/posts").permitAll()
 
                         .requestMatchers(
-                                "/api/v1/replies/image",
-                                "/api/v1/replies/user/*",
-                                "/api/v1/replies/*/history").permitAll()
+                                "/api/v2/replies/image",
+                                "/api/v2/replies/user/*",
+                                "/api/v2/replies/*/history").permitAll()
                         .requestMatchers(
-                                "/api/v1/replies/*").hasAuthority("ROLE_STUDENT")
+                                "/api/v2/replies/*").hasAuthority("ROLE_STUDENT")
 
                         .requestMatchers(
-                                "/api/v1/sections/active").permitAll()
+                                "/api/v2/sections/active").permitAll()
+
+                        .requestMatchers(
+                                "/api/v2/sections/editable").hasAuthority("ROLE_STUDENT")
+
+                        .requestMatchers(
+                                "/api/v2/labels/active").permitAll()
+
+                        .requestMatchers(
+                                "/api/v2/badges/user/*").permitAll()
+
+                        .requestMatchers("/api/v2/collections/*/public",
+                                "/api/v2/collections/public"
+                        ).permitAll()
+                        .requestMatchers(
+                                "/api/v2/collections/*/document/*",
+                                "/api/v2/collections/mine",
+                                "/api/v2/collections/*",
+                                "/api/v2/collections").authenticated()
 
                         .anyRequest().authenticated())
 

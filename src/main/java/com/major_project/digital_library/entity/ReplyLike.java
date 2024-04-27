@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 
 @Entity
-@IdClass(UserReply.class)
+@IdClass(UserReplyKey.class)
 public class ReplyLike {
     @Id
     @ManyToOne
