@@ -21,7 +21,7 @@ public class Reply {
     @UuidGenerator(style = UuidGenerator.Style.TIME)
     private UUID replyId;
 
-    @Column(columnDefinition = "text")
+    @Column(columnDefinition = "LONGTEXT")
     private String content;
 
     private Timestamp createdAt;

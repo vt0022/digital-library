@@ -136,6 +136,7 @@ public class ReviewController {
         review.setVerifiedStatus(isApproved ? 1 : -1);
         if (!isApproved)
             review.setNote(note);
+        review.setTimesLeft(review.getTimesLeft() - 1);
         review = reviewService.save(review);
 
         ReviewResponseModel reviewResponseModel = modelMapper.map(review, ReviewResponseModel.class);

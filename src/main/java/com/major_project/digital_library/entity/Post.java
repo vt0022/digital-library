@@ -23,7 +23,7 @@ public class Post {
 
     private String title;
 
-    @Column(columnDefinition = "text")
+    @Column(columnDefinition = "LONGTEXT")
     private String content;
 
     private int totalViews;

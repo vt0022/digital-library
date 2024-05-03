@@ -31,6 +31,8 @@ public class Review {
 
     private String note;
 
+    private int timesLeft;
+
     @ManyToOne
     @JoinColumn(name = "userId")
     private User user;
@@ -42,6 +44,7 @@ public class Review {
     @PrePersist
     protected void onCreate() {
         createdAt = new Timestamp(System.currentTimeMillis());
+        timesLeft = 2;
     }
 
     @PreUpdate

@@ -19,7 +19,7 @@ public class ReplyHistory {
     @UuidGenerator(style = UuidGenerator.Style.TIME)
     private UUID replyHistoryId;
 
-    @Column(columnDefinition = "text")
+    @Column(columnDefinition = "LONGTEXT")
     private String content;
 
     private Timestamp loggedAt;

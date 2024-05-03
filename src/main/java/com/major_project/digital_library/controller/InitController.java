@@ -584,6 +584,8 @@ public class InitController {
             Cell contentCell = row.getCell(1);
             Cell totalViewsCell = row.getCell(2);
             Cell userCell = row.getCell(3);
+            Cell labelCell = row.getCell(4);
+            Cell subsectionCell = row.getCell(5);
 
             DataFormatter formatter = new DataFormatter();
 
@@ -592,15 +594,42 @@ public class InitController {
                 String content = formatter.formatCellValue(contentCell);
                 Integer totalViews = Integer.valueOf(formatter.formatCellValue(totalViewsCell));
                 UUID userId = UUID.fromString(formatter.formatCellValue(userCell));
+                UUID subId = UUID.fromString(formatter.formatCellValue(subsectionCell));
+                UUID labelId = labelCell == null ? null : UUID.fromString(formatter.formatCellValue(labelCell));
 
                 Post post = new Post();
                 try {
                     User user = userService.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+                    Subsection subsection = subsectionRepository.findById(subId).orElseThrow(() -> new RuntimeException("Subsection not found"));
+                    Label label = labelId == null ? null : labelRepository.findById(labelId).orElseThrow(() -> new RuntimeException("Label not found"));
 
+                    post.setSubsection(subsection);
+                    post.setLabel(label);
                     post.setUserPosted(user);
                     post.setContent(content);
                     post.setTitle(title);
                     post.setTotalViews(totalViews);
+
+                    List<String> keywords = tagExtractor.findKeywords(title
+                            .concat(". ")
+                            .concat(content.replace("<[^>]*>", "")));
+
+                    for (String keyword : keywords) {
+                        boolean isExisted = tagRepository.existsByTagName(keyword);
+                        Tag tag = new Tag();
+                        if (isExisted) {
+                            tag = tagRepository.findByTagName(keyword).orElseThrow(() -> new RuntimeException("Tag not found"));
+                        } else {
+                            tag.setTagName(keyword);
+                            tag.setSlug(SlugGenerator.generateSlug(keyword, false));
+                            tag = tagRepository.save(tag);
+                        }
+
+                        if (!post.getTags().contains(tag)) {
+                            post.getTags().add(tag);
+                            postRepository.save(post);
+                        }
+                    }
 
                     postService.save(post);
                 } catch (Exception e) {

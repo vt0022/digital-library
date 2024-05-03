@@ -211,8 +211,36 @@ public class PostServiceImpl implements IPostService {
         postHistory.setPost(post);
         postHistoryRepository.save(postHistory);
 
+        Subsection subsection = subsectionRepository.findById(postRequestModel.getSubsectionId()).orElseThrow(() -> new RuntimeException("Subsection not found"));
+        Label label = postRequestModel.getLabelId() == null ? null : labelRepository.findById(postRequestModel.getLabelId()).orElseThrow(() -> new RuntimeException("Label not found"));
+
+        List<String> keywords = tagExtractor.findKeywords(postRequestModel.getTitle()
+                .concat(". ")
+                .concat(postRequestModel.getContent().replace("<[^>]*>", "")));
+
         post.setTitle(postRequestModel.getTitle());
         post.setContent(postRequestModel.getContent());
+        post.setSubsection(subsection);
+        post.setLabel(label);
+
+        post.getTags().clear();
+        for (String keyword : keywords) {
+            boolean isExisted = tagRepository.existsByTagName(keyword);
+            Tag tag = new Tag();
+            if (isExisted) {
+                tag = tagRepository.findByTagName(keyword).orElseThrow(() -> new RuntimeException("Tag not found"));
+            } else {
+                tag.setTagName(keyword);
+                tag.setSlug(SlugGenerator.generateSlug(keyword, false));
+                tag = tagRepository.save(tag);
+            }
+
+            if (!post.getTags().contains(tag)) {
+                post.getTags().add(tag);
+                postRepository.save(post);
+            }
+        }
+
         postRepository.save(post);
 
         PostResponseModel postResponseModel = modelMapper.map(post, PostResponseModel.class);

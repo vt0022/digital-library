@@ -21,7 +21,7 @@ public class PostHistory {
 
     private String title;
 
-    @Column(columnDefinition = "text")
+    @Column(columnDefinition = "LONGTEXT")
     private String content;
 
     private Timestamp loggedAt;
