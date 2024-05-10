@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -235,27 +236,21 @@ public interface IDocumentRepository extends JpaRepository<Document, UUID> {
             String query,
             Pageable pageable);
 
-    @Query("SELECT s.document FROM Save s " +
-            "JOIN s.document d " +
-            "WHERE s.document = d " +
-            "AND s.user = :user " +
-            "AND s.isSaved = true " +
-            "AND (d.isInternal = false OR d.organization = s.user.organization) " +
-            "AND d.isDeleted = false " +
-            "AND d.category.isDeleted = false " +
-            "AND d.field.isDeleted = false " +
-            "AND d.organization.isDeleted = false " +
-            "AND (LOWER(d.docName) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(d.docIntroduction) LIKE LOWER(CONCAT('%', :query, '%')))"
-    )
-    Page<Document> findLikedDocuments(User user, String query, Pageable pageable);
-
     long countByVerifiedStatus(int verifiedStatus);
+
+    long countByVerifiedStatusAndUploadedAtBetween(int verifiedStatus, Timestamp startDate, Timestamp endDate);
 
     long countByVerifiedStatusAndOrganization(int verifiedStatus, Organization organization);
 
+    long countByVerifiedStatusAndOrganizationAndUploadedAtBetween(int verifiedStatus, Organization organization, Timestamp startDate, Timestamp endDate);
+
     long count();
 
+    long countByUploadedAtBetween(Timestamp startDate, Timestamp endDate);
+
     long countByOrganization(Organization organization);
+
+    long countByOrganizationAndUploadedAtBetween(Organization organization, Timestamp startDate, Timestamp endDate);
 
     @Query("SELECT MONTH(d.uploadedAt) as month, COUNT(d) as count " +
             "FROM Document d " +
@@ -270,16 +265,36 @@ public interface IDocumentRepository extends JpaRepository<Document, UUID> {
             "GROUP BY d.category")
     List<Object[]> countDocumentsByCategory(Organization organization);
 
+    @Query("SELECT d.category.categoryName as category, COUNT(d) as count " +
+            "FROM Document d " +
+            "WHERE (d.organization = :organization OR :organization IS NULL) " +
+            "AND DATE(d.uploadedAt) BETWEEN DATE(:startDate) AND DATE(:endDate) " +
+            "GROUP BY d.category")
+    List<Object[]> countDocumentsByCategoryAndDateRange(Timestamp startDate, Timestamp endDate, Organization organization);
+
     @Query("SELECT d.field.fieldName as category, COUNT(d) as count " +
             "FROM Document d " +
             "WHERE (d.organization = :organization OR :organization IS NULL) " +
             "GROUP BY d.field")
     List<Object[]> countDocumentsByField(Organization organization);
 
+    @Query("SELECT d.field.fieldName as category, COUNT(d) as count " +
+            "FROM Document d " +
+            "WHERE (d.organization = :organization OR :organization IS NULL) " +
+            "AND DATE(d.uploadedAt) BETWEEN DATE(:startDate) AND DATE(:endDate) " +
+            "GROUP BY d.field")
+    List<Object[]> countDocumentsByFieldAndDateRange(Timestamp startDate, Timestamp endDate, Organization organization);
+
     @Query("SELECT d.organization.orgName as organization, COUNT(d) as count " +
             "FROM Document d " +
             "GROUP BY d.organization")
     List<Object[]> countDocumentsByOrganization();
+
+    @Query("SELECT d.organization.orgName as organization, COUNT(d) as count " +
+            "FROM Document d " +
+            "WHERE DATE(d.uploadedAt) BETWEEN DATE(:startDate) AND DATE(:endDate) " +
+            "GROUP BY d.organization")
+    List<Object[]> countDocumentsByOrganizationAndDateRange(Timestamp startDate, Timestamp endDate);
 
     @Query("SELECT d FROM Document d JOIN d.tags t " +
             "WHERE t IN :tags " +

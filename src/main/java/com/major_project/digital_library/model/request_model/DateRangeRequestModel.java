@@ -1,7 +1,6 @@
-package com.major_project.digital_library.model;
+package com.major_project.digital_library.model.request_model;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -10,14 +9,13 @@ import java.io.Serializable;
 import java.sql.Timestamp;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class SaveModel implements Serializable {
+@NoArgsConstructor
+public class DateRangeRequestModel implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    private String slug;
+    private Timestamp startDate;
 
-    private Timestamp savedAt;
+    private Timestamp endDate;
 }

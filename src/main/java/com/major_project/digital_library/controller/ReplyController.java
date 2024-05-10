@@ -136,6 +136,7 @@ public class ReplyController {
                         .build());
     }
 
+    @Operation(summary = "Thích một bình luận")
     @PostMapping("/replies/{replyId}/like")
     public ResponseEntity<?> likeReply(@PathVariable UUID replyId) {
         boolean isLiked = replyLikeService.likeReply(replyId);

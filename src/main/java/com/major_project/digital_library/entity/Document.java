@@ -50,10 +50,6 @@ public class Document {
 
     private int totalView;
 
-    private int totalFavorite;
-
-    private double averageRating;
-
     private boolean isInternal;
 
     private boolean isShared;

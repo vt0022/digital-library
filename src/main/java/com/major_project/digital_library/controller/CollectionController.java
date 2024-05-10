@@ -81,7 +81,7 @@ public class CollectionController {
                     .builder()
                     .status(404)
                     .error(false)
-                    .message("Document not accessible")
+                    .message("Collection not accessible")
                     .build());
         else
             return ResponseEntity.ok(ResponseModel
@@ -103,7 +103,7 @@ public class CollectionController {
                     .builder()
                     .status(404)
                     .error(false)
-                    .message("Document not accessible")
+                    .message("Collection not accessible")
                     .build());
         else
             return ResponseEntity.ok(ResponseModel

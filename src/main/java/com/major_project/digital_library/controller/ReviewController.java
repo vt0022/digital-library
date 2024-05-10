@@ -46,24 +46,20 @@ public class ReviewController {
             description = "Trả về tất cả đánh giá của một tài liệu")
     @GetMapping("/documents/{slug}/reviews")
     public ResponseEntity<?> getReviewsByDocument(@PathVariable String slug,
-                                                  @RequestParam(defaultValue = "0") int rating) {
+                                                  @RequestParam(defaultValue = "0") int rating,
+                                                  @RequestParam(defaultValue = "0") int page) {
         Document document = documentService.findBySlug(slug).orElseThrow(() -> new RuntimeException("Document not found"));
-//
-//        List<ReviewResponseModel> reviewResponseModels = document.getReviews()
-//                .stream()
-//                .sorted(Comparator.comparing(Review::getCreatedAt).reversed())
-//                .map(reviewResponse -> modelMapper.map(reviewResponse, ReviewResponseModel.class))
-//                .collect(Collectors.toList());
 
-        Pageable pageable = PageRequest.of(0, 100);
-        List<Review> reviews = new ArrayList<>();
+        Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
+        Pageable pageable = PageRequest.of(page, 4, sort);
+        Page<Review> reviews = Page.empty();
 
         if (rating >= 1 && rating <= 5)
-            reviews = reviewService.findByDocumentAndStarAndVerifiedStatusOrderByCreatedAt(document, rating, 1, pageable).getContent();
+            reviews = reviewService.findByDocumentAndStarAndVerifiedStatusOrderByCreatedAt(document, rating, 1, pageable);
         else
-            reviews = reviewService.findByDocumentAndVerifiedStatusOrderByCreatedAt(document, 1, pageable).getContent();
+            reviews = reviewService.findByDocumentAndVerifiedStatusOrderByCreatedAt(document, 1, pageable);
 
-        List<ReviewResponseModel> reviewResponseModels = reviews.stream().map(this::convertToReviewModel).collect(Collectors.toList());
+        Page<ReviewResponseModel> reviewResponseModels = reviews.map(this::convertToReviewModel);
 
         return ResponseEntity.ok(ResponseModel.builder()
                 .status(200)
@@ -246,19 +242,8 @@ public class ReviewController {
     @DeleteMapping("/reviews/{reviewId}")
     public ResponseEntity<?> deleteReview(@PathVariable UUID reviewId) {
         Review review = reviewService.findById(reviewId).orElseThrow(() -> new RuntimeException("Review not found"));
-        int star = review.getStar();
-        Document document = review.getDocument();
 
         reviewService.deleteById(reviewId);
-
-        List<Review> reviewList = document.getReviews();
-        int totalRating = reviewList
-                .stream()
-                .mapToInt(Review::getStar)
-                .sum() - star;
-        double averageRating = (double) totalRating / (reviewList.size() - 1);
-        document.setAverageRating(averageRating);
-        documentService.save(document);
 
         return ResponseEntity.ok(ResponseModel.builder()
                 .status(200)

@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.sql.Timestamp;
 
 @Data
 @NoArgsConstructor
@@ -28,5 +29,5 @@ public class Save implements Serializable {
     @JoinColumn(name = "docId")
     private Document document;
 
-    private boolean isSaved;
+    private Timestamp savedAt;
 }

@@ -13,11 +13,11 @@ import java.sql.Timestamp;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class SaveModel implements Serializable {
+public class DocumentLikeModel implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
     private String slug;
 
-    private Timestamp savedAt;
+    private Timestamp likedAt;
 }

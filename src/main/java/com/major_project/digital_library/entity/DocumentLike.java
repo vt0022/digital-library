@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.sql.Timestamp;
 
 @Data
 @NoArgsConstructor
@@ -27,4 +28,6 @@ public class DocumentLike implements Serializable {
     @ManyToOne
     @JoinColumn(name = "docId")
     private Document document;
+
+    private Timestamp likedAt;
 }

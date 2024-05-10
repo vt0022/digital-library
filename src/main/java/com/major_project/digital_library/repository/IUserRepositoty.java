@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -38,7 +39,11 @@ public interface IUserRepositoty extends JpaRepository<User, UUID> {
 
     long count();
 
+    long countByCreatedAtBetween(Timestamp startDate, Timestamp endDate);
+
     long countByOrganization(Organization organization);
+
+    long countByOrganizationAndCreatedAtBetween(Organization organization, Timestamp startDate, Timestamp endDate);
 
     @Query("SELECT u FROM User u " +
             "WHERE (u.isDeleted = :isDeleted OR :isDeleted IS NULL) " +

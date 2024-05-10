@@ -138,12 +138,13 @@ public class SecurityConfig {
                                 "/api/v2/documents/related/*",
                                 "/api/v2/documents/public").permitAll()
                         .requestMatchers(
-                                "/api/v2/documents/*/liked",
                                 "/api/v2/documents/*/like",
-                                "/api/v2/documents/*/reviewed",
+                                "/api/v2/documents/*/unlike",
+                                "/api/v2/documents/*/relike",
                                 "/api/v2/documents/*/review",
-                                "/api/v2/documents/*/saved",
                                 "/api/v2/documents/*/save",
+                                "/api/v2/documents/*/unsave",
+                                "/api/v2/documents/*/resave",
                                 "/api/v2/documents/*/recent",
                                 "/api/v2/documents/saved",
                                 "/api/v2/documents/liked",

@@ -1,10 +1,15 @@
 package com.major_project.digital_library.controller;
 
+import com.major_project.digital_library.model.DocumentLikeModel;
+import com.major_project.digital_library.model.SaveModel;
 import com.major_project.digital_library.model.request_model.DocumentRequestModel;
 import com.major_project.digital_library.model.response_model.DetailDocumentResponseModel;
 import com.major_project.digital_library.model.response_model.DocumentResponseModel;
 import com.major_project.digital_library.model.response_model.ResponseModel;
+import com.major_project.digital_library.service.IDocumentLikeService;
 import com.major_project.digital_library.service.IDocumentService;
+import com.major_project.digital_library.service.IRecencyService;
+import com.major_project.digital_library.service.ISaveService;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -13,16 +18,23 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v2/documents")
 public class DocumentController {
     private final IDocumentService documentService;
+    private final IDocumentLikeService documentLikeService;
+    private final ISaveService saveService;
+    private final IRecencyService recencyService;
 
     @Autowired
-    public DocumentController(IDocumentService documentService) {
+    public DocumentController(IDocumentService documentService, IDocumentLikeService documentLikeService, ISaveService saveService, IRecencyService recencyService) {
         this.documentService = documentService;
+        this.documentLikeService = documentLikeService;
+        this.saveService = saveService;
+        this.recencyService = recencyService;
     }
 
     @Operation(summary = "Xem chi tiết một tài liệu cho sinh viên, quản lý, admin")
@@ -260,15 +272,16 @@ public class DocumentController {
     @Operation(summary = "Xem danh sách tài liệu đang chờ duyệt",
             description = "Trả về danh sách tài liệu đang chờ duyệt cho manager hoặc admin")
     @GetMapping("/pending")
-    public ResponseEntity<?> getPendingDocuments(@RequestParam(defaultValue = "0") int page,
+    public ResponseEntity<?> getPendingDocuments(@RequestParam(defaultValue = "all", required = false) String organization,
+                                                 @RequestParam(defaultValue = "0") int page,
                                                  @RequestParam(defaultValue = "20") int size) {
-        Page<DocumentResponseModel> documentModels = documentService.getPendingDocuments(page, size);
+        Page<DocumentResponseModel> documentModels = documentService.getPendingDocuments(page, size, organization);
 
         return ResponseEntity.ok(ResponseModel
                 .builder()
                 .status(200)
                 .error(false)
-                .message("Get documents for guest successfully")
+                .message("Get pending document successfully")
                 .data(documentModels)
                 .build());
     }
@@ -438,6 +451,137 @@ public class DocumentController {
                 .error(false)
                 .message("Get related documents successfully")
                 .data(documentModels)
+                .build());
+    }
+
+    @Operation(summary = "Thích một tài liệu",
+            description = "Thêm một tài liệu vào danh sách đã thích")
+    @PostMapping("/{slug}/like")
+    public ResponseEntity<?> likeDocument(@PathVariable String slug) {
+        documentLikeService.likeDocument(slug);
+
+        return ResponseEntity.ok(ResponseModel
+                .builder()
+                .status(200)
+                .error(false)
+                .message("Like document successfully")
+                .build());
+    }
+
+    @Operation(summary = "Bỏ thích một tài liệu",
+            description = "Xoá một tài liệu khỏi danh sách đã thích")
+    @PostMapping("/{slug}/unlike")
+    public ResponseEntity<?> unlikeDocument(@PathVariable String slug) {
+        DocumentLikeModel documentLikeModel = documentLikeService.unlikeDocument(slug);
+
+        return ResponseEntity.ok(ResponseModel
+                .builder()
+                .status(200)
+                .error(false)
+                .message("Unlike document successfully")
+                .data(documentLikeModel)
+                .build());
+    }
+
+    @Operation(summary = "Hoàn tác bỏ thích một tài liệu",
+            description = "Thêm tài liệu vào lại danh sách đã thích")
+    @PostMapping("/{slug}/relike")
+    public ResponseEntity<?> undoUnlikeDocument(@PathVariable String slug, @RequestBody DocumentLikeModel documentLikeModel) {
+        documentLikeService.undoUnlike(slug, documentLikeModel);
+
+        return ResponseEntity.ok(ResponseModel
+                .builder()
+                .status(200)
+                .error(false)
+                .message("Relike document successfully")
+                .build());
+    }
+
+    @Operation(summary = "Xem danh sách đã thích",
+            description = "Trả về danh sách tài liệu đã thích")
+    @GetMapping("/liked")
+    public ResponseEntity<?> getFavoriteDocuments(@RequestParam(defaultValue = "0") int page,
+                                                  @RequestParam(defaultValue = "12") int size,
+                                                  @RequestParam String s) {
+        Page<DocumentResponseModel> documentModels = documentLikeService.getLikedDocuments(page, size, s);
+
+        return ResponseEntity.ok(ResponseModel.builder()
+                .error(false)
+                .status(200)
+                .message("Get liked documents successfully")
+                .data(documentModels)
+                .build());
+    }
+
+    @Operation(summary = "Lưu một tài liệu",
+            description = "Thêm một tài liệu vào danh sách đã lưu")
+    @PostMapping("/{slug}/save")
+    public ResponseEntity<?> saveDocument(@PathVariable String slug) {
+        saveService.saveDocument(slug);
+
+        return ResponseEntity.ok(ResponseModel
+                .builder()
+                .status(200)
+                .error(false)
+                .message("Save document successfully")
+                .build());
+    }
+
+    @Operation(summary = "Bỏ lưu một tài liệu",
+            description = "Xoá một tài liệu khỏi danh sách đã lưu")
+    @PostMapping("/{slug}/unsave")
+    public ResponseEntity<?> unsaveDocument(@PathVariable String slug) {
+        SaveModel saveModel = saveService.unsaveDocument(slug);
+
+        return ResponseEntity.ok(ResponseModel
+                .builder()
+                .status(200)
+                .error(false)
+                .message("Unsave document successfully")
+                .data(saveModel)
+                .build());
+    }
+
+    @Operation(summary = "Hoàn tác bỏ lưu một tài liệu",
+            description = "Thêm tài liệu vào lại danh sách đã lưu")
+    @PostMapping("/{slug}/resave")
+    public ResponseEntity<?> undoUnsaveDocument(@PathVariable String slug, @RequestBody SaveModel saveModel) {
+        saveService.undoUnsave(slug, saveModel);
+
+        return ResponseEntity.ok(ResponseModel
+                .builder()
+                .status(200)
+                .error(false)
+                .message("Resave document successfully")
+                .build());
+    }
+
+    @Operation(summary = "Xem danh sách đã lưu",
+            description = "Trả về danh sách tài liệu đã lưu")
+    @GetMapping("/saved")
+    public ResponseEntity<?> getSavedDocuments(@RequestParam(defaultValue = "0") int page,
+                                               @RequestParam(defaultValue = "12") int size,
+                                               @RequestParam String s) {
+        Page<DocumentResponseModel> documentModels = saveService.getSavedDocuments(page, size, s);
+        return ResponseEntity.ok(ResponseModel.builder()
+                .error(false)
+                .status(200)
+                .message("Get saved documents successfully")
+                .data(documentModels)
+                .build());
+    }
+
+    @Operation(summary = "Trả về danh sách gần đây")
+    @GetMapping("/recent")
+    public ResponseEntity<?> getRecentDocuments() {
+        List<DocumentResponseModel> documentResponseModels = recencyService.getRecentDocuments();
+
+        return ResponseEntity.ok(ResponseModel
+                .builder()
+                .status(200)
+                .error(false)
+                .message("Get recent documents successfully")
+                .data(documentResponseModels)
                 .build());
     }
 }

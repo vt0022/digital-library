@@ -30,4 +30,9 @@ public class Recency implements Serializable {
     private Document document;
 
     private Timestamp accessedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        accessedAt = new Timestamp(System.currentTimeMillis());
+    }
 }

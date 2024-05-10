@@ -1,7 +1,6 @@
 package com.major_project.digital_library.controller;
 
 import com.major_project.digital_library.constant.BadgeUnit;
-import com.major_project.digital_library.entity.Collection;
 import com.major_project.digital_library.entity.*;
 import com.major_project.digital_library.model.FileModel;
 import com.major_project.digital_library.model.response_model.ResponseModel;
@@ -30,7 +29,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.Timestamp;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -46,9 +48,12 @@ public class InitController {
     private final IOrganizationService organizationService;
     private final IRoleService roleService;
     private final ISaveService saveService;
+    private final ISaveRepository saveRepository;
     private final IReviewService reviewService;
     private final IDocumentLikeService favoriteService;
+    private final IDocumentLikeRepository documentLikeRepository;
     private final IRecencyService recencyService;
+    private final IRecencyRepository recencyRepository;
     private final IPostLikeService postLikeService;
     private final IReplyService replyService;
     private final IPostService postService;
@@ -70,7 +75,7 @@ public class InitController {
     private final TagExtractor tagExtractor;
 
     @Autowired
-    public InitController(IUserService userService, IDocumentService documentService, IFieldService fieldService, ICategoryService categoryService, IOrganizationService organizationService, IRoleService roleService, ISaveService saveService, IReviewService reviewService, IDocumentLikeService favoriteService, IRecencyService recencyService, IPostLikeService postLikeService, IReplyService replyService, IPostService postService, IReplyLikeService replyLikeService, ISubsectionRepository subsectionRepository, ISectionRepository sectionRepository, ILabelRepository labelRepository, IBadgeTypeRepository badgeTypeRepository, IBadgeRepository badgeRepository, GoogleDriveUpload googleDriveUpload, ModelMapper modelMapper, SlugGenerator slugGenerator, IUserRepositoty userRepositoty, IBadgeRewardRepository badgeRewardRepository, ITagRepository tagRepository, IPostRepository postRepository, ICollectionRepository collectionRepository, ICollectionDocumentRepository collectionDocumentRepository, TagExtractor tagExtractor) {
+    public InitController(IUserService userService, IDocumentService documentService, IFieldService fieldService, ICategoryService categoryService, IOrganizationService organizationService, IRoleService roleService, ISaveService saveService, ISaveRepository saveRepository, IReviewService reviewService, IDocumentLikeService favoriteService, IDocumentLikeRepository documentLikeRepository, IRecencyService recencyService, IRecencyRepository recencyRepository, IPostLikeService postLikeService, IReplyService replyService, IPostService postService, IReplyLikeService replyLikeService, ISubsectionRepository subsectionRepository, ISectionRepository sectionRepository, ILabelRepository labelRepository, IBadgeTypeRepository badgeTypeRepository, IBadgeRepository badgeRepository, GoogleDriveUpload googleDriveUpload, ModelMapper modelMapper, SlugGenerator slugGenerator, IUserRepositoty userRepositoty, IBadgeRewardRepository badgeRewardRepository, ITagRepository tagRepository, IPostRepository postRepository, ICollectionRepository collectionRepository, ICollectionDocumentRepository collectionDocumentRepository, TagExtractor tagExtractor) {
         this.userService = userService;
         this.documentService = documentService;
         this.fieldService = fieldService;
@@ -78,9 +83,12 @@ public class InitController {
         this.organizationService = organizationService;
         this.roleService = roleService;
         this.saveService = saveService;
+        this.saveRepository = saveRepository;
         this.reviewService = reviewService;
         this.favoriteService = favoriteService;
+        this.documentLikeRepository = documentLikeRepository;
         this.recencyService = recencyService;
+        this.recencyRepository = recencyRepository;
         this.postLikeService = postLikeService;
         this.replyService = replyService;
         this.postService = postService;
@@ -360,7 +368,7 @@ public class InitController {
                     documentLike.setDocument(document);
                     documentLike.setUser(user);
 
-                    favoriteService.save(documentLike);
+                    documentLikeRepository.save(documentLike);
                 } catch (Exception e) {
                     System.out.println(e);
                 }
@@ -374,22 +382,6 @@ public class InitController {
                 .status(200)
                 .error(false)
                 .message("Create likes successfully")
-                .build());
-    }
-
-    @PostMapping("/likes/refresh")
-    public ResponseEntity<?> refreshLikes() {
-        List<Document> documents = documentService.findAll();
-        for (Document doc : documents) {
-            int totalLikes = doc.getDocumentLikes().size();
-            doc.setTotalFavorite(totalLikes);
-            documentService.save(doc);
-        }
-
-        return ResponseEntity.ok(ResponseModel.builder()
-                .status(200)
-                .error(false)
-                .message("Refresh likes successfully")
                 .build());
     }
 
@@ -471,11 +463,10 @@ public class InitController {
                     User user = userService.findById(userId).orElse(null);
                     Document document = documentService.findById(docId).orElse(null);
 
-                    save.setSaved(true);
                     save.setDocument(document);
                     save.setUser(user);
 
-                    saveService.save(save);
+                    saveRepository.save(save);
                 } catch (Exception e) {
                     System.out.println(e);
                 }
@@ -524,7 +515,7 @@ public class InitController {
                     recency.setAccessedAt(accessedAt);
                     recency.setUser(user);
 
-                    recencyService.save(recency);
+                    recencyRepository.save(recency);
                 } catch (Exception e) {
                     System.out.println(e);
                 }
@@ -538,34 +529,6 @@ public class InitController {
                 .status(200)
                 .error(false)
                 .message("Create recencies successfully")
-                .build());
-    }
-
-    @PostMapping("/refactor")
-    public ResponseEntity<?> editDocumentsWithQuantity() {
-        List<Document> documents = documentService.findAll();
-
-        List<Document> updatedDocuments = new ArrayList<>();
-
-        for (Document document : documents) {
-            int totalLikes = document.getDocumentLikes().size();
-            List<Review> reviewList = document.getReviews();
-            int totalRating = 0;
-            for (Review review : reviewList) totalRating += review.getStar();
-            double averageRating = reviewList.size() != 0 ? totalRating / reviewList.size() : 0.0;
-
-            document.setTotalFavorite(totalLikes);
-            document.setAverageRating(averageRating);
-
-            updatedDocuments.add(document);
-        }
-
-        documentService.saveAll(updatedDocuments);
-
-        return ResponseEntity.ok(ResponseModel.builder()
-                .status(200)
-                .error(false)
-                .message("Update total like and average rating successfully")
                 .build());
     }
 

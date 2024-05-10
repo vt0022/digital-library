@@ -8,6 +8,7 @@ import com.major_project.digital_library.model.response_model.DocumentResponseMo
 import com.major_project.digital_library.repository.*;
 import com.major_project.digital_library.service.ICollectionDocumentService;
 import com.major_project.digital_library.service.IDocumentService;
+import com.major_project.digital_library.service.IRecencyService;
 import com.major_project.digital_library.service.IUserService;
 import com.major_project.digital_library.util.GoogleDriveUpload;
 import com.major_project.digital_library.util.SlugGenerator;
@@ -19,7 +20,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -40,15 +40,15 @@ public class DocumentServiceImpl implements IDocumentService {
     private final ICollectionRepository collectionRepository;
     private final ICollectionDocumentService collectionDocumentService;
     private final IUserService userService;
+    private final IRecencyService recencyService;
     private final ModelMapper modelMapper;
     private final SlugGenerator slugGenerator;
     private final TagExtractor tagExtractor;
-
     private final GoogleDriveUpload googleDriveUpload;
     private final StringHandler stringHandler;
 
     @Autowired
-    public DocumentServiceImpl(IDocumentRepository documentRepository, ICategoryRepository categoryRepository, IFieldRepository fieldRepository, IOrganizationRepository organizationRepository, IUserRepositoty userRepositoty, IDocumentLikeRepository documentLikeRepository, ISaveRepository saveRepository, IReviewRepository reviewRepository, ICollectionRepository collectionRepository, ICollectionDocumentService collectionDocumentService, IUserService userService, ModelMapper modelMapper, SlugGenerator slugGenerator, TagExtractor tagExtractor, GoogleDriveUpload googleDriveUpload, StringHandler stringHandler) {
+    public DocumentServiceImpl(IDocumentRepository documentRepository, ICategoryRepository categoryRepository, IFieldRepository fieldRepository, IOrganizationRepository organizationRepository, IUserRepositoty userRepositoty, IDocumentLikeRepository documentLikeRepository, ISaveRepository saveRepository, IReviewRepository reviewRepository, ICollectionRepository collectionRepository, ICollectionDocumentService collectionDocumentService, IUserService userService, IRecencyService recencyService, ModelMapper modelMapper, SlugGenerator slugGenerator, TagExtractor tagExtractor, GoogleDriveUpload googleDriveUpload, StringHandler stringHandler) {
         this.documentRepository = documentRepository;
         this.categoryRepository = categoryRepository;
         this.fieldRepository = fieldRepository;
@@ -60,11 +60,22 @@ public class DocumentServiceImpl implements IDocumentService {
         this.collectionRepository = collectionRepository;
         this.collectionDocumentService = collectionDocumentService;
         this.userService = userService;
+        this.recencyService = recencyService;
         this.modelMapper = modelMapper;
         this.slugGenerator = slugGenerator;
         this.tagExtractor = tagExtractor;
         this.googleDriveUpload = googleDriveUpload;
         this.stringHandler = stringHandler;
+    }
+
+    @Override
+    public <S extends Document> List<S> saveAll(Iterable<S> entities) {
+        return documentRepository.saveAll(entities);
+    }
+
+    @Override
+    public Optional<Document> findBySlug(String slug) {
+        return documentRepository.findBySlug(slug);
     }
 
     @Override
@@ -75,11 +86,6 @@ public class DocumentServiceImpl implements IDocumentService {
     @Override
     public <S extends Document> S save(S entity) {
         return documentRepository.save(entity);
-    }
-
-    @Override
-    public <S extends Document> List<S> saveAll(Iterable<S> entities) {
-        return documentRepository.saveAll(entities);
     }
 
     @Override
@@ -95,283 +101,6 @@ public class DocumentServiceImpl implements IDocumentService {
     @Override
     public Page<Document> findAll(Pageable pageable) {
         return documentRepository.findAll(pageable);
-    }
-
-    @Override
-    public Optional<Document> findBySlug(String slug) {
-        return documentRepository.findBySlug(slug);
-    }
-
-    @Override
-    public Page<Document> findByDocNameContaining(String docName, Pageable pageable) {
-        return documentRepository.findByDocNameContaining(docName, pageable);
-    }
-
-    @Override
-    public Page<Document> findByDocNameAndOrganizationContaining(String docName, Organization organization, Pageable pageable) {
-        return documentRepository.findByDocNameAndOrganizationContaining(docName, organization, pageable);
-    }
-
-    @Override
-    public Page<Document> findAllByOrganization(Organization organization, Pageable pageable) {
-        return documentRepository.findAllByOrganization(organization, pageable);
-    }
-
-    @Override
-    public Page<Document> findByUserUploaded(User user, Pageable pageable) {
-        return documentRepository.findByUserUploaded(user, pageable);
-    }
-
-    @Override
-    public Page<Document> findByUserUploadedAndIsDeleted(User user, boolean isDeleted, Pageable pageable) {
-        return documentRepository.findByUserUploadedAndIsDeleted(user, isDeleted, pageable);
-    }
-
-    @Override
-    public Page<Document> findByVerifiedStatusAndIsDeleted(int VerifiedStatus, boolean isDeleted, Pageable pageable) {
-        return documentRepository.findByVerifiedStatusAndIsDeleted(VerifiedStatus, isDeleted, pageable);
-    }
-
-    @Override
-    public Page<Document> findByOrganizationAndVerifiedStatusAndIsDeleted(Organization organization, int verifiedStatus, boolean isDeleted, Pageable pageable) {
-        return documentRepository.findByOrganizationAndVerifiedStatusAndIsDeleted(organization, verifiedStatus, isDeleted, pageable);
-    }
-
-    @Override
-    @Query("SELECT d FROM Document d WHERE d.isDeleted = false " +
-            "AND d.verifiedStatus = 1 " +
-            "AND d.userUploaded = ?1 " +
-            "AND (d.isInternal = false OR (d.isInternal = true AND d.organization = ?2))")
-    public Page<Document> findByUserUploaded(User user, Organization userOrganization, Pageable pageable) {
-        return documentRepository.findByUserUploaded(user, userOrganization, pageable);
-    }
-
-    @Override
-    @Query("SELECT d FROM Document d " +
-            "WHERE (d.isDeleted = :isDeleted OR :isDeleted IS NULL) " +
-            "AND (d.isInternal = :isInternal OR :isInternal IS NULL) " +
-            "AND (d.verifiedStatus = :verifiedStatus OR :verifiedStatus IS NULL) " +
-            "AND (d.category = :category OR :category IS NULL) " +
-            "AND (d.field = :field OR :field IS NULL) " +
-            "AND (d.organization = :organization OR :organization IS NULL)")
-    public Page<Document> findAllDocumentsWithFilter(Boolean isDeleted, Boolean isInternal, Integer verifiedStatus, Category category, Field field, Organization organization, Pageable pageable) {
-        return documentRepository.findAllDocumentsWithFilter(isDeleted, isInternal, verifiedStatus, category, field, organization, pageable);
-    }
-
-    @Override
-    @Query("SELECT d FROM Document d WHERE d.isDeleted = false " +
-            "AND d.verifiedStatus = 1 " +
-            "AND (d.category = :category OR :category IS NULL) " +
-            "AND (d.field = :field OR :field IS NULL) " +
-            "AND (d.organization = :organization OR :organization IS NULL) " +
-            "AND d.category.isDeleted = false " +
-            "AND d.field.isDeleted = false " +
-            "AND d.organization.isDeleted = false " +
-            "AND (d.isInternal = false OR (d.isInternal = true AND d.organization = :userOrganization))")
-    public Page<Document> findDocumentsForStudents(Category category, Field field, Organization organization, Organization userOrganization, Pageable pageable) {
-        return documentRepository.findDocumentsForStudents(category, field, organization, userOrganization, pageable);
-    }
-
-    @Override
-    @Query("SELECT d FROM Document d WHERE d.isDeleted = false " +
-            "AND d.verifiedStatus = 1 " +
-            "AND (d.category = :category OR :category IS NULL) " +
-            "AND (d.field = :field OR :field IS NULL) " +
-            "AND (d.organization = :organization OR :organization IS NULL) " +
-            "AND d.category.isDeleted = false " +
-            "AND d.field.isDeleted = false " +
-            "AND d.organization.isDeleted = false " +
-            "AND (d.isInternal = false)")
-    public Page<Document> findDocumentsForGuests(Category category, Field field, Organization organization, Pageable pageable) {
-        return documentRepository.findDocumentsForGuests(category, field, organization, pageable);
-    }
-
-    @Override
-    @Query("SELECT d FROM Document d WHERE d.isDeleted = false " +
-            "AND d.verifiedStatus = 1 " +
-            "AND (d.category = :category OR :category IS NULL) " +
-            "AND (d.field = :field OR :field IS NULL) " +
-            "AND (d.organization = :organization OR :organization IS NULL) " +
-            "AND d.category.isDeleted = false " +
-            "AND d.field.isDeleted = false " +
-            "AND d.organization.isDeleted = false " +
-            "AND (d.isInternal = false OR (d.isInternal = true AND d.organization = :userOrganization)) " +
-            "AND (LOWER(d.docName) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(d.docIntroduction) LIKE LOWER(CONCAT('%', :query, '%')))")
-    public Page<Document> searchDocumentsForStudents(Category category, Field field, Organization organization, Organization userOrganization, String query, Pageable pageable) {
-        return documentRepository.searchDocumentsForStudents(category, field, organization, userOrganization, query, pageable);
-    }
-
-    @Override
-    @Query("SELECT d FROM Document d WHERE d.isDeleted = false " +
-            "AND d.verifiedStatus = 1 " +
-            "AND (d.category = :category OR :category IS NULL) " +
-            "AND (d.field = :field OR :field IS NULL) " +
-            "AND (d.organization = :organization OR :organization IS NULL) " +
-            "AND d.category.isDeleted = false " +
-            "AND d.field.isDeleted = false " +
-            "AND d.organization.isDeleted = false " +
-            "AND (d.isInternal = false) " +
-            "AND (LOWER(d.docName) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(d.docIntroduction) LIKE LOWER(CONCAT('%', :query, '%')))")
-    public Page<Document> searchDocumentsForGuests(Category category, Field field, Organization organization, String query, Pageable pageable) {
-        return documentRepository.searchDocumentsForGuests(category, field, organization, query, pageable);
-    }
-
-    @Override
-    @Query("SELECT d FROM Document d " +
-            "WHERE (d.isDeleted = :isDeleted OR :isDeleted IS NULL) " +
-            "AND (d.isInternal = :isInternal OR :isInternal IS NULL) " +
-            "AND (d.verifiedStatus = :verifiedStatus OR :verifiedStatus IS NULL) " +
-            "AND (d.category = :category OR :category IS NULL) " +
-            "AND (d.field = :field OR :field IS NULL) " +
-            "AND (d.organization = :organization OR :organization IS NULL) " +
-            "AND (LOWER(d.docName) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(d.docIntroduction) LIKE LOWER(CONCAT('%', :query, '%')))")
-    public Page<Document> searchWithAllDocuments(Boolean isDeleted, Boolean isInternal, Integer verifiedStatus, Category category, Field field, Organization organization, String query, Pageable pageable) {
-        return documentRepository.searchWithAllDocuments(isDeleted, isInternal, verifiedStatus, category, field, organization, query, pageable);
-    }
-
-    @Override
-    @Query("SELECT d FROM Document d " +
-            "WHERE (d.isDeleted = :isDeleted OR :isDeleted IS NULL) " +
-            "AND (d.isInternal = :isInternal OR :isInternal IS NULL) " +
-            "AND (d.verifiedStatus = :verifiedStatus OR :verifiedStatus IS NULL) " +
-            "AND (d.category = :category OR :category IS NULL) " +
-            "AND (d.field = :field OR :field IS NULL) " +
-            "AND (d.organization = :organization OR :organization IS NULL) " +
-            "AND (LOWER(d.docName) LIKE LOWER(CONCAT('%', :query, '%')) " +
-            "OR LOWER(d.docIntroduction) LIKE LOWER(CONCAT('%', :query, '%'))) " +
-            "AND MONTH(d.uploadedAt) = MONTH(CURRENT_DATE) AND YEAR(d.uploadedAt) = YEAR(CURRENT_DATE)")
-    public Page<Document> searchLatestDocuments(Boolean isDeleted, Boolean isInternal, Integer verifiedStatus, Category category, Field field, Organization organization, String query, Pageable pageable) {
-        return documentRepository.searchLatestDocuments(isDeleted, isInternal, verifiedStatus, category, field, organization, query, pageable);
-    }
-
-    @Override
-    @Query("SELECT d FROM Document d " +
-            "WHERE (d.isDeleted = :isDeleted OR :isDeleted IS NULL) " +
-            "AND (d.isInternal = :isInternal OR :isInternal IS NULL) " +
-            "AND (d.verifiedStatus = :verifiedStatus OR :verifiedStatus IS NULL) " +
-            "AND (d.category = :category OR :category IS NULL) " +
-            "AND (d.field = :field OR :field IS NULL) " +
-            "AND (d.organization = :organization OR :organization IS NULL) " +
-            "AND MONTH(d.uploadedAt) = MONTH(CURRENT_DATE) AND YEAR(d.uploadedAt) = YEAR(CURRENT_DATE)")
-    public Page<Document> findLatestDocuments(Boolean isDeleted, Boolean isInternal, Integer verifiedStatus, Category category, Field field, Organization organization, Pageable pageable) {
-        return documentRepository.findLatestDocuments(isDeleted, isInternal, verifiedStatus, category, field, organization, pageable);
-    }
-
-    @Override
-    @Query("SELECT d FROM Document d WHERE d.isDeleted = false " +
-            "AND (d.verifiedStatus = :verifiedStatus OR :verifiedStatus IS NULL) " +
-            "AND (d.category = :category OR :category IS NULL) " +
-            "AND (d.field = :field OR :field IS NULL) " +
-            "AND (d.organization = :organization OR :organization IS NULL) " +
-            "AND d.category.isDeleted = false " +
-            "AND d.field.isDeleted = false " +
-            "AND d.organization.isDeleted = false " +
-            "AND d.userUploaded = :userUploaded " +
-            "AND (LOWER(d.docName) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(d.docIntroduction) LIKE LOWER(CONCAT('%', :query, '%')))")
-    public Page<Document> findUploadedDocuments(Integer verifiedStatus, Category category, Field field, Organization organization, User userUploaded, String query, Pageable pageable) {
-        return documentRepository.findUploadedDocuments(verifiedStatus, category, field, organization, userUploaded, query, pageable);
-    }
-
-    @Override
-    @Query("SELECT d FROM Document d WHERE d.isDeleted = false " +
-            "AND (d.verifiedStatus = 1) " +
-            "AND (d.isInternal = false OR (d.isInternal = true AND d.organization = :userOrganization)) " +
-            "AND (d.category = :category OR :category IS NULL) " +
-            "AND (d.field = :field OR :field IS NULL) " +
-            "AND d.category.isDeleted = false " +
-            "AND d.field.isDeleted = false " +
-            "AND d.organization.isDeleted = false " +
-            "AND d.userUploaded = :userUploaded " +
-            "AND (LOWER(d.docName) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(d.docIntroduction) LIKE LOWER(CONCAT('%', :query, '%')))")
-    public Page<Document> findUploadedDocumentsByUserForStudent(Category category, Field field, Organization userOrganization, User userUploaded, String query, Pageable pageable) {
-        return documentRepository.findUploadedDocumentsByUserForStudent(category, field, userOrganization, userUploaded, query, pageable);
-    }
-
-    @Override
-    @Query("SELECT d FROM Document d WHERE d.isDeleted = false " +
-            "AND (d.verifiedStatus = 1) " +
-            "AND (d.isInternal = false) " +
-            "AND (d.category = :category OR :category IS NULL) " +
-            "AND (d.field = :field OR :field IS NULL) " +
-            "AND d.category.isDeleted = false " +
-            "AND d.field.isDeleted = false " +
-            "AND d.organization.isDeleted = false " +
-            "AND d.userUploaded = :userUploaded " +
-            "AND (LOWER(d.docName) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(d.docIntroduction) LIKE LOWER(CONCAT('%', :query, '%')))")
-    public Page<Document> findUploadedDocumentsByUserForGuest(Category category, Field field, User userUploaded, String query, Pageable pageable) {
-        return documentRepository.findUploadedDocumentsByUserForGuest(category, field, userUploaded, query, pageable);
-    }
-
-    @Override
-    @Query("SELECT s.document FROM Save s " +
-            "JOIN s.document d " +
-            "WHERE s.user = :user " +
-            "AND s.isSaved = true " +
-            "AND (d.isInternal = false OR d.organization = s.user.organization) " +
-            "AND d.isDeleted = false " +
-            "AND d.category.isDeleted = false " +
-            "AND d.field.isDeleted = false " +
-            "AND d.organization.isDeleted = false " +
-            "AND (LOWER(d.docName) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(d.docIntroduction) LIKE LOWER(CONCAT('%', :query, '%')))")
-    public Page<Document> findLikedDocuments(User user, String query, Pageable pageable) {
-        return documentRepository.findLikedDocuments(user, query, pageable);
-    }
-
-    @Override
-    public long count() {
-        return documentRepository.count();
-    }
-
-    @Override
-    public long countByVerifiedStatus(int verifiedStatus) {
-        return documentRepository.countByVerifiedStatus(verifiedStatus);
-    }
-
-    @Override
-    public long countByOrganization(Organization organization) {
-        return documentRepository.countByOrganization(organization);
-    }
-
-
-    @Override
-    public long countByVerifiedStatusAndOrganization(int verifiedStatus, Organization organization) {
-        return documentRepository.countByVerifiedStatusAndOrganization(verifiedStatus, organization);
-    }
-
-    @Override
-    @Query("SELECT MONTH(d.uploadedAt) as month, COUNT(d) as count " +
-            "FROM Document d " +
-            "WHERE (d.organization = :organization OR :organization IS NULL) " +
-            "AND YEAR(d.uploadedAt) = YEAR(CURRENT_DATE) " +
-            "GROUP BY MONTH(d.uploadedAt)")
-    public List<Object[]> countDocumentsByMonth(Organization organization) {
-        return documentRepository.countDocumentsByMonth(organization);
-    }
-
-    @Override
-    @Query("SELECT d.category.categoryName as category, COUNT(d) as count " +
-            "FROM Document d " +
-            "WHERE (d.organization = :organization OR :organization IS NULL) " +
-            "GROUP BY d.category")
-    public List<Object[]> countDocumentsByCategory(Organization organization) {
-        return documentRepository.countDocumentsByCategory(organization);
-    }
-
-    @Override
-    @Query("SELECT d.field.fieldName as category, COUNT(d) as count " +
-            "FROM Document d " +
-            "WHERE (d.organization = :organization OR :organization IS NULL) " +
-            "GROUP BY d.field")
-    public List<Object[]> countDocumentsByField(Organization organization) {
-        return documentRepository.countDocumentsByField(organization);
-    }
-
-    @Override
-    @Query("SELECT d.organization.orgName as organization, COUNT(d) as count " +
-            "FROM Document d " +
-            "GROUP BY d.organization")
-    public List<Object[]> countDocumentsByOrganization() {
-        return documentRepository.countDocumentsByOrganization();
     }
 
     @Override
@@ -407,6 +136,8 @@ public class DocumentServiceImpl implements IDocumentService {
         // Increase views
         document.setTotalView(document.getTotalView() + 1);
         documentRepository.save(document);
+
+        recencyService.addToRecentDocuments(slug);
 
         DetailDocumentResponseModel documentResponseModel = convertToDetailDocumentModel(document);
 
@@ -622,7 +353,7 @@ public class DocumentServiceImpl implements IDocumentService {
 //    }
 
     @Override
-    public Page<DocumentResponseModel> getPendingDocuments(int page, int size) {
+    public Page<DocumentResponseModel> getPendingDocuments(int page, int size, String organization) {
         // Order maybe one of these: docId, totalView
         Sort sort = Sort.by(Sort.Direction.DESC, "updatedAt");
         Pageable pageable = PageRequest.of(page, size, sort);
@@ -636,7 +367,13 @@ public class DocumentServiceImpl implements IDocumentService {
             Organization foundOrganization = user.getOrganization();
             documents = documentRepository.findByOrganizationAndVerifiedStatusAndIsDeleted(foundOrganization, 0, false, pageable);
         } else { // Not include organization
-            documents = documentRepository.findByVerifiedStatusAndIsDeleted(0, false, pageable);
+            if (organization.equals("all"))
+                documents = documentRepository.findByVerifiedStatusAndIsDeleted(0, false, pageable);
+            else {
+                Organization foundOrganization = organizationRepository.findBySlug(organization).orElseThrow(() -> new RuntimeException("Organization not found"));
+                ;
+                documents = documentRepository.findByOrganizationAndVerifiedStatusAndIsDeleted(foundOrganization, 0, false, pageable);
+            }
         }
         Page<DocumentResponseModel> documentModels = documents.map(this::convertToDocumentModel);
 
@@ -925,7 +662,10 @@ public class DocumentServiceImpl implements IDocumentService {
         DetailDocumentResponseModel documentResponseModel = modelMapper.map(document, DetailDocumentResponseModel.class);
 
         int totalLikes = document.getDocumentLikes().size();
-        int totalReviews = (int) document.getReviews().stream().filter(review -> review.getVerifiedStatus() == 1).count();
+        int totalReviews = (int) document.getReviews()
+                .stream()
+                .filter(review -> review.getVerifiedStatus() == 1)
+                .count();
         int totalRating = document.getReviews()
                 .stream()
                 .filter(review -> review.getVerifiedStatus() == 1)
@@ -951,9 +691,13 @@ public class DocumentServiceImpl implements IDocumentService {
         DetailDocumentResponseModel documentResponseModel = modelMapper.map(document, DetailDocumentResponseModel.class);
 
         int totalLikes = document.getDocumentLikes().size();
-        int totalReviews = document.getReviews().size();
+        int totalReviews = (int) document.getReviews()
+                .stream()
+                .filter(review -> review.getVerifiedStatus() == 1)
+                .count();
         int totalRating = document.getReviews()
                 .stream()
+                .filter(review -> review.getVerifiedStatus() == 1)
                 .mapToInt(Review::getStar)
                 .sum();
         double averageRating = totalReviews == 0 ? 0 : (double) totalRating / totalReviews;
