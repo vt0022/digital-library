@@ -256,12 +256,20 @@ public class SecurityConfig {
                                 "/api/v2/sections/sub/*",
                                 "/api/v2/sections/sub").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(
-                                "/api/v2/sections/all").hasAuthority("ROLE_ADMIN")
-                        .requestMatchers(
                                 "/api/v2/sections/active").permitAll()
+                        .requestMatchers(
+                                "/api/v2/sections/*/activation",
+                                "/api/v2/sections/all",
+                                "/api/v2/sections/*",
+                                "/api/v2/sections").hasAuthority("ROLE_ADMIN")
 
                         .requestMatchers(
                                 "/api/v2/labels/active").permitAll()
+                        .requestMatchers(
+                                "/api/v2/labels/*/activation",
+                                "/api/v2/labels/all",
+                                "/api/v2/labels/*",
+                                "/api/v2/labels").hasAuthority("ROLE_ADMIN")
 
                         .requestMatchers(
                                 "/api/v2/badges/user/*").permitAll()

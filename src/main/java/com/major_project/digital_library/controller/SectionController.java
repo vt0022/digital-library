@@ -1,5 +1,6 @@
 package com.major_project.digital_library.controller;
 
+import com.major_project.digital_library.model.request_model.SectionRequestModel;
 import com.major_project.digital_library.model.request_model.SubsectionRequestModel;
 import com.major_project.digital_library.model.response_model.DetailSectionResponseModel;
 import com.major_project.digital_library.model.response_model.ResponseModel;
@@ -41,7 +42,7 @@ public class SectionController {
                 .build());
     }
 
-    @Operation(summary = "Lấy tất cả chuyên mục do admin quản lý")
+    @Operation(summary = "Lấy tất cả mục do admin quản lý")
     @GetMapping("/all")
     public ResponseEntity<?> getAllSections(@RequestParam(defaultValue = "0") int page,
                                             @RequestParam(defaultValue = "100") int size,
@@ -54,6 +55,76 @@ public class SectionController {
                 .error(false)
                 .message("Get all sections successfully")
                 .data(sectionResponseModels)
+                .build());
+    }
+
+    @Operation(summary = "Xem chi tiết 1 mục",
+            description = "Trả về chi tiết 1 mục")
+    @GetMapping("/{sectionId}")
+    public ResponseEntity<?> createSection(@PathVariable UUID sectionId) {
+        SectionResponseModel sectionResponseModel = sectionService.findSection(sectionId);
+
+        return ResponseEntity.ok(ResponseModel.builder()
+                .status(200)
+                .error(false)
+                .message("Get section successfully")
+                .data(sectionResponseModel)
+                .build());
+    }
+
+    @Operation(summary = "Tạo mục mới",
+            description = "Tạo một mục mới")
+    @PostMapping
+    public ResponseEntity<?> createSection(@RequestBody SectionRequestModel sectionRequestModel) {
+        SectionResponseModel sectionResponseModel = sectionService.createSection(sectionRequestModel);
+
+        return ResponseEntity.ok(ResponseModel.builder()
+                .status(200)
+                .error(false)
+                .message("Create new section successfully")
+                .data(sectionResponseModel)
+                .build());
+    }
+
+    @Operation(summary = "Cập nhật mục",
+            description = "Cập nhật mục đã có")
+    @PutMapping("/{sectionId}")
+    public ResponseEntity<?> updateSection(@PathVariable UUID sectionId,
+                                           @RequestBody SectionRequestModel sectionRequestModel) {
+        SectionResponseModel sectionResponseModel = sectionService.updateSection(sectionId, sectionRequestModel);
+
+        return ResponseEntity.ok(ResponseModel.builder()
+                .status(200)
+                .error(false)
+                .message("Update section successfully")
+                .data(sectionResponseModel)
+                .build());
+    }
+
+    @Operation(summary = "Xoá mục",
+            description = "Xoá mục: xoá cứng nếu chưa có bài đăng, ngược lại xoá mềm")
+    @DeleteMapping("/{sectionId}")
+    public ResponseEntity<?> deleteSection(@PathVariable UUID sectionId) {
+        boolean isDeleted = sectionService.deleteSection(sectionId);
+
+        return ResponseEntity.ok(ResponseModel.builder()
+                .status(200)
+                .error(false)
+                .message(isDeleted ? "Delete section from system successfully" : "Unable to delete this section as there are documents and users linked to it. Status changed to disabled")
+                .build());
+    }
+
+    @Operation(summary = "Kích hoạt lại mục",
+            description = "Kích hoạt lại mục đã bị xoá mềm")
+    @PutMapping("/{sectionId}/activation")
+    public ResponseEntity<?> activateSection(@PathVariable UUID sectionId) {
+        SectionResponseModel sectionResponseModel = sectionService.activateSection(sectionId);
+
+        return ResponseEntity.ok(ResponseModel.builder()
+                .status(200)
+                .error(false)
+                .message("Activate section successfully")
+                .data(sectionResponseModel)
                 .build());
     }
 
@@ -139,7 +210,7 @@ public class SectionController {
         return ResponseEntity.ok(ResponseModel.builder()
                 .status(200)
                 .error(false)
-                .message(isDeleted ? "Delete subsection from system successfully" : "Unable to delete this subsection as there are documents and users linked to it. Status changed to deleted")
+                .message(isDeleted ? "Delete subsection from system successfully" : "Unable to delete this subsection as there are documents and users linked to it. Status changed to disabled")
                 .build());
     }
 

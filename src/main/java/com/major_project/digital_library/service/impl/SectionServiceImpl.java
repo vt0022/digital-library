@@ -4,6 +4,7 @@ import com.major_project.digital_library.entity.Post;
 import com.major_project.digital_library.entity.Section;
 import com.major_project.digital_library.entity.Subsection;
 import com.major_project.digital_library.model.lean_model.PostLeanModel;
+import com.major_project.digital_library.model.request_model.SectionRequestModel;
 import com.major_project.digital_library.model.response_model.DetailSectionResponseModel;
 import com.major_project.digital_library.model.response_model.DetailSubsectionResponseModel;
 import com.major_project.digital_library.model.response_model.SectionResponseModel;
@@ -18,10 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -60,6 +58,70 @@ public class SectionServiceImpl implements ISectionService {
         Page<SectionResponseModel> sectionResponseModels = sections.map(this::convertToSectionResponseModel);
 
         return sectionResponseModels;
+    }
+
+    @Override
+    public SectionResponseModel findSection(UUID subId) {
+        Section section = sectionRepository.findById(subId).orElseThrow(() -> new RuntimeException("Section not found"));
+
+        SectionResponseModel sectionResponseModels = modelMapper.map(section, SectionResponseModel.class);
+
+        return sectionResponseModels;
+    }
+
+    @Override
+    public SectionResponseModel createSection(SectionRequestModel sectionRequestModel) {
+        Optional<Section> sectionOptional = sectionRepository.findBySectionName(sectionRequestModel.getSectionName());
+        if (sectionOptional.isPresent())
+            throw new RuntimeException("Organization already exists");
+
+        Section section = modelMapper.map(sectionRequestModel, Section.class);
+        section = sectionRepository.save(section);
+
+        SectionResponseModel sectionResponseModel = modelMapper.map(section, SectionResponseModel.class);
+
+        return sectionResponseModel;
+    }
+
+    @Override
+    public SectionResponseModel updateSection(UUID subId,
+                                              SectionRequestModel sectionRequestModel) {
+        Section section = sectionRepository.findById(subId).orElseThrow(() -> new RuntimeException("Section not found"));
+        Optional<Section> sectionOptional = sectionRepository.findBySectionName(sectionRequestModel.getSectionName());
+        if (sectionOptional.isPresent())
+            if (sectionOptional.get().getSectionId() != section.getSectionId())
+                throw new RuntimeException("Section already exists");
+
+        section.setSectionName(sectionRequestModel.getSectionName());
+        section = sectionRepository.save(section);
+
+        SectionResponseModel sectionResponseModel = modelMapper.map(section, SectionResponseModel.class);
+        return sectionResponseModel;
+    }
+
+    @Override
+    public boolean deleteSection(UUID subId) {
+        Section section = sectionRepository.findById(subId).orElseThrow(() -> new RuntimeException("Section not found"));
+
+        if (section.getSubsections().isEmpty()) {
+            sectionRepository.deleteById(subId);
+            return true;
+        } else {
+            section.setDisabled(true);
+            sectionRepository.save(section);
+            return false;
+        }
+    }
+
+    @Override
+    public SectionResponseModel activateSection(UUID subId) {
+        Section section = sectionRepository.findById(subId).orElseThrow(() -> new RuntimeException("Section not found"));
+
+        section.setDisabled(false);
+        section = sectionRepository.save(section);
+
+        SectionResponseModel sectionResponseModel = modelMapper.map(section, SectionResponseModel.class);
+        return sectionResponseModel;
     }
 
     private DetailSectionResponseModel convertToDetailSectionResponseModel(Section section) {
