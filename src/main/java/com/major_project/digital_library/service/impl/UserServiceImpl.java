@@ -15,7 +15,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -142,15 +141,5 @@ public class UserServiceImpl implements IUserService {
             "AND YEAR(u.createdAt) = YEAR(CURRENT_DATE)")
     public Page<User> searchLatestUsers(Boolean isDeleted, Integer gender, Organization organization, Role role, String roleName, String query, Pageable pageable) {
         return userRepository.searchLatestUsers(isDeleted, gender, organization, role, roleName, query, pageable);
-    }
-
-    @Override
-    @Query("SELECT MONTH(u.createdAt) as month, COUNT(u) as count " +
-            "FROM User u " +
-            "WHERE (u.organization = :organization OR :organization IS NULL) " +
-            "AND YEAR(u.createdAt) = YEAR(CURRENT_DATE) " +
-            "GROUP BY MONTH(u.createdAt)")
-    public List<Object[]> countUsersByMonth(Organization organization) {
-        return userRepository.countUsersByMonth(organization);
     }
 }

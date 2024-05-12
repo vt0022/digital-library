@@ -37,13 +37,22 @@ public interface IUserRepositoty extends JpaRepository<User, UUID> {
             "AND u.role.roleName <> 'ROLE_MANAGER'")
     Page<User> findByOrganization(Organization organization, Pageable pageable);
 
-    long count();
-
     long countByCreatedAtBetween(Timestamp startDate, Timestamp endDate);
 
     long countByOrganization(Organization organization);
 
     long countByOrganizationAndCreatedAtBetween(Organization organization, Timestamp startDate, Timestamp endDate);
+
+    @Query("SELECT u.organization.orgName as organization, COUNT(u) as count " +
+            "FROM User u " +
+            "GROUP BY u.organization")
+    List<Object[]> countUsersByOrganization();
+
+    @Query("SELECT u.organization.orgName as organization, COUNT(u) as count " +
+            "FROM User u " +
+            "WHERE DATE(u.createdAt) BETWEEN DATE(:startDate) AND DATE(:endDate) " +
+            "GROUP BY u.organization")
+    List<Object[]> countUsersByOrganizationAndDateRange(Timestamp startDate, Timestamp endDate);
 
     @Query("SELECT u FROM User u " +
             "WHERE (u.isDeleted = :isDeleted OR :isDeleted IS NULL) " +
@@ -72,7 +81,7 @@ public interface IUserRepositoty extends JpaRepository<User, UUID> {
     @Query("SELECT MONTH(u.createdAt) as month, COUNT(u) as count " +
             "FROM User u " +
             "WHERE (u.organization = :organization OR :organization IS NULL) " +
-            "AND YEAR(u.createdAt) = YEAR(CURRENT_DATE) " +
+            "AND YEAR(u.createdAt) = :year " +
             "GROUP BY MONTH(u.createdAt)")
-    List<Object[]> countUsersByMonth(Organization organization);
+    List<Object[]> countUsersByMonth(int year, Organization organization);
 }

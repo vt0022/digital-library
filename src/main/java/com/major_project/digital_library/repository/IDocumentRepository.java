@@ -244,8 +244,6 @@ public interface IDocumentRepository extends JpaRepository<Document, UUID> {
 
     long countByVerifiedStatusAndOrganizationAndUploadedAtBetween(int verifiedStatus, Organization organization, Timestamp startDate, Timestamp endDate);
 
-    long count();
-
     long countByUploadedAtBetween(Timestamp startDate, Timestamp endDate);
 
     long countByOrganization(Organization organization);
@@ -255,9 +253,9 @@ public interface IDocumentRepository extends JpaRepository<Document, UUID> {
     @Query("SELECT MONTH(d.uploadedAt) as month, COUNT(d) as count " +
             "FROM Document d " +
             "WHERE (d.organization = :organization OR :organization IS NULL) " +
-            "AND YEAR(d.uploadedAt) = YEAR(CURRENT_DATE) " +
+            "AND YEAR(d.uploadedAt) = :year " +
             "GROUP BY MONTH(d.uploadedAt)")
-    List<Object[]> countDocumentsByMonth(Organization organization);
+    List<Object[]> countDocumentsByMonth(int year, Organization organization);
 
     @Query("SELECT d.category.categoryName as category, COUNT(d) as count " +
             "FROM Document d " +

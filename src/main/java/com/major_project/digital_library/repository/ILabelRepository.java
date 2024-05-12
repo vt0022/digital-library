@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.sql.Timestamp;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -14,4 +15,6 @@ public interface ILabelRepository extends JpaRepository<Label, UUID> {
     Optional<Label> findBySlug(String slug);
 
     Page<Label> findAllByIsDisabled(boolean isDisabled, Pageable pageable);
+
+    long countByCreatedAtBetween(Timestamp startDate, Timestamp endDate);
 }

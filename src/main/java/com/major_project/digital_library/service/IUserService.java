@@ -7,7 +7,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -74,11 +73,4 @@ public interface IUserService {
             "AND MONTH(u.createdAt) = MONTH(CURRENT_DATE) " +
             "AND YEAR(u.createdAt) = YEAR(CURRENT_DATE)")
     Page<User> searchLatestUsers(Boolean isDeleted, Integer gender, Organization organization, Role role, String roleName, String query, Pageable pageable);
-
-    @Query("SELECT MONTH(u.createdAt) as month, COUNT(u) as count " +
-            "FROM User u " +
-            "WHERE (u.organization = :organization OR :organization IS NULL) " +
-            "AND YEAR(u.createdAt) = YEAR(CURRENT_DATE) " +
-            "GROUP BY MONTH(u.createdAt)")
-    List<Object[]> countUsersByMonth(Organization organization);
 }

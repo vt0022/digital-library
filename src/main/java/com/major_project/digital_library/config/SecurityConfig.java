@@ -210,9 +210,11 @@ public class SecurityConfig {
                                 "/api/v2/users").hasAuthority("ROLE_ADMIN")
 
                         .requestMatchers(
-                                "/api/v2/statistics/admin").hasAuthority("ROLE_ADMIN")
+                                "/api/v2/statistics/general/admin",
+                                "/api/v2/statistics/yearly/admin").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(
-                                "/api/v2/statistics/manager").hasAuthority("ROLE_MANAGER")
+                                "/api/v2/statistics/general/manager",
+                                "/api/v2/statistics/yearly/manager").hasAuthority("ROLE_MANAGER")
 
                         .requestMatchers(
                                 "/api/v2/reviews/*/approval").hasAnyAuthority("ROLE_ADMIN", "ROLE_MANAGER")
@@ -247,10 +249,16 @@ public class SecurityConfig {
                                 "/api/v2/replies/*").hasAuthority("ROLE_STUDENT")
 
                         .requestMatchers(
-                                "/api/v2/sections/active").permitAll()
-
+                                "/api/v2/sections/sub/editable").hasAuthority("ROLE_STUDENT")
                         .requestMatchers(
-                                "/api/v2/sections/editable").hasAuthority("ROLE_STUDENT")
+                                "/api/v2/sections/sub/*/activation",
+                                "/api/v2/sections/sub/all",
+                                "/api/v2/sections/sub/*",
+                                "/api/v2/sections/sub").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(
+                                "/api/v2/sections/all").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(
+                                "/api/v2/sections/active").permitAll()
 
                         .requestMatchers(
                                 "/api/v2/labels/active").permitAll()

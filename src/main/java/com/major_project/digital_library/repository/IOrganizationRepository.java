@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.sql.Timestamp;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -22,4 +23,6 @@ public interface IOrganizationRepository extends JpaRepository<Organization, UUI
             "WHERE (o.isDeleted = :isDeleted OR :isDeleted IS NULL) " +
             "AND LOWER(o.orgName) LIKE LOWER(CONCAT('%', :query, '%'))")
     Page<Organization> searchOrganizations(Boolean isDeleted, String query, Pageable pageable);
+
+    long countByCreatedAtBetween(Timestamp startDate, Timestamp endDate);
 }

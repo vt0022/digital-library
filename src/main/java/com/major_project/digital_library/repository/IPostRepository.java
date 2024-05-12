@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.UUID;
 
@@ -80,9 +81,52 @@ public interface IPostRepository extends JpaRepository<Post, UUID> {
             "ORDER BY p.createdAt DESC")
     Page<Post> findAllByUser(User user, String query, Pageable pageable);
 
-    @Query("SELECT p FROM Post p JOIN p.tags t " +
+    @Query("SELECT p " +
+            "FROM Post p " +
+            "JOIN p.tags t " +
             "WHERE t.tagName IN :tags " +
             "GROUP BY p.postId " +
             "ORDER BY COUNT(t) DESC")
     Page<Post> findAllByTags(List<String> tags, Pageable pageable);
+
+    long countByCreatedAtBetween(Timestamp startDate, Timestamp endDate);
+
+    @Query("SELECT MONTH(p.createdAt) as month, COUNT(p) as count " +
+            "FROM Post p " +
+            "WHERE YEAR(p.createdAt) = :year " +
+            "GROUP BY MONTH(p.createdAt)")
+    List<Object[]> countPostsByMonth(int year);
+
+    @Query("SELECT p.subsection.subName as subsection, COUNT(p) as count " +
+            "FROM Post p " +
+            "GROUP BY p.subsection")
+    List<Object[]> countPostsBySubsection();
+
+    @Query("SELECT p.subsection.subName as subsection, COUNT(p) as count " +
+            "FROM Post p " +
+            "WHERE DATE(p.createdAt) BETWEEN DATE(:startDate) AND DATE(:endDate) " +
+            "GROUP BY p.subsection")
+    List<Object[]> countPostsBySubsectionAndDateRange(Timestamp startDate, Timestamp endDate);
+
+    @Query("SELECT p.label.labelName, COUNT(p) as count " +
+            "FROM Post p " +
+            "GROUP BY p.label")
+    List<Object[]> countPostsByLabel();
+
+    @Query("SELECT p.label.labelName, COUNT(p) as count " +
+            "FROM Post p " +
+            "WHERE DATE(p.createdAt) BETWEEN DATE(:startDate) AND DATE(:endDate) " +
+            "GROUP BY p.label")
+    List<Object[]> countPostsByLabelAndDateRange(Timestamp startDate, Timestamp endDate);
+
+    @Query("SELECT COUNT(p)" +
+            "FROM Post p " +
+            "WHERE p.label IS NULL")
+    long countPostsWithNoLabel();
+
+    @Query("SELECT COUNT(p)" +
+            "FROM Post p " +
+            "WHERE p.label IS NULL " +
+            "AND DATE(p.createdAt) BETWEEN DATE(:startDate) AND DATE(:endDate)")
+    long countPostsWithNoLabelAndDateRange(Timestamp startDate, Timestamp endDate);
 }
