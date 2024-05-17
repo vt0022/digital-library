@@ -224,6 +224,10 @@ public class SecurityConfig {
                                 "/api/v2/reviews/*").authenticated()
 
                         .requestMatchers(
+                                "/api/v2/posts/all/user/*").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(
+                                "/api/v2/posts/user/likes").hasAuthority("ROLE_STUDENT")
+                        .requestMatchers(
                                 "/api/v2/posts/user/*",
                                 "/api/v2/posts/*/replies/guest",
                                 "/api/v2/posts/*/guest",
@@ -231,22 +235,26 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/v2/posts/*/replies",
                                 "/api/v2/posts/*/reply",
-                                "/api/v2/posts/*/like").hasAuthority("ROLE_STUDENT")
+                                "/api/v2/posts/*/like").authenticated()
                         .requestMatchers(
-                                "/api/v2/posts/related").permitAll()
+                                "/api/v2/posts/all").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(
-                                "/api/v2/posts/*").hasAuthority("ROLE_STUDENT")
-                        .requestMatchers(HttpMethod.PUT,
-                                "/api/v2/posts").hasAuthority("ROLE_STUDENT")
+                                "/api/v2/posts/related").authenticated()
+                        .requestMatchers(
+                                "/api/v2/posts/*").hasAnyAuthority("ROLE_STUDENT", "ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/v2/posts").hasAnyAuthority("ROLE_STUDENT", "ROLE_ADMIN")
                         .requestMatchers(HttpMethod.GET,
                                 "/api/v2/posts").permitAll()
 
+                        .requestMatchers(
+                                "/api/v2/replies/user/likes").hasAuthority("ROLE_STUDENT")
                         .requestMatchers(
                                 "/api/v2/replies/image",
                                 "/api/v2/replies/user/*",
                                 "/api/v2/replies/*/history").permitAll()
                         .requestMatchers(
-                                "/api/v2/replies/*").hasAuthority("ROLE_STUDENT")
+                                "/api/v2/replies/*").hasAnyAuthority("ROLE_STUDENT", "ROLE_ADMIN")
 
                         .requestMatchers(
                                 "/api/v2/sections/sub/editable").hasAuthority("ROLE_STUDENT")
@@ -282,6 +290,46 @@ public class SecurityConfig {
                                 "/api/v2/collections/mine",
                                 "/api/v2/collections/*",
                                 "/api/v2/collections").authenticated()
+
+                        .requestMatchers(
+                                "/api/v2/notifications/mine").authenticated()
+
+                        .requestMatchers(
+                                "/api/v2/appeals/post/*/check").hasAuthority("ROLE_STUDENT")
+                        .requestMatchers(
+                                "/api/v2/reports/post/*/read",
+                                "/api/v2/reports/reply/*/read").hasAnyAuthority("ROLE_STUDENT", "ROLE_ADMIN")
+                        .requestMatchers(
+                                "/api/v2/reports/post/*/handle",
+                                "/api/v2/reports/reply/*/hande").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(
+                                "/api/v2/reports/post/*",
+                                "/api/v2/reports/reply/*").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/v2/reports/post",
+                                "/api/v2/reports/reply").hasAnyAuthority("ROLE_STUDENT", "ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v2/reports/post",
+                                "/api/v2/reports/reply").hasAuthority("ROLE_ADMIN")
+
+                        .requestMatchers(
+                                "/api/v2/appeals/reply/*/check").hasAuthority("ROLE_STUDENT")
+                        .requestMatchers(
+                                "/api/v2/appeals/post/*/read",
+                                "/api/v2/appeals/reply/*/read").hasAnyAuthority("ROLE_STUDENT", "ROLE_ADMIN")
+                        .requestMatchers(
+                                "/api/v2/appeals/post/*/handle",
+                                "/api/v2/appeals/reply/*/hande").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(
+                                "/api/v2/appeals/post/*",
+                                "/api/v2/appeals/reply/*").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.POST,
+                                "/api/v2/appeals/post",
+                                "/api/v2/appeals/reply").hasAnyAuthority("ROLE_STUDENT", "ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v2/appeals/post",
+                                "/api/v2/appeals/reply").hasAuthority("ROLE_ADMIN")
+
 
                         .anyRequest().authenticated())
 

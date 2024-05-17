@@ -2,6 +2,7 @@ package com.major_project.digital_library.controller;
 
 import com.major_project.digital_library.model.request_model.ReplyRequestModel;
 import com.major_project.digital_library.model.response_model.ReplyHistoryResponseModel;
+import com.major_project.digital_library.model.response_model.ReplyLikeResponseModel;
 import com.major_project.digital_library.model.response_model.ReplyResponseModel;
 import com.major_project.digital_library.model.response_model.ResponseModel;
 import com.major_project.digital_library.service.IReplyHistoryService;
@@ -108,15 +109,24 @@ public class ReplyController {
     @Operation(summary = "Xoá một bình luận")
     @DeleteMapping("/replies/{replyId}")
     public ResponseEntity<?> editReply(@PathVariable UUID replyId) {
-        replyService.deleteReply(replyId);
+        boolean isDeleted = replyService.deleteReply(replyId);
 
-        return ResponseEntity.ok(
-                ResponseModel
-                        .builder()
-                        .status(200)
-                        .error(false)
-                        .message("Delete reply successfully")
-                        .build());
+        if (isDeleted)
+            return ResponseEntity.ok(
+                    ResponseModel
+                            .builder()
+                            .status(200)
+                            .error(false)
+                            .message("Delete reply successfully")
+                            .build());
+        else
+            return ResponseEntity.ok(
+                    ResponseModel
+                            .builder()
+                            .status(404)
+                            .error(false)
+                            .message("Reply not accessible")
+                            .build());
     }
 
     @Operation(summary = "Xem tất cả phản hồi của một người dùng")
@@ -163,4 +173,19 @@ public class ReplyController {
                         .build());
     }
 
+    @Operation(summary = "Lấy toàn bộ danh sách bài đăng đã thích của một người dùng")
+    @GetMapping("/replies/user/likes")
+    public ResponseEntity<?> getAllReplyLikesByUser(@RequestParam(defaultValue = "0") int page,
+                                                    @RequestParam(defaultValue = "10") int size) {
+        Page<ReplyLikeResponseModel> replyLikeResponseModels = replyLikeService.findByUser(page, size);
+
+        return ResponseEntity.ok(
+                ResponseModel
+                        .builder()
+                        .status(200)
+                        .error(false)
+                        .message("Get reply likes of user successfully")
+                        .data(replyLikeResponseModels)
+                        .build());
+    }
 }

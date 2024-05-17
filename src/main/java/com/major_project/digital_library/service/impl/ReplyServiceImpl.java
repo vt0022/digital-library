@@ -1,5 +1,6 @@
 package com.major_project.digital_library.service.impl;
 
+import com.major_project.digital_library.constant.NotificationMessage;
 import com.major_project.digital_library.entity.Post;
 import com.major_project.digital_library.entity.Reply;
 import com.major_project.digital_library.entity.ReplyHistory;
@@ -12,6 +13,7 @@ import com.major_project.digital_library.repository.IReplyHistoryRepository;
 import com.major_project.digital_library.repository.IReplyLikeRepository;
 import com.major_project.digital_library.repository.IReplyRepository;
 import com.major_project.digital_library.service.IBadgeService;
+import com.major_project.digital_library.service.INotificationService;
 import com.major_project.digital_library.service.IReplyService;
 import com.major_project.digital_library.service.IUserService;
 import org.modelmapper.ModelMapper;
@@ -33,16 +35,18 @@ public class ReplyServiceImpl implements IReplyService {
     private final IReplyHistoryRepository replyHistoryRepository;
     private final IUserService userService;
     private final IBadgeService badgeService;
+    private final INotificationService notificationService;
     private final ModelMapper modelMapper;
 
     @Autowired
-    public ReplyServiceImpl(IReplyRepository replyRepository, IUserService userService, IReplyLikeRepository replyLikeRepository, IPostRepository postRepository, IReplyHistoryRepository replyHistoryRepository, IBadgeService badgeService, ModelMapper modelMapper) {
+    public ReplyServiceImpl(IReplyRepository replyRepository, IUserService userService, IReplyLikeRepository replyLikeRepository, IPostRepository postRepository, IReplyHistoryRepository replyHistoryRepository, IBadgeService badgeService, INotificationService notificationService, ModelMapper modelMapper) {
         this.replyRepository = replyRepository;
         this.userService = userService;
         this.replyLikeRepository = replyLikeRepository;
         this.postRepository = postRepository;
         this.replyHistoryRepository = replyHistoryRepository;
         this.badgeService = badgeService;
+        this.notificationService = notificationService;
         this.modelMapper = modelMapper;
     }
 
@@ -107,9 +111,11 @@ public class ReplyServiceImpl implements IReplyService {
         reply.setUser(user);
         reply.setPost(post);
 
-        replyRepository.save(reply);
+        reply = replyRepository.save(reply);
 
         ReplyResponseModel replyResponseModel = modelMapper.map(reply, ReplyResponseModel.class);
+
+        notificationService.sendNotification(NotificationMessage.REPLY.name(), NotificationMessage.REPLY.getMessage(), user, post.getUserPosted(), reply);
         return replyResponseModel;
     }
 
@@ -118,7 +124,7 @@ public class ReplyServiceImpl implements IReplyService {
         User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not logged in"));
         Reply reply = replyRepository.findById(replyId).orElseThrow(() -> new RuntimeException("Reply not found"));
 
-        if (!reply.getUser().getUserId().equals(user.getUserId()))
+        if (!reply.getUser().getUserId().equals(user.getUserId()) && !user.getRole().getRoleName().equals("ROLE_ADMIN"))
             return null;
 
         ReplyHistory replyHistory = modelMapper.map(reply, ReplyHistory.class);
@@ -133,10 +139,16 @@ public class ReplyServiceImpl implements IReplyService {
     }
 
     @Override
-    public void deleteReply(UUID replyId) {
+    public boolean deleteReply(UUID replyId) {
+        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not logged in"));
         Reply reply = replyRepository.findById(replyId).orElseThrow(() -> new RuntimeException("Reply not found"));
 
-        replyRepository.delete(reply);
+        if (!reply.getUser().getUserId().equals(user.getUserId()) && !user.getRole().getRoleName().equals("ROLE_ADMIN"))
+            return false;
+        else {
+            replyRepository.delete(reply);
+            return true;
+        }
     }
 
     @Override

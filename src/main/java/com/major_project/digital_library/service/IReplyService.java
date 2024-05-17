@@ -31,7 +31,7 @@ public interface IReplyService {
 
     ReplyResponseModel editReply(UUID replyId, Map<String, String> replyContent);
 
-    void deleteReply(UUID replyId);
+    boolean deleteReply(UUID replyId);
 
     Page<ReplyResponseModel> getRepliesOfUser(UUID userId, int page, int size);
 }

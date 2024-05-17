@@ -2,6 +2,7 @@ package com.major_project.digital_library.model.response_model;
 
 import com.major_project.digital_library.model.lean_model.LabelLeanModel;
 import com.major_project.digital_library.model.lean_model.ReplyLeanModel;
+import com.major_project.digital_library.model.lean_model.SubsectionLeanModel;
 import com.major_project.digital_library.model.lean_model.UserLeanModel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -29,6 +30,8 @@ public class PostResponseModel implements Serializable {
 
     private Timestamp updatedAt;
 
+    private boolean isDisabled;
+
     private UserLeanModel userPosted;
 
     private int totalReplies;
@@ -40,4 +43,6 @@ public class PostResponseModel implements Serializable {
     private ReplyLeanModel latestReply;
 
     private LabelLeanModel label;
+
+    private SubsectionLeanModel subsection;
 }

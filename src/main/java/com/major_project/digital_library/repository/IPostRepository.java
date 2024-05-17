@@ -17,10 +17,37 @@ import java.util.UUID;
 @Repository
 public interface IPostRepository extends JpaRepository<Post, UUID> {
     @Query("SELECT p FROM Post p " +
+            "WHERE (p.label.isDisabled = FALSE OR p.label IS NULL) " +
+            "AND p.subsection.isDisabled = FALSE " +
+            "AND (p.subsection = :subsection OR :subsection IS NULL) " +
+            "AND (p.label = :label OR :label IS NULL) " +
+            "AND (LOWER(p.title) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(p.content) LIKE LOWER(CONCAT('%', :query, '%'))) ")
+    Page<Post> findViewablePosts(
+            Subsection subsection,
+            Label label,
+            String query,
+            Pageable pageable
+    );
+
+    @Query("SELECT p FROM Post p " +
             "WHERE (p.subsection = :subsection OR :subsection IS NULL) " +
             "AND (p.label = :label OR :label IS NULL) " +
             "AND (LOWER(p.title) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(p.content) LIKE LOWER(CONCAT('%', :query, '%'))) ")
     Page<Post> findAllPosts(
+            Subsection subsection,
+            Label label,
+            String query,
+            Pageable pageable
+    );
+
+    @Query("SELECT p FROM Post p " +
+            "WHERE (p.label.isDisabled = FALSE OR p.label IS NULL) " +
+            "AND p.subsection.isDisabled = FALSE " +
+            "AND (p.subsection = :subsection OR :subsection IS NULL) " +
+            "AND (p.label = :label OR :label IS NULL) " +
+            "AND (LOWER(p.title) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(p.content) LIKE LOWER(CONCAT('%', :query, '%'))) " +
+            "ORDER BY SIZE(p.postLikes) DESC")
+    Page<Post> findViewablePostsOrderByTotalLikesDesc(
             Subsection subsection,
             Label label,
             String query,
@@ -40,11 +67,39 @@ public interface IPostRepository extends JpaRepository<Post, UUID> {
     );
 
     @Query("SELECT p FROM Post p " +
+            "WHERE (p.label.isDisabled = FALSE OR p.label IS NULL) " +
+            "AND p.subsection.isDisabled = FALSE " +
+            "AND (p.subsection = :subsection OR :subsection IS NULL) " +
+            "AND (p.label = :label OR :label IS NULL) " +
+            "AND (LOWER(p.title) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(p.content) LIKE LOWER(CONCAT('%', :query, '%'))) " +
+            "ORDER BY SIZE(p.postLikes) ASC")
+    Page<Post> findViewablePostsOrderByTotalLikesAsc(
+            Subsection subsection,
+            Label label,
+            String query,
+            Pageable pageable
+    );
+
+    @Query("SELECT p FROM Post p " +
             "WHERE (p.subsection = :subsection OR :subsection IS NULL) " +
             "AND (p.label = :label OR :label IS NULL) " +
             "AND (LOWER(p.title) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(p.content) LIKE LOWER(CONCAT('%', :query, '%'))) " +
             "ORDER BY SIZE(p.postLikes) ASC")
     Page<Post> findAllPostsOrderByTotalLikesAsc(
+            Subsection subsection,
+            Label label,
+            String query,
+            Pageable pageable
+    );
+
+    @Query("SELECT p FROM Post p " +
+            "WHERE (p.label.isDisabled = FALSE OR p.label IS NULL) " +
+            "AND p.subsection.isDisabled = FALSE " +
+            "AND (p.subsection = :subsection OR :subsection IS NULL) " +
+            "AND (p.label = :label OR :label IS NULL) " +
+            "AND (LOWER(p.title) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(p.content) LIKE LOWER(CONCAT('%', :query, '%'))) " +
+            "ORDER BY SIZE(p.replies) DESC")
+    Page<Post> findViewablePostsOrderByTotalRepliesDesc(
             Subsection subsection,
             Label label,
             String query,
@@ -64,6 +119,20 @@ public interface IPostRepository extends JpaRepository<Post, UUID> {
     );
 
     @Query("SELECT p FROM Post p " +
+            "WHERE (p.label.isDisabled = FALSE OR p.label IS NULL) " +
+            "AND p.subsection.isDisabled = FALSE " +
+            "AND (p.subsection = :subsection OR :subsection IS NULL) " +
+            "AND (p.label = :label OR :label IS NULL) " +
+            "AND (LOWER(p.title) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(p.content) LIKE LOWER(CONCAT('%', :query, '%'))) " +
+            "ORDER BY SIZE(p.replies) ASC")
+    Page<Post> findViewablePostsOrderByTotalRepliesAsc(
+            Subsection subsection,
+            Label label,
+            String query,
+            Pageable pageable
+    );
+
+    @Query("SELECT p FROM Post p " +
             "WHERE (p.subsection = :subsection OR :subsection IS NULL) " +
             "AND (p.label = :label OR :label IS NULL) " +
             "AND (LOWER(p.title) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(p.content) LIKE LOWER(CONCAT('%', :query, '%'))) " +
@@ -76,10 +145,28 @@ public interface IPostRepository extends JpaRepository<Post, UUID> {
     );
 
     @Query("SELECT p FROM Post p " +
+            "WHERE (p.label.isDisabled = FALSE OR p.label IS NULL) " +
+            "AND p.subsection.isDisabled = FALSE " +
+            "AND (LOWER(p.title) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(p.content) LIKE LOWER(CONCAT('%', :query, '%'))) " +
+            "AND p.userPosted = :user " +
+            "ORDER BY p.createdAt DESC")
+    Page<Post> findViewablePostsByUser(User user, String query, Pageable pageable);
+
+    @Query("SELECT p FROM Post p " +
             "WHERE (LOWER(p.title) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(p.content) LIKE LOWER(CONCAT('%', :query, '%'))) " +
             "AND p.userPosted = :user " +
             "ORDER BY p.createdAt DESC")
     Page<Post> findAllByUser(User user, String query, Pageable pageable);
+
+    @Query("SELECT p " +
+            "FROM Post p " +
+            "JOIN p.tags t " +
+            "WHERE t.tagName IN :tags " +
+            "AND (p.label.isDisabled = FALSE OR p.label IS NULL) " +
+            "AND p.subsection.isDisabled = FALSE " +
+            "GROUP BY p.postId " +
+            "ORDER BY COUNT(t) DESC")
+    Page<Post> findViewablePostsByTags(List<String> tags, Pageable pageable);
 
     @Query("SELECT p " +
             "FROM Post p " +

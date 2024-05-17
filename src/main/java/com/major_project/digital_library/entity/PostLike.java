@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.sql.Timestamp;
 
 @Data
 @AllArgsConstructor
@@ -28,4 +29,10 @@ public class PostLike implements Serializable {
     @JoinColumn(name = "postId")
     private Post post;
 
+    private Timestamp likedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        likedAt = new Timestamp(System.currentTimeMillis());
+    }
 }

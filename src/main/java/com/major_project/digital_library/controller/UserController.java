@@ -368,10 +368,12 @@ public class UserController {
         int totalLikes = (int) user.getUploadedDocuments().stream()
                 .flatMap(document -> document.getDocumentLikes().stream())
                 .count();
+        BadgeLeanModel badge = badgeService.findBestBadge(user.getUserId());
 
         userResponseModel.setTotalDocuments(totalDocuments);
         userResponseModel.setTotalViews(totalViews);
         userResponseModel.setTotalLikes(totalLikes);
+        userResponseModel.setBadge(badge);
 
         return ResponseEntity.ok(ResponseModel.builder()
                 .status(200)

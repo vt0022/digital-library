@@ -22,7 +22,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+import java.util.UUID;
 
 @Service
 public class PostServiceImpl implements IPostService {
@@ -56,26 +59,6 @@ public class PostServiceImpl implements IPostService {
     }
 
     @Override
-    public <S extends Post> S save(S entity) {
-        return postRepository.save(entity);
-    }
-
-    @Override
-    public Optional<Post> findById(UUID uuid) {
-        return postRepository.findById(uuid);
-    }
-
-    @Override
-    public void deleteById(UUID uuid) {
-        postRepository.deleteById(uuid);
-    }
-
-    @Override
-    public Page<Post> findAll(Pageable pageable) {
-        return postRepository.findAll(pageable);
-    }
-
-    @Override
     public DetailPostResponseModel getPostDetail(UUID postId) {
         Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
         badgeRewardService.rewardBadge(post.getUserPosted(), String.valueOf(BadgeUnit.TOTAL_POST_VIEWS));
@@ -92,7 +75,50 @@ public class PostServiceImpl implements IPostService {
     }
 
     @Override
-    public Page<PostResponseModel> findPosts(int page, int size, String order, String subsectionSlug, String labelSlug, String query) {
+    public Page<PostResponseModel> findViewablePosts(int page, int size, String order, String subsectionSlug, String labelSlug, String query) {
+        Subsection subsection = null;
+        Label label = null;
+        if (!subsectionSlug.equals(""))
+            subsection = subsectionRepository.findBySlug(subsectionSlug).orElseThrow(() -> new RuntimeException("Subsection not found"));
+        if (!labelSlug.equals(""))
+            label = labelRepository.findBySlug(labelSlug).orElseThrow(() -> new RuntimeException("Label not found"));
+
+        Page<Post> posts = Page.empty();
+        if (order.equals("mostViewed")) {
+            Sort sort = Sort.by(Sort.Direction.DESC, "totalViews");
+            Pageable pageable = PageRequest.of(page, size, sort);
+            posts = postRepository.findViewablePosts(subsection, label, query, pageable);
+        } else if (order.equals("leastViewed")) {
+            Sort sort = Sort.by(Sort.Direction.ASC, "totalViews");
+            Pageable pageable = PageRequest.of(page, size, sort);
+            posts = postRepository.findViewablePosts(subsection, label, query, pageable);
+        } else if (order.equals("mostLiked")) {
+            Pageable pageable = PageRequest.of(page, size);
+            posts = postRepository.findViewablePostsOrderByTotalLikesDesc(subsection, label, query, pageable);
+        } else if (order.equals("leastLiked")) {
+            Pageable pageable = PageRequest.of(page, size);
+            posts = postRepository.findViewablePostsOrderByTotalLikesAsc(subsection, label, query, pageable);
+        } else if (order.equals("mostReplied")) {
+            Pageable pageable = PageRequest.of(page, size);
+            posts = postRepository.findViewablePostsOrderByTotalRepliesDesc(subsection, label, query, pageable);
+        } else if (order.equals("leastReplied")) {
+            Pageable pageable = PageRequest.of(page, size);
+            posts = postRepository.findViewablePostsOrderByTotalRepliesAsc(subsection, label, query, pageable);
+        } else if (order.equals("oldest")) {
+            Sort sort = Sort.by(Sort.Direction.ASC, "createdAt");
+            Pageable pageable = PageRequest.of(page, size, sort);
+            posts = postRepository.findViewablePosts(subsection, label, query, pageable);
+        } else {
+            Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
+            Pageable pageable = PageRequest.of(page, size, sort);
+            posts = postRepository.findViewablePosts(subsection, label, query, pageable);
+        }
+
+        return posts.map(this::convertToPostModel);
+    }
+
+    @Override
+    public Page<PostResponseModel> findAllPosts(int page, int size, String order, String subsectionSlug, String labelSlug, String query) {
         Subsection subsection = null;
         Label label = null;
         if (!subsectionSlug.equals(""))
@@ -135,6 +161,17 @@ public class PostServiceImpl implements IPostService {
     }
 
     @Override
+    public Page<PostResponseModel> findViewablePostsOfUser(UUID userId, int page, int size, String query) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Post> posts = postRepository.findViewablePostsByUser(user, query, pageable);
+        Page<PostResponseModel> postResponseModels = posts.map(this::convertToPostModel);
+
+        return postResponseModels;
+    }
+
+    @Override
     public Page<PostResponseModel> findPostsOfUser(UUID userId, int page, int size, String query) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -147,11 +184,16 @@ public class PostServiceImpl implements IPostService {
 
     @Override
     public Page<PostResponseModel> findRelatedPosts(String query) {
-        Pageable pageable = PageRequest.of(0, 100);
+        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not logged in"));
 
         List<String> tags = tagExtractor.findKeywords(query);
 
-        Page<Post> posts = postRepository.findAllByTags(tags, pageable);
+        Pageable pageable = PageRequest.of(0, 100);
+        Page<Post> posts = Page.empty();
+        if (user.getRole().getRoleName().equals("ROLE_ADMIN"))
+            posts = postRepository.findAllByTags(tags, pageable);
+        else
+            posts = postRepository.findViewablePostsByTags(tags, pageable);
         Page<PostResponseModel> postResponseModels = posts.map(this::convertToPostModel);
 
         return postResponseModels;
@@ -204,7 +246,7 @@ public class PostServiceImpl implements IPostService {
         User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not logged in"));
         Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
 
-        if (!post.getUserPosted().getUserId().equals(user.getUserId()))
+        if (!post.getUserPosted().getUserId().equals(user.getUserId()) && !user.getRole().getRoleName().equals("ROLE_ADMIN"))
             return null;
 
         PostHistory postHistory = modelMapper.map(post, PostHistory.class);
@@ -249,9 +291,16 @@ public class PostServiceImpl implements IPostService {
     }
 
     @Override
-    public void deletePost(UUID postId) {
+    public boolean deletePost(UUID postId) {
+        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not logged in"));
         Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
-        postRepository.delete(post);
+
+        if (!post.getUserPosted().getUserId().equals(user.getUserId()) && !user.getRole().getRoleName().equals("ROLE_ADMIN"))
+            return false;
+        else {
+            postRepository.delete(post);
+            return true;
+        }
     }
 
     private PostResponseModel convertToPostModel(Post post) {

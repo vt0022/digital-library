@@ -1,6 +1,7 @@
 package com.major_project.digital_library.controller;
 
 import com.major_project.digital_library.constant.BadgeUnit;
+import com.major_project.digital_library.constant.NotificationMessage;
 import com.major_project.digital_library.entity.*;
 import com.major_project.digital_library.model.FileModel;
 import com.major_project.digital_library.model.response_model.ResponseModel;
@@ -55,6 +56,10 @@ public class InitController {
     private final IRecencyService recencyService;
     private final IRecencyRepository recencyRepository;
     private final IPostLikeService postLikeService;
+    private final IPostLikeRepository postLikeRepository;
+    private final IReplyLikeRepository replyLikeRepository;
+    private final IReplyRepository replyRepository;
+    private final INotificationRepository notificationRepository;
     private final IReplyService replyService;
     private final IPostService postService;
     private final IReplyLikeService replyLikeService;
@@ -75,7 +80,7 @@ public class InitController {
     private final TagExtractor tagExtractor;
 
     @Autowired
-    public InitController(IUserService userService, IDocumentService documentService, IFieldService fieldService, ICategoryService categoryService, IOrganizationService organizationService, IRoleService roleService, ISaveService saveService, ISaveRepository saveRepository, IReviewService reviewService, IDocumentLikeService favoriteService, IDocumentLikeRepository documentLikeRepository, IRecencyService recencyService, IRecencyRepository recencyRepository, IPostLikeService postLikeService, IReplyService replyService, IPostService postService, IReplyLikeService replyLikeService, ISubsectionRepository subsectionRepository, ISectionRepository sectionRepository, ILabelRepository labelRepository, IBadgeTypeRepository badgeTypeRepository, IBadgeRepository badgeRepository, GoogleDriveUpload googleDriveUpload, ModelMapper modelMapper, SlugGenerator slugGenerator, IUserRepositoty userRepositoty, IBadgeRewardRepository badgeRewardRepository, ITagRepository tagRepository, IPostRepository postRepository, ICollectionRepository collectionRepository, ICollectionDocumentRepository collectionDocumentRepository, TagExtractor tagExtractor) {
+    public InitController(IUserService userService, IDocumentService documentService, IFieldService fieldService, ICategoryService categoryService, IOrganizationService organizationService, IRoleService roleService, ISaveService saveService, ISaveRepository saveRepository, IReviewService reviewService, IDocumentLikeService favoriteService, IDocumentLikeRepository documentLikeRepository, IRecencyService recencyService, IRecencyRepository recencyRepository, IPostLikeService postLikeService, IPostLikeRepository postLikeRepository, IReplyLikeRepository replyLikeRepository, IReplyRepository replyRepository, INotificationRepository notificationRepository, IReplyService replyService, IPostService postService, IReplyLikeService replyLikeService, ISubsectionRepository subsectionRepository, ISectionRepository sectionRepository, ILabelRepository labelRepository, IBadgeTypeRepository badgeTypeRepository, IBadgeRepository badgeRepository, GoogleDriveUpload googleDriveUpload, ModelMapper modelMapper, SlugGenerator slugGenerator, IUserRepositoty userRepositoty, IBadgeRewardRepository badgeRewardRepository, ITagRepository tagRepository, IPostRepository postRepository, ICollectionRepository collectionRepository, ICollectionDocumentRepository collectionDocumentRepository, TagExtractor tagExtractor) {
         this.userService = userService;
         this.documentService = documentService;
         this.fieldService = fieldService;
@@ -90,6 +95,10 @@ public class InitController {
         this.recencyService = recencyService;
         this.recencyRepository = recencyRepository;
         this.postLikeService = postLikeService;
+        this.postLikeRepository = postLikeRepository;
+        this.replyLikeRepository = replyLikeRepository;
+        this.replyRepository = replyRepository;
+        this.notificationRepository = notificationRepository;
         this.replyService = replyService;
         this.postService = postService;
         this.replyLikeService = replyLikeService;
@@ -594,7 +603,7 @@ public class InitController {
                         }
                     }
 
-                    postService.save(post);
+                    postRepository.save(post);
                 } catch (Exception e) {
                     System.out.println(e);
                 }
@@ -637,7 +646,7 @@ public class InitController {
                 Reply reply = new Reply();
                 try {
                     User userReply = userService.findById(userReplyId).orElseThrow(() -> new RuntimeException("User not found"));
-                    Post post = postService.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
+                    Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
 
                     reply.setReplyId(id);
                     reply.setContent(content);
@@ -770,7 +779,7 @@ public class InitController {
                 UUID userId = UUID.fromString(formatter.formatCellValue(userCell));
 
                 try {
-                    Post post = postService.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
+                    Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
                     User user = userService.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
 
                     PostLike postLike = new PostLike();
@@ -906,13 +915,13 @@ public class InitController {
                 UUID labelId = cellLabel == null ? null : UUID.fromString(formatter.formatCellValue(cellLabel));
 
                 try {
-                    Post post = postService.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
+                    Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
                     Subsection subsection = subsectionRepository.findById(subId).orElseThrow(() -> new RuntimeException("Subsection not found"));
                     Label label = labelId == null ? null : labelRepository.findById(labelId).orElseThrow(() -> new RuntimeException("Label not found"));
 
                     post.setSubsection(subsection);
                     post.setLabel(label);
-                    postService.save(post);
+                    postRepository.save(post);
                 } catch (Exception e) {
                     System.out.println(e);
                 }
@@ -1073,7 +1082,7 @@ public class InitController {
 
                     if (!post.getTags().contains(tag)) {
                         post.getTags().add(tag);
-                        postService.save(post);
+                        postRepository.save(post);
                     }
                 }
             } catch (Exception e) {
@@ -1279,6 +1288,62 @@ public class InitController {
                 .status(200)
                 .error(false)
                 .message("Add documents for collection successfully")
+                .build());
+    }
+
+    @PostMapping("/notifications")
+    public ResponseEntity<?> initNotifications() {
+        List<PostLike> postLikes = postLikeRepository.findAll();
+        List<ReplyLike> replyLikes = replyLikeRepository.findAll();
+        List<Reply> replies = replyRepository.findAll();
+        List<User> users = userRepositoty.findAll().stream().filter(u -> u.getRole().getRoleName().equals("ROLE_STUDENT")).collect(Collectors.toList());
+        List<Badge> badges = badgeRepository.findAll();
+
+        for (PostLike postLike : postLikes) {
+            Notification notification = new Notification();
+            notification.setPost(postLike.getPost());
+            notification.setSender(postLike.getUser());
+            notification.setRecipient(postLike.getPost().getUserPosted());
+            notification.setSentAt(postLike.getLikedAt());
+            notification.setType(NotificationMessage.LIKE_POST.name());
+            notification.setMessage(NotificationMessage.LIKE_POST.getMessage());
+            notificationRepository.save(notification);
+        }
+        for (ReplyLike replyLike : replyLikes) {
+            Notification notification = new Notification();
+            notification.setReply(replyLike.getReply());
+            notification.setSender(replyLike.getUser());
+            notification.setRecipient(replyLike.getReply().getUser());
+            notification.setSentAt(replyLike.getLikedAt());
+            notification.setType(NotificationMessage.LIKE_REPLY.name());
+            notification.setMessage(NotificationMessage.LIKE_REPLY.getMessage());
+            notificationRepository.save(notification);
+        }
+        for (Reply reply : replies) {
+            Notification notification = new Notification();
+            notification.setReply(reply);
+            notification.setSender(reply.getUser());
+            notification.setRecipient(reply.getPost().getUserPosted());
+            notification.setSentAt(reply.getCreatedAt());
+            notification.setType(NotificationMessage.REPLY.name());
+            notification.setMessage(NotificationMessage.REPLY.getMessage());
+            notificationRepository.save(notification);
+        }
+//        for (Badge badge : badges) {
+//            Notification notification = new Notification();
+//            notification.setReply(badge);
+//            notification.setSender(reply.getUser());
+//            notification.setRecipient(reply.getPost().getUserPosted());
+//            notification.setSentAt(reply.getCreatedAt());
+//            notification.setType(NotificationMessage.REPLY.name());
+//            notification.setMessage(NotificationMessage.REPLY.getMessage());
+//            notificationRepository.save(notification);
+//        }
+
+        return ResponseEntity.ok(ResponseModel.builder()
+                .status(200)
+                .error(false)
+                .message("Init notifications successfully")
                 .build());
     }
 

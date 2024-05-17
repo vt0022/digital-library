@@ -1,12 +1,14 @@
 package com.major_project.digital_library.service.impl;
 
 import com.major_project.digital_library.constant.BadgeUnit;
+import com.major_project.digital_library.constant.NotificationMessage;
 import com.major_project.digital_library.entity.*;
 import com.major_project.digital_library.repository.IBadgeRepository;
 import com.major_project.digital_library.repository.IBadgeRewardRepository;
 import com.major_project.digital_library.repository.IBadgeTypeRepository;
 import com.major_project.digital_library.repository.IUserRepositoty;
 import com.major_project.digital_library.service.IBadgeRewardService;
+import com.major_project.digital_library.service.INotificationService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,14 +22,16 @@ public class BadgeRewardServiceImpl implements IBadgeRewardService {
     private final IBadgeRepository badgeRepository;
     private final IBadgeTypeRepository badgeTypeRepository;
     private final IUserRepositoty userRepositoty;
+    private final INotificationService notificationService;
     private final ModelMapper modelMapper;
 
     @Autowired
-    public BadgeRewardServiceImpl(IBadgeRewardRepository badgeRewardRepository, IBadgeRepository badgeRepository, IBadgeTypeRepository badgeTypeRepository, IUserRepositoty userRepositoty, ModelMapper modelMapper) {
+    public BadgeRewardServiceImpl(IBadgeRewardRepository badgeRewardRepository, IBadgeRepository badgeRepository, IBadgeTypeRepository badgeTypeRepository, IUserRepositoty userRepositoty, INotificationService notificationService, ModelMapper modelMapper) {
         this.badgeRewardRepository = badgeRewardRepository;
         this.badgeRepository = badgeRepository;
         this.badgeTypeRepository = badgeTypeRepository;
         this.userRepositoty = userRepositoty;
+        this.notificationService = notificationService;
         this.modelMapper = modelMapper;
     }
 
@@ -58,6 +62,8 @@ public class BadgeRewardServiceImpl implements IBadgeRewardService {
                 badgeReward.setBadge(badge.get());
                 badgeReward.setUser(user);
                 badgeRewardRepository.save(badgeReward);
+
+                notificationService.sendNotification(NotificationMessage.REWARD_BADGE.name(), NotificationMessage.REWARD_BADGE.getMessage(), user, user, badge);
             }
         }
     }

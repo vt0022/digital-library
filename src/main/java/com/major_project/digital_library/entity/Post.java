@@ -32,6 +32,8 @@ public class Post {
 
     private Timestamp updatedAt;
 
+    private boolean isDisabled;
+
     @ManyToOne
     @JoinColumn(name = "postedBy")
     private User userPosted;
@@ -55,6 +57,12 @@ public class Post {
 
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PostHistory> postHistories = new ArrayList<>();
+
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Notification> notifications = new ArrayList<>();
+
+    @OneToMany(mappedBy = "post", cascade = CascadeType.MERGE)
+    private List<PostReport> postReports = new ArrayList<>();
 
     @ManyToMany()
     @JoinTable(

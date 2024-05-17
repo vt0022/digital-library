@@ -25,4 +25,6 @@ public class ReplyLeanModel implements Serializable {
     private Timestamp updatedAt;
 
     private UserLeanModel user;
+
+    private PostLeanModel post;
 }

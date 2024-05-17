@@ -1,10 +1,7 @@
 package com.major_project.digital_library.controller;
 
 import com.major_project.digital_library.model.request_model.PostRequestModel;
-import com.major_project.digital_library.model.response_model.DetailPostResponseModel;
-import com.major_project.digital_library.model.response_model.PostHistoryResponseModel;
-import com.major_project.digital_library.model.response_model.PostResponseModel;
-import com.major_project.digital_library.model.response_model.ResponseModel;
+import com.major_project.digital_library.model.response_model.*;
 import com.major_project.digital_library.service.IPostHistoryService;
 import com.major_project.digital_library.service.IPostLikeService;
 import com.major_project.digital_library.service.IPostService;
@@ -78,7 +75,27 @@ public class PostController {
                                       @RequestParam(defaultValue = "") String subsection,
                                       @RequestParam(defaultValue = "") String label,
                                       @RequestParam(defaultValue = "") String s) {
-        Page<PostResponseModel> postResponseModels = postService.findPosts(page, size, order, subsection, label, s);
+        Page<PostResponseModel> postResponseModels = postService.findViewablePosts(page, size, order, subsection, label, s);
+
+        return ResponseEntity.ok(
+                ResponseModel
+                        .builder()
+                        .status(200)
+                        .error(false)
+                        .message("Get posts successfully")
+                        .data(postResponseModels)
+                        .build());
+    }
+
+    @Operation(summary = "Hiển thị toàn bộ danh sách bài viết")
+    @GetMapping("/all")
+    public ResponseEntity<?> getAllPosts(@RequestParam(defaultValue = "0") int page,
+                                         @RequestParam(defaultValue = "10") int size,
+                                         @RequestParam(defaultValue = "newest") String order,
+                                         @RequestParam(defaultValue = "") String subsection,
+                                         @RequestParam(defaultValue = "") String label,
+                                         @RequestParam(defaultValue = "") String s) {
+        Page<PostResponseModel> postResponseModels = postService.findAllPosts(page, size, order, subsection, label, s);
 
         return ResponseEntity.ok(
                 ResponseModel
@@ -96,6 +113,24 @@ public class PostController {
                                             @RequestParam(defaultValue = "0") int page,
                                             @RequestParam(defaultValue = "10") int size,
                                             @RequestParam(defaultValue = "") String query) {
+        Page<PostResponseModel> postResponseModels = postService.findViewablePostsOfUser(userId, page, size, query);
+
+        return ResponseEntity.ok(
+                ResponseModel
+                        .builder()
+                        .status(200)
+                        .error(false)
+                        .message("Get posts of user successfully")
+                        .data(postResponseModels)
+                        .build());
+    }
+
+    @Operation(summary = "Lấy toàn bộ danh sách bài đăng của một người dùng")
+    @GetMapping("/all/user/{userId}")
+    public ResponseEntity<?> getAllPostsByUser(@PathVariable UUID userId,
+                                               @RequestParam(defaultValue = "0") int page,
+                                               @RequestParam(defaultValue = "10") int size,
+                                               @RequestParam(defaultValue = "") String query) {
         Page<PostResponseModel> postResponseModels = postService.findPostsOfUser(userId, page, size, query);
 
         return ResponseEntity.ok(
@@ -150,15 +185,23 @@ public class PostController {
     @Operation(summary = "Xoá bỏ bài viết")
     @DeleteMapping("/{postId}")
     public ResponseEntity<?> deletePost(@PathVariable UUID postId) {
-        postService.deletePost(postId);
+        boolean isDeleted = postService.deletePost(postId);
 
-        return ResponseEntity.ok(
-                ResponseModel
-                        .builder()
-                        .status(200)
-                        .error(false)
-                        .message("Delete post successfully")
-                        .build());
+        if (isDeleted)
+            return ResponseEntity.ok(
+                    ResponseModel
+                            .builder()
+                            .status(200)
+                            .error(false)
+                            .message("Delete post successfully")
+                            .build());
+        else
+            return ResponseEntity.ok(ResponseModel
+                    .builder()
+                    .status(404)
+                    .error(true)
+                    .message("Post not accessible")
+                    .build());
     }
 
     @Operation(summary = "Thích bài viết")
@@ -200,6 +243,22 @@ public class PostController {
                         .error(false)
                         .message("Get related posts successfully")
                         .data(postResponseModels)
+                        .build());
+    }
+
+    @Operation(summary = "Lấy toàn bộ danh sách bài đăng đã thích của một người dùng")
+    @GetMapping("/user/likes")
+    public ResponseEntity<?> getAllPostLikesByUser(@RequestParam(defaultValue = "0") int page,
+                                                   @RequestParam(defaultValue = "10") int size) {
+        Page<PostLikeResponseModel> postLikeResponseModels = postLikeService.findByUser(page, size);
+
+        return ResponseEntity.ok(
+                ResponseModel
+                        .builder()
+                        .status(200)
+                        .error(false)
+                        .message("Get post likes of user successfully")
+                        .data(postLikeResponseModels)
                         .build());
     }
 }

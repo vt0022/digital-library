@@ -1,15 +1,22 @@
 package com.major_project.digital_library.service.impl;
 
 import com.major_project.digital_library.constant.BadgeUnit;
+import com.major_project.digital_library.constant.NotificationMessage;
 import com.major_project.digital_library.entity.Post;
 import com.major_project.digital_library.entity.PostLike;
 import com.major_project.digital_library.entity.User;
+import com.major_project.digital_library.model.response_model.PostLikeResponseModel;
 import com.major_project.digital_library.repository.IPostLikeRepository;
 import com.major_project.digital_library.repository.IPostRepository;
 import com.major_project.digital_library.service.IBadgeRewardService;
+import com.major_project.digital_library.service.INotificationService;
 import com.major_project.digital_library.service.IPostLikeService;
 import com.major_project.digital_library.service.IUserService;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -21,13 +28,17 @@ public class PostLikeServiceImpl implements IPostLikeService {
     private final IPostRepository postRepository;
     private final IUserService userService;
     private final IBadgeRewardService badgeRewardService;
+    private final INotificationService notificationService;
+    private final ModelMapper modelMapper;
 
     @Autowired
-    public PostLikeServiceImpl(IPostLikeRepository postLikeRepository, IPostRepository postRepository, IUserService userService, IBadgeRewardService badgeRewardService) {
+    public PostLikeServiceImpl(IPostLikeRepository postLikeRepository, IPostRepository postRepository, IUserService userService, IBadgeRewardService badgeRewardService, INotificationService notificationService, ModelMapper modelMapper) {
         this.postLikeRepository = postLikeRepository;
         this.postRepository = postRepository;
         this.userService = userService;
         this.badgeRewardService = badgeRewardService;
+        this.notificationService = notificationService;
+        this.modelMapper = modelMapper;
     }
 
     @Override
@@ -72,8 +83,27 @@ public class PostLikeServiceImpl implements IPostLikeService {
             postLikeRepository.save(newPostLike);
 
             badgeRewardService.rewardBadge(post.getUserPosted(), BadgeUnit.TOTAL_POST_LIKES.name());
-            
+
+            notificationService.sendNotification(NotificationMessage.LIKE_POST.name(), NotificationMessage.LIKE_POST.getMessage(), user, post.getUserPosted(), post);
+
             return false;
         }
+    }
+
+    @Override
+    public Page<PostLikeResponseModel> findByUser(int page, int size) {
+        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not logged in"));
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<PostLike> postLikes = postLikeRepository.findAllByUser(user, pageable);
+        Page<PostLikeResponseModel> postLikeResponseModels = postLikes.map(this::convertToPostLikeModel);
+
+        return postLikeResponseModels;
+    }
+
+    private PostLikeResponseModel convertToPostLikeModel(PostLike postLike) {
+        PostLikeResponseModel postLikeResponseModel = modelMapper.map(postLike, PostLikeResponseModel.class);
+
+        return postLikeResponseModel;
     }
 }
