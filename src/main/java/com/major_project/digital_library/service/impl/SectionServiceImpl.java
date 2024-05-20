@@ -134,13 +134,19 @@ public class SectionServiceImpl implements ISectionService {
 
             if (subsectionOptional.isPresent()) {
                 Subsection orgSubsection = subsectionOptional.get();
-                int totalPosts = orgSubsection.getPosts().size();
+                int totalPosts = orgSubsection.getPosts()
+                        .stream()
+                        .filter(p -> !p.isDisabled() && !p.getSubsection().isDisabled() && (p.getLabel() == null || !p.getLabel().isDisabled()))
+                        .collect(Collectors.toList())
+                        .size();
                 int totalReplies = (int) orgSubsection.getPosts()
                         .stream()
-                        .flatMap(post -> post.getReplies().stream())
+                        .filter(p -> !p.isDisabled() && !p.getSubsection().isDisabled() && (p.getLabel() == null || !p.getLabel().isDisabled()))
+                        .flatMap(p -> p.getReplies().stream().filter(r -> !r.isDisabled()))
                         .count();
                 Post latestPost = orgSubsection.getPosts()
                         .stream()
+                        .filter(p -> !p.isDisabled() && (p.getLabel() == null || !p.getLabel().isDisabled()))
                         .max(Comparator.comparing(Post::getCreatedAt)).orElse(null);
 
                 subsection.setLatestPost(

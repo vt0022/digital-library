@@ -26,9 +26,11 @@ public interface IDocumentRepository extends JpaRepository<Document, UUID> {
 
     Page<Document> findByUserUploadedAndIsDeleted(User user, boolean isDeleted, Pageable pageable);
 
-    Page<Document> findByVerifiedStatusAndIsDeleted(int verifiedStatus, boolean isDeleted, Pageable pageable);
-
-    Page<Document> findByOrganizationAndVerifiedStatusAndIsDeleted(Organization organization, int verifiedStatus, boolean isDeleted, Pageable pageable);
+    @Query("SELECT d FROM Document d WHERE d.isDeleted = false " +
+            "AND (d.verifiedStatus = :verifiedStatus OR :verifiedStatus IS NULL) " +
+            "AND (d.organization = :organization OR :organization IS NULL) " +
+            "AND d.isContributed = TRUE")
+    Page<Document> findPendingDocuments(Organization organization, Integer verifiedStatus, Pageable pageable);
 
     @Query("SELECT d FROM Document d WHERE d.isDeleted = false " +
             "AND d.verifiedStatus = 1 " +

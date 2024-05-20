@@ -73,6 +73,9 @@ public class User implements Serializable, UserDetails {
     @OneToMany(mappedBy = "userVerified", cascade = {CascadeType.MERGE, CascadeType.PERSIST})
     private List<Document> verifiedDocuments;
 
+    @OneToMany(mappedBy = "userVerified", cascade = {CascadeType.MERGE, CascadeType.PERSIST})
+    private List<Review> verifiedReviews;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Review> reviews = new ArrayList<>();
 
@@ -114,7 +117,7 @@ public class User implements Serializable, UserDetails {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PostReport> postReports = new ArrayList<>();
-    
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         Collection<SimpleGrantedAuthority> authorities = new ArrayList<>();

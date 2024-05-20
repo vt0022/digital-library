@@ -15,7 +15,23 @@ import java.util.UUID;
 
 @Repository
 public interface IReplyRepository extends JpaRepository<Reply, UUID> {
+    @Query("SELECT r FROM Reply r " +
+            "WHERE r.isDisabled = FALSE " +
+            "AND r.post = :post " +
+            "ORDER BY r.createdAt ASC")
+    Page<Reply> findViewableRepliesByPost(Post post, Pageable pageable);
+
     Page<Reply> findAllByPostOrderByCreatedAtAsc(Post post, Pageable pageable);
+
+    @Query("SELECT r FROM Reply r " +
+            "WHERE r.isDisabled = FALSE " +
+            "AND r.post.isDisabled = FALSE " +
+            "AND r.post.subsection.isDisabled = FALSE " +
+            "AND r.post.subsection.section.isDisabled = FALSE " +
+            "AND (r.post.label.isDisabled = FALSE OR r.post.label IS NULL) " +
+            "AND r.user = :user " +
+            "ORDER BY r.createdAt DESC")
+    Page<Reply> findViewableRepliesByUser(User user, Pageable pageable);
 
     Page<Reply> findAllByUserOrderByCreatedAtDesc(User user, Pageable pageable);
 

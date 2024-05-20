@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -21,4 +22,6 @@ public interface ISectionRepository extends JpaRepository<Section, UUID> {
             "WHERE (s.isDisabled = :isDisabled OR :isDisabled IS NULL) " +
             "AND LOWER(s.sectionName) LIKE LOWER(CONCAT('%', :query, '%'))")
     Page<Section> searchSections(Boolean isDisabled, String query, Pageable pageable);
+
+    long countByCreatedAtBetween(Timestamp startDate, Timestamp endDate);
 }

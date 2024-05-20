@@ -48,7 +48,7 @@ public class DetailDocumentResponseModel implements Serializable {
 
     private boolean isInternal;
 
-    private String author;
+    private boolean isContributed;
 
     private String thumbnail;
 

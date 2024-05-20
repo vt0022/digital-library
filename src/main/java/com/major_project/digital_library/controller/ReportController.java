@@ -13,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -84,6 +85,21 @@ public class ReportController {
                 .build());
     }
 
+    @Operation(summary = "Kiểm tra tất cả báo cáo liên quan tới bài đăng")
+    @GetMapping("/post/{reportId}/check")
+    public ResponseEntity<?> checkExistingPostReports(@PathVariable UUID reportId
+    ) {
+        List<PostReportResponseModel> postReportResponseModels = postReportService.checkReport(reportId);
+
+        return ResponseEntity.ok(ResponseModel.builder()
+                .status(200)
+                .error(false)
+                .message("Check post reports of post successfully")
+                .data(postReportResponseModels)
+                .build());
+    }
+
+    @Operation(summary = "Xử lý báo cáo bài đăng")
     @PostMapping("/post/{reportId}/handle")
     public ResponseEntity<?> handlePostReport(@PathVariable UUID reportId,
                                               @RequestParam String type
@@ -154,6 +170,21 @@ public class ReportController {
                 .build());
     }
 
+    @Operation(summary = "Kiểm tra tất cả báo cáo liên quan tới phản hồi")
+    @GetMapping("/reply/{reportId}/check")
+    public ResponseEntity<?> checkExistingReplyReports(@PathVariable UUID reportId
+    ) {
+        List<ReplyReportResponseModel> replyReportResponseModels = replyReportService.checkReport(reportId);
+
+        return ResponseEntity.ok(ResponseModel.builder()
+                .status(200)
+                .error(false)
+                .message("Check reply reports of post successfully")
+                .data(replyReportResponseModels)
+                .build());
+    }
+
+    @Operation(summary = "Xử lý báo cáo phản hồi")
     @PostMapping("/reply/{reportId}/handle")
     public ResponseEntity<?> handleReplyReport(@PathVariable UUID reportId,
                                                @RequestParam String type

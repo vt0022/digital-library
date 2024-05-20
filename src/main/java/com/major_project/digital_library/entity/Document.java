@@ -42,6 +42,8 @@ public class Document {
 
     private Timestamp updatedAt;
 
+    private Timestamp verifiedAt;
+
     private boolean isDeleted;
 
     private int verifiedStatus;
@@ -52,7 +54,7 @@ public class Document {
 
     private boolean isInternal;
 
-    private boolean isShared;
+    private boolean isContributed;
 
     private String thumbnail;
 

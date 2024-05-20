@@ -224,9 +224,11 @@ public class SecurityConfig {
                                 "/api/v2/reviews/*").authenticated()
 
                         .requestMatchers(
-                                "/api/v2/posts/all/user/*").hasAuthority("ROLE_ADMIN")
+                                "/api/v2/posts/all/user/*").hasAnyAuthority("ROLE_ADMIN", "ROLE_STUDENT")
                         .requestMatchers(
                                 "/api/v2/posts/user/likes").hasAuthority("ROLE_STUDENT")
+                        .requestMatchers(
+                                "/api/v2/posts/*/replies/all").authenticated()
                         .requestMatchers(
                                 "/api/v2/posts/user/*",
                                 "/api/v2/posts/*/replies/guest",
@@ -247,6 +249,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET,
                                 "/api/v2/posts").permitAll()
 
+                        .requestMatchers(
+                                "/api/v2/replies/all/user/*").hasAnyAuthority("ROLE_ADMIN", "ROLE_STUDENT")
                         .requestMatchers(
                                 "/api/v2/replies/user/likes").hasAuthority("ROLE_STUDENT")
                         .requestMatchers(
@@ -291,11 +295,12 @@ public class SecurityConfig {
                                 "/api/v2/collections/*",
                                 "/api/v2/collections").authenticated()
 
-                        .requestMatchers(
+                        .requestMatchers("/api/v2/notifications/mine/count",
+                                "/api/v2/notifications/*/read",
                                 "/api/v2/notifications/mine").authenticated()
 
                         .requestMatchers(
-                                "/api/v2/appeals/post/*/check").hasAuthority("ROLE_STUDENT")
+                                "/api/v2/reports/post/*/check").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(
                                 "/api/v2/reports/post/*/read",
                                 "/api/v2/reports/reply/*/read").hasAnyAuthority("ROLE_STUDENT", "ROLE_ADMIN")

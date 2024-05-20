@@ -25,7 +25,9 @@ public interface IReplyService {
 
     Page<ReplyResponseModel> getRepliesOfPostForGuest(UUID postId, int page, int size);
 
-    Page<ReplyResponseModel> getRepliesOfPost(UUID postId, int page, int size);
+    Page<ReplyResponseModel> getAllRepliesOfPost(UUID postId, int page, int size);
+
+    Page<ReplyResponseModel> getViewableRepliesOfPost(UUID postId, int page, int size);
 
     ReplyResponseModel addReply(UUID postId, ReplyRequestModel replyRequestModel);
 
@@ -33,5 +35,7 @@ public interface IReplyService {
 
     boolean deleteReply(UUID replyId);
 
-    Page<ReplyResponseModel> getRepliesOfUser(UUID userId, int page, int size);
+    Page<ReplyResponseModel> getViewableRepliesOfUser(UUID userId, int page, int size);
+
+    Page<ReplyResponseModel> getAllRepliesOfUser(UUID userId, int page, int size);
 }

@@ -32,6 +32,12 @@ public class PostResponseModel implements Serializable {
 
     private boolean isDisabled;
 
+    private boolean isLabelDisabled;
+
+    private boolean isSectionDisabled;
+
+    private boolean isSubsectionDisabled;
+
     private UserLeanModel userPosted;
 
     private int totalReplies;

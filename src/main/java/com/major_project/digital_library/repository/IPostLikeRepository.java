@@ -23,6 +23,9 @@ public interface IPostLikeRepository extends JpaRepository<PostLike, UserPostKey
     @Query("SELECT p FROM PostLike p " +
             "WHERE p.user = :user " +
             "AND p.post.isDisabled = FALSE " +
+            "AND (p.post.label.isDisabled = FALSE OR p.post.label IS NULL) " +
+            "AND p.post.subsection.isDisabled = FALSE " +
+            "AND p.post.subsection.section.isDisabled = FALSE " +
             "ORDER BY p.likedAt DESC")
     Page<PostLike> findAllByUser(User user, Pageable pageable);
 }

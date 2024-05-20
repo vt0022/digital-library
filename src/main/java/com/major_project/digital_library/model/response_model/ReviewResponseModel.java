@@ -1,5 +1,6 @@
 package com.major_project.digital_library.model.response_model;
 
+import com.major_project.digital_library.model.lean_model.UserLeanModel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -30,7 +31,11 @@ public class ReviewResponseModel implements Serializable {
 
     private Timestamp updatedAt;
 
+    private Timestamp verifiedAt;
+
     private UserResponseModel user;
+
+    private UserLeanModel userVerified;
 
     private DocumentResponseModel document;
 }

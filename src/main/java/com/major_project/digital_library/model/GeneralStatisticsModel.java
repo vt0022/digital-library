@@ -28,9 +28,23 @@ public class GeneralStatisticsModel {
 
     private int totalReplies;
 
+    private int totalSections;
+
     private int totalSubsections;
 
     private int totalLabels;
+
+    private int totalPendingReviews;
+
+    private int totalReviews;
+
+    private int totalPostReports;
+
+    private int totalReplyReports;
+
+    private int totalPostAppeals;
+
+    private int totalReplyAppeals;
 
     private Map<String, Long> documentsByCategory;
 
@@ -47,4 +61,12 @@ public class GeneralStatisticsModel {
     private Map<String, Long> repliesBySubsection;
 
     private Map<String, Long> repliesByLabel;
+
+    private Map<String, Long> postReportsByReason;
+
+    private Map<String, Long> replyReportsByReason;
+
+    private Map<String, Long> postAppealsByReason;
+
+    private Map<String, Long> replyAppealsByReason;
 }

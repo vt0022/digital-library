@@ -20,7 +20,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class PostReportServiceImpl implements IPostReportService {
@@ -80,7 +83,6 @@ public class PostReportServiceImpl implements IPostReportService {
         return postReportResponseModel;
     }
 
-    @Override
     public boolean handleReport(UUID reportId, String type) {
         User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not logged in"));
         PostReport postReport = postReportRepository.findById(reportId).orElseThrow(() -> new RuntimeException("Post report not found"));
@@ -98,6 +100,13 @@ public class PostReportServiceImpl implements IPostReportService {
             postReport.setStatus(ProcessStatus.DISABLED.name());
             postReportRepository.save(postReport);
 
+            List<String> status = Arrays.asList(ProcessStatus.PENDING.name(), ProcessStatus.REVIEWED.name());
+            List<PostReport> relatedPostReports = postReportRepository.findAllByPostAndStatus(postReport, post, status);
+            relatedPostReports.forEach(report -> {
+                report.setStatus(ProcessStatus.DISABLED.name());
+                postReportRepository.save(report);
+            });
+
             notificationService.sendNotification(NotificationMessage.WARN_POST.name(), NotificationMessage.WARN_POST.getMessage() + " " + reason, user, post.getUserPosted(), postReport);
 
             return true;
@@ -111,6 +120,17 @@ public class PostReportServiceImpl implements IPostReportService {
 
             return false;
         }
+    }
+
+    @Override
+    public List<PostReportResponseModel> checkReport(UUID reportId) {
+        PostReport postReport = postReportRepository.findById(reportId).orElseThrow(() -> new RuntimeException("Post report not found"));
+        List<String> status = Arrays.asList(ProcessStatus.PENDING.name(), ProcessStatus.REVIEWED.name());
+        List<PostReport> postReports = postReportRepository.findAllByPostAndStatus(postReport, postReport.getPost(), status);
+
+        List<PostReportResponseModel> postReportResponseModels = postReports.stream().map(this::convertToPostReportModel).collect(Collectors.toList());
+
+        return postReportResponseModels;
     }
 
     @Override

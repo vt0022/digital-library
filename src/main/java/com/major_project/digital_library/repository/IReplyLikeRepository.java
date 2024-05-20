@@ -20,7 +20,11 @@ public interface IReplyLikeRepository extends JpaRepository<ReplyLike, UserReply
 
     @Query("SELECT r FROM ReplyLike r " +
             "WHERE r.user = :user " +
-            "AND r.reply.isDisabled = FALSE AND r.reply.post.isDisabled = FALSE " +
+            "AND r.reply.isDisabled = FALSE " +
+            "AND r.reply.post.isDisabled = FALSE " +
+            "AND (r.reply.post.label.isDisabled = FALSE OR r.reply.post.label IS NULL) " +
+            "AND r.reply.post.subsection.isDisabled = FALSE " +
+            "AND r.reply.post.subsection.section.isDisabled = FALSE " +
             "ORDER BY r.likedAt DESC")
     Page<ReplyLike> findAllByUser(User user, Pageable pageable);
 }

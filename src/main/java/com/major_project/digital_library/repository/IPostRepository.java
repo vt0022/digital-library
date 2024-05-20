@@ -17,7 +17,8 @@ import java.util.UUID;
 @Repository
 public interface IPostRepository extends JpaRepository<Post, UUID> {
     @Query("SELECT p FROM Post p " +
-            "WHERE (p.label.isDisabled = FALSE OR p.label IS NULL) " +
+            "WHERE p.isDisabled = FALSE " +
+            "AND (p.label.isDisabled = FALSE OR p.label IS NULL) " +
             "AND p.subsection.isDisabled = FALSE " +
             "AND (p.subsection = :subsection OR :subsection IS NULL) " +
             "AND (p.label = :label OR :label IS NULL) " +
@@ -41,7 +42,8 @@ public interface IPostRepository extends JpaRepository<Post, UUID> {
     );
 
     @Query("SELECT p FROM Post p " +
-            "WHERE (p.label.isDisabled = FALSE OR p.label IS NULL) " +
+            "WHERE p.isDisabled = FALSE " +
+            "AND (p.label.isDisabled = FALSE OR p.label IS NULL) " +
             "AND p.subsection.isDisabled = FALSE " +
             "AND (p.subsection = :subsection OR :subsection IS NULL) " +
             "AND (p.label = :label OR :label IS NULL) " +
@@ -67,7 +69,8 @@ public interface IPostRepository extends JpaRepository<Post, UUID> {
     );
 
     @Query("SELECT p FROM Post p " +
-            "WHERE (p.label.isDisabled = FALSE OR p.label IS NULL) " +
+            "WHERE p.isDisabled = FALSE " +
+            "AND (p.label.isDisabled = FALSE OR p.label IS NULL) " +
             "AND p.subsection.isDisabled = FALSE " +
             "AND (p.subsection = :subsection OR :subsection IS NULL) " +
             "AND (p.label = :label OR :label IS NULL) " +
@@ -93,7 +96,8 @@ public interface IPostRepository extends JpaRepository<Post, UUID> {
     );
 
     @Query("SELECT p FROM Post p " +
-            "WHERE (p.label.isDisabled = FALSE OR p.label IS NULL) " +
+            "WHERE p.isDisabled = FALSE " +
+            "AND (p.label.isDisabled = FALSE OR p.label IS NULL) " +
             "AND p.subsection.isDisabled = FALSE " +
             "AND (p.subsection = :subsection OR :subsection IS NULL) " +
             "AND (p.label = :label OR :label IS NULL) " +
@@ -119,7 +123,8 @@ public interface IPostRepository extends JpaRepository<Post, UUID> {
     );
 
     @Query("SELECT p FROM Post p " +
-            "WHERE (p.label.isDisabled = FALSE OR p.label IS NULL) " +
+            "WHERE p.isDisabled = FALSE " +
+            "AND (p.label.isDisabled = FALSE OR p.label IS NULL) " +
             "AND p.subsection.isDisabled = FALSE " +
             "AND (p.subsection = :subsection OR :subsection IS NULL) " +
             "AND (p.label = :label OR :label IS NULL) " +
@@ -145,8 +150,11 @@ public interface IPostRepository extends JpaRepository<Post, UUID> {
     );
 
     @Query("SELECT p FROM Post p " +
-            "WHERE (p.label.isDisabled = FALSE OR p.label IS NULL) " +
+            "WHERE p.isDisabled = FALSE " +
+            "AND (p.label.isDisabled = FALSE OR p.label IS NULL) " +
             "AND p.subsection.isDisabled = FALSE " +
+            "AND p.subsection.section.isDisabled = FALSE " +
+            "AND p.isDisabled = FALSE " +
             "AND (LOWER(p.title) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(p.content) LIKE LOWER(CONCAT('%', :query, '%'))) " +
             "AND p.userPosted = :user " +
             "ORDER BY p.createdAt DESC")
@@ -162,8 +170,10 @@ public interface IPostRepository extends JpaRepository<Post, UUID> {
             "FROM Post p " +
             "JOIN p.tags t " +
             "WHERE t.tagName IN :tags " +
+            "AND p.isDisabled = FALSE " +
             "AND (p.label.isDisabled = FALSE OR p.label IS NULL) " +
             "AND p.subsection.isDisabled = FALSE " +
+            "AND p.subsection.section.isDisabled = FALSE " +
             "GROUP BY p.postId " +
             "ORDER BY COUNT(t) DESC")
     Page<Post> findViewablePostsByTags(List<String> tags, Pageable pageable);

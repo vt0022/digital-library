@@ -49,12 +49,29 @@ public class ReplyController {
                         .build());
     }
 
+    @Operation(summary = "Xem tất cả phản hồi của một bài viết bao gồm phản hồi bị gỡ (đăng nhập)")
+    @GetMapping("/posts/{postId}/replies/all")
+    public ResponseEntity<?> getAllPostReplies(@PathVariable UUID postId,
+                                               @RequestParam(defaultValue = "0") int page,
+                                               @RequestParam(defaultValue = "10") int size) {
+        Page<ReplyResponseModel> replyResponseModels = replyService.getAllRepliesOfPost(postId, page, size);
+
+        return ResponseEntity.ok(
+                ResponseModel
+                        .builder()
+                        .status(200)
+                        .error(false)
+                        .message("Get post's replies successfully")
+                        .data(replyResponseModels)
+                        .build());
+    }
+
     @Operation(summary = "Xem phản hồi của một bài viết (đăng nhập)")
     @GetMapping("/posts/{postId}/replies")
     public ResponseEntity<?> getPostReplies(@PathVariable UUID postId,
                                             @RequestParam(defaultValue = "0") int page,
                                             @RequestParam(defaultValue = "10") int size) {
-        Page<ReplyResponseModel> replyResponseModels = replyService.getRepliesOfPost(postId, page, size);
+        Page<ReplyResponseModel> replyResponseModels = replyService.getViewableRepliesOfPost(postId, page, size);
 
         return ResponseEntity.ok(
                 ResponseModel
@@ -129,12 +146,29 @@ public class ReplyController {
                             .build());
     }
 
-    @Operation(summary = "Xem tất cả phản hồi của một người dùng")
+    @Operation(summary = "Xem tất cả phản hồi công khai của một người dùng")
     @GetMapping("/replies/user/{userId}")
-    public ResponseEntity<?> getRepliesOfUser(@PathVariable UUID userId,
-                                              @RequestParam(defaultValue = "0") int page,
-                                              @RequestParam(defaultValue = "5") int size) {
-        Page<ReplyResponseModel> replyResponseModels = replyService.getRepliesOfUser(userId, page, size);
+    public ResponseEntity<?> getViewableRepliesOfUser(@PathVariable UUID userId,
+                                                      @RequestParam(defaultValue = "0") int page,
+                                                      @RequestParam(defaultValue = "5") int size) {
+        Page<ReplyResponseModel> replyResponseModels = replyService.getViewableRepliesOfUser(userId, page, size);
+
+        return ResponseEntity.ok(
+                ResponseModel
+                        .builder()
+                        .status(200)
+                        .error(false)
+                        .message("Get user's replies successfully")
+                        .data(replyResponseModels)
+                        .build());
+    }
+
+    @Operation(summary = "Xem tất cả phản hồi của một người dùng")
+    @GetMapping("/replies/all/user/{userId}")
+    public ResponseEntity<?> getAllRepliesOfUser(@PathVariable UUID userId,
+                                                 @RequestParam(defaultValue = "0") int page,
+                                                 @RequestParam(defaultValue = "10") int size) {
+        Page<ReplyResponseModel> replyResponseModels = replyService.getAllRepliesOfUser(userId, page, size);
 
         return ResponseEntity.ok(
                 ResponseModel

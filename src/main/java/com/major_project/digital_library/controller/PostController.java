@@ -131,7 +131,7 @@ public class PostController {
                                                @RequestParam(defaultValue = "0") int page,
                                                @RequestParam(defaultValue = "10") int size,
                                                @RequestParam(defaultValue = "") String query) {
-        Page<PostResponseModel> postResponseModels = postService.findPostsOfUser(userId, page, size, query);
+        Page<PostResponseModel> postResponseModels = postService.findAllPostsOfUser(userId, page, size, query);
 
         return ResponseEntity.ok(
                 ResponseModel

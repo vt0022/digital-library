@@ -1,5 +1,6 @@
 package com.major_project.digital_library.model.response_model;
 
+import com.major_project.digital_library.model.lean_model.UserLeanModel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -32,7 +33,11 @@ public class DocumentResponseModel implements Serializable {
 
     private Timestamp updatedAt;
 
+    private Timestamp verifiedAt;
+
     private boolean isDeleted;
+
+    private boolean isContributed;
 
     private int verifiedStatus;
 
@@ -46,7 +51,9 @@ public class DocumentResponseModel implements Serializable {
 
     private boolean isInternal;
 
-    private String author;
-
     private String thumbnail;
+
+    private UserLeanModel userVerified;
+
+    private UserLeanModel userUploaded;
 }

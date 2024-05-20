@@ -27,6 +27,8 @@ public class Review {
 
     private Timestamp updatedAt;
 
+    private Timestamp verifiedAt;
+
     private int verifiedStatus;
 
     private String note;
@@ -36,6 +38,10 @@ public class Review {
     @ManyToOne
     @JoinColumn(name = "userId")
     private User user;
+
+    @ManyToOne
+    @JoinColumn(name = "verifiedBy")
+    private User userVerified;
 
     @ManyToOne
     @JoinColumn(name = "docId")

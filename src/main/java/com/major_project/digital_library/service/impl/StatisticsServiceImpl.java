@@ -1,5 +1,7 @@
 package com.major_project.digital_library.service.impl;
 
+import com.major_project.digital_library.constant.AppealReason;
+import com.major_project.digital_library.constant.ReportReason;
 import com.major_project.digital_library.entity.Organization;
 import com.major_project.digital_library.entity.User;
 import com.major_project.digital_library.model.GeneralStatisticsModel;
@@ -28,12 +30,18 @@ public class StatisticsServiceImpl implements IStatisticsService {
     private final ICategoryRepository categoryRepository;
     private final IFieldRepository fieldRepository;
     private final IOrganizationRepository organizationRepository;
+    private final IReviewRepository reviewRepository;
+    private final ISectionRepository sectionRepository;
+    private final IPostReportRepository postReportRepository;
+    private final IPostAppealRepository postAppealRepository;
+    private final IReplyReportRepository replyReportRepository;
+    private final IReplyAppealRepository replyAppealRepository;
     private final ISubsectionRepository subsectionRepository;
     private final ILabelRepository labelRepository;
     private final IUserService userService;
 
     @Autowired
-    public StatisticsServiceImpl(IDocumentRepository documentRepository, IUserRepositoty userRepositoty, IPostRepository postRepository, IReplyRepository replyRepository, ICategoryRepository categoryRepository, IFieldRepository fieldRepository, IOrganizationRepository organizationRepository, ISubsectionRepository subsectionRepository, ILabelRepository labelRepository, IUserService userService) {
+    public StatisticsServiceImpl(IDocumentRepository documentRepository, IUserRepositoty userRepositoty, IPostRepository postRepository, IReplyRepository replyRepository, ICategoryRepository categoryRepository, IFieldRepository fieldRepository, IOrganizationRepository organizationRepository, IReviewRepository reviewRepository, ISectionRepository sectionRepository, IPostReportRepository postReportRepository, IPostAppealRepository postAppealRepository, IReplyReportRepository replyReportRepository, IReplyAppealRepository replyAppealRepository, ISubsectionRepository subsectionRepository, ILabelRepository labelRepository, IUserService userService) {
 
         this.documentRepository = documentRepository;
         this.userRepositoty = userRepositoty;
@@ -42,6 +50,12 @@ public class StatisticsServiceImpl implements IStatisticsService {
         this.categoryRepository = categoryRepository;
         this.fieldRepository = fieldRepository;
         this.organizationRepository = organizationRepository;
+        this.reviewRepository = reviewRepository;
+        this.sectionRepository = sectionRepository;
+        this.postReportRepository = postReportRepository;
+        this.postAppealRepository = postAppealRepository;
+        this.replyReportRepository = replyReportRepository;
+        this.replyAppealRepository = replyAppealRepository;
         this.subsectionRepository = subsectionRepository;
         this.labelRepository = labelRepository;
         this.userService = userService;
@@ -102,14 +116,21 @@ public class StatisticsServiceImpl implements IStatisticsService {
 
         long totalDocuments = getTotalDocumentCount(null, startDate, endDate);
         long totalPendingDocuments = getPendingDocumentCount(null, startDate, endDate);
+        long totalReviews = getTotalReviewCount(null, startDate, endDate);
+        long totalPendingReviews = getPendingReviewCount(null, startDate, endDate);
         long totalUsers = getTotalUserCount(null, startDate, endDate);
         long totalCategories = getTotalCategoryCount(startDate, endDate);
         long totalFields = getTotalFieldCount(startDate, endDate);
         long totalOrganizations = getTotalOrganizationCount(startDate, endDate);
+        long totalSections = getTotalSectionCount(startDate, endDate);
         long totalSubsections = getTotalSubsectionCount(startDate, endDate);
         long totalLabels = getTotalLabelCount(startDate, endDate);
         long totalPosts = getTotalPostCount(startDate, endDate);
         long totalReplies = getTotalReplyCount(startDate, endDate);
+        long totalPostReports = getTotalPostReportCount(startDate, endDate);
+        long totalReplyReports = getTotalReplyReportCount(startDate, endDate);
+        long totalPostAppeals = getTotalPostAppealCount(startDate, endDate);
+        long totalReplyAppeals = getTotalReplyAppealCount(startDate, endDate);
         Map<String, Long> documentCountByCategory = getDocumentCountByCategory(startDate, endDate, null);
         Map<String, Long> documentCountByField = getDocumentCountByField(startDate, endDate, null);
         Map<String, Long> documentCountByOrganization = getDocumentCountByOrganization(startDate, endDate);
@@ -118,18 +139,29 @@ public class StatisticsServiceImpl implements IStatisticsService {
         Map<String, Long> postCountByLabel = getPostCountByLabel(startDate, endDate);
         Map<String, Long> replyCountBySubsection = getReplyCountBySubsection(startDate, endDate);
         Map<String, Long> replyCountByLabel = getReplyCountByLabel(startDate, endDate);
+        Map<String, Long> postReportCountByType = getPostReportCountByType(startDate, endDate);
+        Map<String, Long> replyReportCountByType = getReplyReportCountByType(startDate, endDate);
+        Map<String, Long> postAppealCountByType = getPostAppealCountByType(startDate, endDate);
+        Map<String, Long> replyAppealCountByType = getReplyAppealCountByType(startDate, endDate);
 
         GeneralStatisticsModel generalStatisticsModel = GeneralStatisticsModel.builder()
                 .totalDocuments((int) totalDocuments)
                 .totalPendingDocuments((int) totalPendingDocuments)
+                .totalReviews((int) totalReviews)
+                .totalPendingReviews((int) totalPendingReviews)
                 .totalUsers((int) totalUsers)
                 .totalCategories((int) totalCategories)
                 .totalFields((int) totalFields)
                 .totalOrganizations((int) totalOrganizations)
+                .totalSections((int) totalSections)
                 .totalSubsections((int) totalSubsections)
                 .totalLabels((int) totalLabels)
                 .totalPosts((int) totalPosts)
                 .totalReplies((int) totalReplies)
+                .totalPostReports((int) totalPostReports)
+                .totalReplyReports((int) totalReplyReports)
+                .totalPostAppeals((int) totalPostAppeals)
+                .totalReplyAppeals((int) totalReplyAppeals)
                 .documentsByCategory(documentCountByCategory)
                 .documentsByField(documentCountByField)
                 .documentsByOrganization(documentCountByOrganization)
@@ -138,6 +170,10 @@ public class StatisticsServiceImpl implements IStatisticsService {
                 .postsByLabel(postCountByLabel)
                 .repliesBySubsection(replyCountBySubsection)
                 .repliesByLabel(replyCountByLabel)
+                .postReportsByReason(postReportCountByType)
+                .replyReportsByReason(replyReportCountByType)
+                .postAppealsByReason(postAppealCountByType)
+                .replyAppealsByReason(replyAppealCountByType)
                 .build();
 
         return generalStatisticsModel;
@@ -172,11 +208,15 @@ public class StatisticsServiceImpl implements IStatisticsService {
 
         long totalDocuments = getTotalDocumentCount(user.getOrganization(), startDate, endDate);
         long totalPendingDocuments = getPendingDocumentCount(user.getOrganization(), startDate, endDate);
+        long totalReviews = getTotalReviewCount(null, startDate, endDate);
+        long totalPendingReviews = getPendingReviewCount(null, startDate, endDate);
         long totalUsers = getTotalUserCount(user.getOrganization(), startDate, endDate);
 
         GeneralStatisticsModel generalStatisticsModel = GeneralStatisticsModel.builder()
                 .totalDocuments((int) totalDocuments)
                 .totalPendingDocuments((int) totalPendingDocuments)
+                .totalReviews((int) totalReviews)
+                .totalPendingReviews((int) totalPendingReviews)
                 .totalUsers((int) totalUsers)
                 .build();
 
@@ -267,6 +307,24 @@ public class StatisticsServiceImpl implements IStatisticsService {
         return count;
     }
 
+    public long getTotalReviewCount(Organization organization, Timestamp startDate, Timestamp endDate) {
+        long count = 0;
+
+        if (organization == null) {
+            if (startDate == null && endDate == null)
+                count = reviewRepository.count();
+            else
+                count = reviewRepository.countByCreatedAtBetween(startDate, endDate);
+        } else {
+            if (startDate == null && endDate == null)
+                count = reviewRepository.countByDocumentOrganization(organization);
+            else
+                count = reviewRepository.countByDocumentOrganizationAndCreatedAtBetween(organization, startDate, endDate);
+        }
+
+        return count;
+    }
+
     public long getTotalPostCount(Timestamp startDate, Timestamp endDate) {
         long count = 0;
 
@@ -285,6 +343,17 @@ public class StatisticsServiceImpl implements IStatisticsService {
             count = replyRepository.count();
         else
             count = replyRepository.countByCreatedAtBetween(startDate, endDate);
+
+        return count;
+    }
+
+    public long getTotalSectionCount(Timestamp startDate, Timestamp endDate) {
+        long count = 0;
+
+        if (startDate == null && endDate == null)
+            count = sectionRepository.count();
+        else
+            count = sectionRepository.countByCreatedAtBetween(startDate, endDate);
 
         return count;
     }
@@ -326,6 +395,69 @@ public class StatisticsServiceImpl implements IStatisticsService {
                 count = documentRepository.countByVerifiedStatusAndOrganizationAndUploadedAtBetween(0, organization, startDate, endDate);
 
         }
+
+        return count;
+    }
+
+    public long getPendingReviewCount(Organization organization, Timestamp startDate, Timestamp endDate) {
+        long count = 0;
+
+        if (organization == null) {
+            if (startDate == null && endDate == null)
+                count = reviewRepository.countByVerifiedStatus(0);
+            else
+                count = reviewRepository.countByVerifiedStatusAndCreatedAtBetween(0, startDate, endDate);
+        } else {
+            if (startDate == null && endDate == null)
+                count = reviewRepository.countByVerifiedStatusAndDocumentOrganization(0, organization);
+            else
+                count = reviewRepository.countByVerifiedStatusAndDocumentOrganizationAndCreatedAtBetween(0, organization, startDate, endDate);
+
+        }
+
+        return count;
+    }
+
+    public long getTotalPostReportCount(Timestamp startDate, Timestamp endDate) {
+        long count = 0;
+
+        if (startDate == null && endDate == null)
+            count = postReportRepository.count();
+        else
+            count = postReportRepository.countByReportedAtBetween(startDate, endDate);
+
+        return count;
+    }
+
+    public long getTotalReplyReportCount(Timestamp startDate, Timestamp endDate) {
+        long count = 0;
+
+        if (startDate == null && endDate == null)
+            count = replyReportRepository.count();
+        else
+            count = replyReportRepository.countByReportedAtBetween(startDate, endDate);
+
+        return count;
+    }
+
+    public long getTotalPostAppealCount(Timestamp startDate, Timestamp endDate) {
+        long count = 0;
+
+        if (startDate == null && endDate == null)
+            count = postAppealRepository.count();
+        else
+            count = postAppealRepository.countByAppealedAtBetween(startDate, endDate);
+
+        return count;
+    }
+
+    public long getTotalReplyAppealCount(Timestamp startDate, Timestamp endDate) {
+        long count = 0;
+
+        if (startDate == null && endDate == null)
+            count = replyAppealRepository.count();
+        else
+            count = replyAppealRepository.countByAppealedAtBetween(startDate, endDate);
 
         return count;
     }
@@ -524,5 +656,73 @@ public class StatisticsServiceImpl implements IStatisticsService {
             replyCountByField.put("không nhãn", replyCountWithNoLabel);
 
         return replyCountByField;
+    }
+
+    public Map<String, Long> getPostReportCountByType(Timestamp startDate, Timestamp endDate) {
+        List<Object[]> postReportsByType = new ArrayList<>();
+
+        if (startDate == null && endDate == null)
+            postReportsByType = postReportRepository.countPostReportsByType();
+        else
+            postReportsByType = postReportRepository.countPostReportsByTypeAndDateRange(startDate, endDate);
+
+        Map<String, Long> postReportCountByType = postReportsByType.stream()
+                .collect(Collectors.toMap(
+                        result -> ReportReason.valueOf(result[0].toString()).getMessage(),
+                        result -> (Long) result[1]
+                ));
+
+        return postReportCountByType;
+    }
+
+    public Map<String, Long> getReplyReportCountByType(Timestamp startDate, Timestamp endDate) {
+        List<Object[]> replyReportsByType = new ArrayList<>();
+
+        if (startDate == null && endDate == null)
+            replyReportsByType = replyReportRepository.countReplyReportsByType();
+        else
+            replyReportsByType = replyReportRepository.countReplyReportsByTypeAndDateRange(startDate, endDate);
+
+        Map<String, Long> replyReportCountByType = replyReportsByType.stream()
+                .collect(Collectors.toMap(
+                        result -> ReportReason.valueOf(result[0].toString()).getMessage(),
+                        result -> (Long) result[1]
+                ));
+
+        return replyReportCountByType;
+    }
+
+    public Map<String, Long> getPostAppealCountByType(Timestamp startDate, Timestamp endDate) {
+        List<Object[]> postAppealsByType = new ArrayList<>();
+
+        if (startDate == null && endDate == null)
+            postAppealsByType = postAppealRepository.countPostAppealsByType();
+        else
+            postAppealsByType = postAppealRepository.countPostAppealsByTypeAndDateRange(startDate, endDate);
+
+        Map<String, Long> postAppealCountByType = postAppealsByType.stream()
+                .collect(Collectors.toMap(
+                        result -> AppealReason.valueOf(result[0].toString()).getMessage(),
+                        result -> (Long) result[1]
+                ));
+
+        return postAppealCountByType;
+    }
+
+    public Map<String, Long> getReplyAppealCountByType(Timestamp startDate, Timestamp endDate) {
+        List<Object[]> replyAppealsByType = new ArrayList<>();
+
+        if (startDate == null && endDate == null)
+            replyAppealsByType = replyAppealRepository.countReplyAppealsByType();
+        else
+            replyAppealsByType = replyAppealRepository.countReplyAppealsByTypeAndDateRange(startDate, endDate);
+
+        Map<String, Long> replyAppealCountByType = replyAppealsByType.stream()
+                .collect(Collectors.toMap(
+                        result -> AppealReason.valueOf(result[0].toString()).getMessage(),
+                        result -> (Long) result[1]
+                ));
+
+        return replyAppealCountByType;
     }
 }

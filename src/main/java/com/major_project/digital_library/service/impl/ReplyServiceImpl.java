@@ -80,14 +80,25 @@ public class ReplyServiceImpl implements IReplyService {
         Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
 
         Pageable pageable = PageRequest.of(page, size);
-        Page<Reply> replies = replyRepository.findAllByPostOrderByCreatedAtAsc(post, pageable);
+        Page<Reply> replies = replyRepository.findViewableRepliesByPost(post, pageable);
 
         Page<ReplyResponseModel> replyResponseModels = replies.map(this::convertToReplyModelForGuest);
         return replyResponseModels;
     }
 
     @Override
-    public Page<ReplyResponseModel> getRepliesOfPost(UUID postId, int page, int size) {
+    public Page<ReplyResponseModel> getViewableRepliesOfPost(UUID postId, int page, int size) {
+        Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Reply> replies = replyRepository.findViewableRepliesByPost(post, pageable);
+
+        Page<ReplyResponseModel> replyResponseModels = replies.map(this::convertToReplyModel);
+        return replyResponseModels;
+    }
+
+    @Override
+    public Page<ReplyResponseModel> getAllRepliesOfPost(UUID postId, int page, int size) {
         Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
 
         Pageable pageable = PageRequest.of(page, size);
@@ -115,7 +126,9 @@ public class ReplyServiceImpl implements IReplyService {
 
         ReplyResponseModel replyResponseModel = modelMapper.map(reply, ReplyResponseModel.class);
 
-        notificationService.sendNotification(NotificationMessage.REPLY.name(), NotificationMessage.REPLY.getMessage(), user, post.getUserPosted(), reply);
+        if (!post.getUserPosted().getUserId().equals(user.getUserId()))
+            notificationService.sendNotification(NotificationMessage.REPLY.name(), NotificationMessage.REPLY.getMessage(), user, post.getUserPosted(), reply);
+
         return replyResponseModel;
     }
 
@@ -152,7 +165,19 @@ public class ReplyServiceImpl implements IReplyService {
     }
 
     @Override
-    public Page<ReplyResponseModel> getRepliesOfUser(UUID userId, int page, int size) {
+    public Page<ReplyResponseModel> getViewableRepliesOfUser(UUID userId, int page, int size) {
+        User user = userService.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Reply> replies = replyRepository.findViewableRepliesByUser(user, pageable);
+
+        Page<ReplyResponseModel> replyResponseModels = replies.map(this::convertToReplyModelForGuest);
+
+        return replyResponseModels;
+    }
+
+    @Override
+    public Page<ReplyResponseModel> getAllRepliesOfUser(UUID userId, int page, int size) {
         User user = userService.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
 
         Pageable pageable = PageRequest.of(page, size);
@@ -167,9 +192,11 @@ public class ReplyServiceImpl implements IReplyService {
         ReplyResponseModel replyResponseModel = modelMapper.map(reply, ReplyResponseModel.class);
 
         BadgeLeanModel badge = badgeService.findBestBadge(reply.getUser().getUserId());
+        boolean isPostDisabled = checkPostDisabled(reply);
 
         replyResponseModel.setTotalLikes(reply.getReplyLikes().size());
         replyResponseModel.getUser().setBadge(badge);
+        replyResponseModel.setPostDisabled(isPostDisabled);
 
         return replyResponseModel;
     }
@@ -179,13 +206,25 @@ public class ReplyServiceImpl implements IReplyService {
         boolean isLiked = replyLikeRepository.existsByUserAndReply(user, reply);
         boolean isMy = reply.getUser().getUserId().equals(user.getUserId());
         BadgeLeanModel badge = badgeService.findBestBadge(reply.getUser().getUserId());
+        boolean isPostDisabled = checkPostDisabled(reply);
 
         ReplyResponseModel replyResponseModel = modelMapper.map(reply, ReplyResponseModel.class);
         replyResponseModel.setLiked(isLiked);
         replyResponseModel.setMy(isMy);
         replyResponseModel.setTotalLikes(reply.getReplyLikes().size());
         replyResponseModel.getUser().setBadge(badge);
+        replyResponseModel.setPostDisabled(isPostDisabled);
 
         return replyResponseModel;
+    }
+
+    private boolean checkPostDisabled(Reply reply) {
+        Post post = reply.getPost();
+
+        boolean isLabelDisabled = post.getLabel() != null && post.getLabel().isDisabled();
+        boolean isSectionDisabled = post.getSubsection() != null && post.getSubsection().getSection() != null && post.getSubsection().getSection().isDisabled();
+        boolean isSubsectionDisabled = post.getSubsection() != null && post.getSubsection().isDisabled();
+
+        return post.isDisabled() || isLabelDisabled || isSubsectionDisabled || isSectionDisabled;
     }
 }

@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.UUID;
 
@@ -34,4 +35,18 @@ public interface IReviewRepository extends JpaRepository<Review, UUID> {
             "AND r.document = :document " +
             "GROUP BY r.star")
     List<Object[]> countReviewsByStarAndDocument(Document document);
+
+    long countByVerifiedStatus(int verifiedStatus);
+
+    long countByVerifiedStatusAndCreatedAtBetween(int verifiedStatus, Timestamp startDate, Timestamp endDate);
+
+    long countByVerifiedStatusAndDocumentOrganization(int verifiedStatus, Organization organization);
+
+    long countByVerifiedStatusAndDocumentOrganizationAndCreatedAtBetween(int verifiedStatus, Organization organization, Timestamp startDate, Timestamp endDate);
+
+    long countByCreatedAtBetween(Timestamp startDate, Timestamp endDate);
+
+    long countByDocumentOrganization(Organization organization);
+
+    long countByDocumentOrganizationAndCreatedAtBetween(Organization organization, Timestamp startDate, Timestamp endDate);
 }

@@ -20,4 +20,6 @@ public class SubsectionLeanModel implements Serializable {
     private String subName;
 
     private String slug;
+
+    private boolean isDisabled;
 }

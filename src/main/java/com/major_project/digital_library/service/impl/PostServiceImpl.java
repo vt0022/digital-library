@@ -61,16 +61,26 @@ public class PostServiceImpl implements IPostService {
     @Override
     public DetailPostResponseModel getPostDetail(UUID postId) {
         Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
+        post.setTotalViews(post.getTotalViews() + 1);
+        postRepository.save(post);
+
         badgeRewardService.rewardBadge(post.getUserPosted(), String.valueOf(BadgeUnit.TOTAL_POST_VIEWS));
+
         DetailPostResponseModel detailPostResponseModel = convertToDetailPostModel(post);
+
         return detailPostResponseModel;
     }
 
     @Override
     public PostResponseModel getPostDetailForGuest(UUID postId) {
         Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
+        post.setTotalViews(post.getTotalViews() + 1);
+        postRepository.save(post);
+
         badgeRewardService.rewardBadge(post.getUserPosted(), String.valueOf(BadgeUnit.TOTAL_POST_VIEWS));
+
         PostResponseModel postResponseModel = convertToPostModel(post);
+
         return postResponseModel;
     }
 
@@ -172,7 +182,7 @@ public class PostServiceImpl implements IPostService {
     }
 
     @Override
-    public Page<PostResponseModel> findPostsOfUser(UUID userId, int page, int size, String query) {
+    public Page<PostResponseModel> findAllPostsOfUser(UUID userId, int page, int size, String query) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
 
         Pageable pageable = PageRequest.of(page, size);
@@ -309,12 +319,20 @@ public class PostServiceImpl implements IPostService {
         Reply latestReply = post.getReplies()
                 .stream()
                 .max(Comparator.comparing(Reply::getCreatedAt)).orElse(null);
+        BadgeLeanModel badge = badgeService.findBestBadge(post.getUserPosted().getUserId());
+        boolean isLabelDisabled = post.getLabel() != null && post.getLabel().isDisabled();
+        boolean isSectionDisabled = post.getSubsection() != null && post.getSubsection().getSection() != null && post.getSubsection().getSection().isDisabled();
+        boolean isSubsectionDisabled = post.getSubsection() != null && post.getSubsection().isDisabled();
 
         postResponseModel.setTotalLikes(post.getPostLikes().size());
         postResponseModel.setTotalReplies(post.getReplies().size());
         postResponseModel.setLatestReply(
                 latestReply == null ? null :
                         modelMapper.map(latestReply, ReplyLeanModel.class));
+        postResponseModel.getUserPosted().setBadge(badge);
+        postResponseModel.setLabelDisabled(isLabelDisabled);
+        postResponseModel.setSectionDisabled(isSectionDisabled);
+        postResponseModel.setSubsectionDisabled(isSubsectionDisabled);
 
         return postResponseModel;
     }
@@ -327,12 +345,18 @@ public class PostServiceImpl implements IPostService {
         boolean isLiked = postLikeRepository.existsByUserAndPost(user, post);
         boolean isMy = post.getUserPosted().getUserId().equals(user.getUserId());
         BadgeLeanModel badge = badgeService.findBestBadge(post.getUserPosted().getUserId());
+        boolean isLabelDisabled = post.getLabel() != null && post.getLabel().isDisabled();
+        boolean isSectionDisabled = post.getSubsection() != null && post.getSubsection().getSection() != null && post.getSubsection().getSection().isDisabled();
+        boolean isSubsectionDisabled = post.getSubsection() != null && post.getSubsection().isDisabled();
 
         detailPostResponseModel.setLiked(isLiked);
         detailPostResponseModel.setMy(isMy);
         detailPostResponseModel.setTotalLikes(post.getPostLikes().size());
         detailPostResponseModel.setTotalReplies(post.getReplies().size());
         detailPostResponseModel.getUserPosted().setBadge(badge);
+        detailPostResponseModel.setLabelDisabled(isLabelDisabled);
+        detailPostResponseModel.setSectionDisabled(isSectionDisabled);
+        detailPostResponseModel.setSubsectionDisabled(isSubsectionDisabled);
 
         return detailPostResponseModel;
     }

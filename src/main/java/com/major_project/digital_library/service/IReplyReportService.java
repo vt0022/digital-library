@@ -4,6 +4,7 @@ import com.major_project.digital_library.model.request_model.ReplyReportRequestM
 import com.major_project.digital_library.model.response_model.ReplyReportResponseModel;
 import org.springframework.data.domain.Page;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface IReplyReportService {
@@ -12,6 +13,8 @@ public interface IReplyReportService {
     ReplyReportResponseModel reportReply(ReplyReportRequestModel replyReportRequestModel);
 
     ReplyReportResponseModel readReport(UUID replyReportId);
+
+    List<ReplyReportResponseModel> checkReport(UUID reportId);
 
     boolean handleReport(UUID reportId, String type);
 

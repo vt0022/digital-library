@@ -22,4 +22,6 @@ public class LabelLeanModel implements Serializable {
     private String slug;
 
     private String color;
+
+    private boolean isDisabled;
 }

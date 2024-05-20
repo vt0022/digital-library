@@ -24,6 +24,8 @@ public class ReplyLeanModel implements Serializable {
 
     private Timestamp updatedAt;
 
+    private boolean isDisabled;
+
     private UserLeanModel user;
 
     private PostLeanModel post;

@@ -1171,7 +1171,7 @@ public class InitController {
         List<Document> documents = documentService.findAll();
         for (Document document : documents) {
             if (document.getUserUploaded().getRole().getRoleName().equals("ROLE_STUDENT")) {
-                document.setShared(true);
+                document.setContributed(true);
                 documentService.save(document);
             }
         }

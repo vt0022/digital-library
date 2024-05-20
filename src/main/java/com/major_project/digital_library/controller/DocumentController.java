@@ -272,10 +272,11 @@ public class DocumentController {
     @Operation(summary = "Xem danh sách tài liệu đang chờ duyệt",
             description = "Trả về danh sách tài liệu đang chờ duyệt cho manager hoặc admin")
     @GetMapping("/pending")
-    public ResponseEntity<?> getPendingDocuments(@RequestParam(defaultValue = "all", required = false) String organization,
+    public ResponseEntity<?> getPendingDocuments(@RequestParam(defaultValue = "all") String organization,
+                                                 @RequestParam(defaultValue = "all") String status,
                                                  @RequestParam(defaultValue = "0") int page,
                                                  @RequestParam(defaultValue = "20") int size) {
-        Page<DocumentResponseModel> documentModels = documentService.getPendingDocuments(page, size, organization);
+        Page<DocumentResponseModel> documentModels = documentService.getPendingDocuments(page, size, status, organization);
 
         return ResponseEntity.ok(ResponseModel
                 .builder()

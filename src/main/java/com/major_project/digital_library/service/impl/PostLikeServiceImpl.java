@@ -84,7 +84,8 @@ public class PostLikeServiceImpl implements IPostLikeService {
 
             badgeRewardService.rewardBadge(post.getUserPosted(), BadgeUnit.TOTAL_POST_LIKES.name());
 
-            notificationService.sendNotification(NotificationMessage.LIKE_POST.name(), NotificationMessage.LIKE_POST.getMessage(), user, post.getUserPosted(), post);
+            if (!post.getUserPosted().getUserId().equals(user.getUserId()))
+                notificationService.sendNotification(NotificationMessage.LIKE_POST.name(), NotificationMessage.LIKE_POST.getMessage(), user, post.getUserPosted(), post);
 
             return false;
         }

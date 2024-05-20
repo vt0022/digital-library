@@ -41,7 +41,7 @@ public class OrganizationController {
     public ResponseEntity<?> getAllOrganizations(@RequestParam(defaultValue = "0") int page,
                                                  @RequestParam(defaultValue = "15") int size,
                                                  @RequestParam(defaultValue = "all") String deleted,
-                                                 @RequestParam String s) {
+                                                 @RequestParam(defaultValue = "") String s) {
         Sort sort = Sort.by(Sort.Direction.DESC, "updatedAt");
         Pageable pageable = PageRequest.of(page, size, sort);
 
@@ -65,7 +65,7 @@ public class OrganizationController {
     @GetMapping("/search")
     public ResponseEntity<?> searchOrganizations(@RequestParam(defaultValue = "0") int page,
                                                  @RequestParam(defaultValue = "15") int size,
-                                                 @RequestParam String s) {
+                                                 @RequestParam(defaultValue = "") String s) {
         Sort sort = Sort.by(Sort.Direction.DESC, "updatedAt");
         Pageable pageable = PageRequest.of(page, size, sort);
 

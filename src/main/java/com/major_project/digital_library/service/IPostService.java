@@ -19,7 +19,7 @@ public interface IPostService {
 
     Page<PostResponseModel> findViewablePostsOfUser(UUID userId, int page, int size, String query);
 
-    Page<PostResponseModel> findPostsOfUser(UUID userId, int page, int size, String query);
+    Page<PostResponseModel> findAllPostsOfUser(UUID userId, int page, int size, String query);
 
     Page<PostResponseModel> findRelatedPosts(String query);
 

@@ -4,6 +4,7 @@ import com.major_project.digital_library.model.request_model.PostReportRequestMo
 import com.major_project.digital_library.model.response_model.PostReportResponseModel;
 import org.springframework.data.domain.Page;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface IPostReportService {
@@ -14,6 +15,8 @@ public interface IPostReportService {
     PostReportResponseModel readReport(UUID postReportId);
 
     boolean handleReport(UUID reportId, String type);
+
+    List<PostReportResponseModel> checkReport(UUID reportId);
 
     void deleteReport(UUID postReportId);
 }

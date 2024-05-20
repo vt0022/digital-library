@@ -97,6 +97,7 @@ public class AppealController {
                 .build());
     }
 
+    @Operation(summary = "Kiểm tra đã khiếu nại chưa")
     @GetMapping("/post/{reportId}/check")
     public ResponseEntity<?> checkPostAppeal(@PathVariable UUID reportId) {
         PostAppealResponseModel postAppealResponseModel = postAppealService.checkAppeal(reportId);

@@ -41,6 +41,14 @@ public class DetailPostResponseModel implements Serializable {
 
     private boolean isMy;
 
+    private boolean isDisabled;
+
+    private boolean isLabelDisabled;
+
+    private boolean isSectionDisabled;
+
+    private boolean isSubsectionDisabled;
+
     private SubsectionLeanModel subsection;
 
     private LabelLeanModel label;

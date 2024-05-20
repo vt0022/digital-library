@@ -36,5 +36,9 @@ public class ReplyResponseModel implements Serializable {
 
     private boolean isMy;
 
+    private boolean isDisabled;
+
+    private boolean isPostDisabled;
+
     private PostLeanModel post;
 }

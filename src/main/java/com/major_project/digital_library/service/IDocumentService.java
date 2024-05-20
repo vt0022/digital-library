@@ -45,7 +45,7 @@ public interface IDocumentService {
 
     Page<DocumentResponseModel> getDocumentsForGuests(int page, int size, String order, String sortOrder, String category, String field, String organization, String s);
 
-    Page<DocumentResponseModel> getPendingDocuments(int page, int size, String organization);
+    Page<DocumentResponseModel> getPendingDocuments(int page, int size, String status, String organization);
 
     Page<DocumentResponseModel> getDocumentsForStudent(int page, int size, String order, String sortOrder, String category, String field, String organization, String s);
 

@@ -7,10 +7,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v2/notifications")
@@ -24,15 +23,40 @@ public class NotificationController {
 
     @Operation(summary = "Lấy thông báo của người dùng")
     @GetMapping("/mine")
-    public ResponseEntity<?> getGeneralStatisticsForAdmin(@RequestParam(defaultValue = "10") int size
+    public ResponseEntity<?> getUserNotifications(@RequestParam(defaultValue = "0") int page
     ) {
-        Page<NotificationResponseModel> notificationResponseModels = notificationService.getNotificationsOfUser(size);
+        Page<NotificationResponseModel> notificationResponseModels = notificationService.getNotificationsOfUser(page);
 
         return ResponseEntity.ok(ResponseModel.builder()
                 .status(200)
                 .error(false)
                 .message("Get notifications of current user successfully")
                 .data(notificationResponseModels)
+                .build());
+    }
+
+    @Operation(summary = "Lấy số thông báo chưa đọc của người dùng")
+    @GetMapping("/mine/count")
+    public ResponseEntity<?> countUserUnreadNotifications() {
+        int count = notificationService.countUnreadNotificationsOfUser();
+
+        return ResponseEntity.ok(ResponseModel.builder()
+                .status(200)
+                .error(false)
+                .message("Get number of notifications of current user successfully")
+                .data(count)
+                .build());
+    }
+
+    @Operation(summary = "Đánh dấu đã đọc")
+    @PutMapping("/{notiId}/read")
+    public ResponseEntity<?> readNotification(@PathVariable UUID notiId) {
+        NotificationResponseModel notificationResponseModel = notificationService.readNotification(notiId);
+
+        return ResponseEntity.ok(ResponseModel.builder()
+                .status(200)
+                .error(false)
+                .message("Read a notification successfully")
                 .build());
     }
 }

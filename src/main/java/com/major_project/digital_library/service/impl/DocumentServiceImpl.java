@@ -23,6 +23,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -353,27 +354,22 @@ public class DocumentServiceImpl implements IDocumentService {
 //    }
 
     @Override
-    public Page<DocumentResponseModel> getPendingDocuments(int page, int size, String organization) {
-        // Order maybe one of these: docId, totalView
-        Sort sort = Sort.by(Sort.Direction.DESC, "updatedAt");
-        Pageable pageable = PageRequest.of(page, size, sort);
-        Page<Document> documents;
-
-        // Find user info
+    public Page<DocumentResponseModel> getPendingDocuments(int page, int size, String status, String organization) {
         User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not found"));
 
+        Integer verifiedStatus = parseStatus(status);
+
+        Sort sort = Sort.by(Sort.Direction.DESC, "updatedAt");
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<Document> documents;
         // By organization
         if (user.getRole().getRoleName().equals("ROLE_MANAGER")) {
-            Organization foundOrganization = user.getOrganization();
-            documents = documentRepository.findByOrganizationAndVerifiedStatusAndIsDeleted(foundOrganization, 0, false, pageable);
+            Organization userOrganization = user.getOrganization();
+            documents = documentRepository.findPendingDocuments(userOrganization, verifiedStatus, pageable);
         } else { // Not include organization
-            if (organization.equals("all"))
-                documents = documentRepository.findByVerifiedStatusAndIsDeleted(0, false, pageable);
-            else {
-                Organization foundOrganization = organizationRepository.findBySlug(organization).orElseThrow(() -> new RuntimeException("Organization not found"));
-                ;
-                documents = documentRepository.findByOrganizationAndVerifiedStatusAndIsDeleted(foundOrganization, 0, false, pageable);
-            }
+            Organization foundOrganization = findOrganizationBySlug(organization);
+            documents = documentRepository.findPendingDocuments(foundOrganization, verifiedStatus, pageable);
         }
         Page<DocumentResponseModel> documentModels = documents.map(this::convertToDocumentModel);
 
@@ -460,6 +456,9 @@ public class DocumentServiceImpl implements IDocumentService {
         document.setCategory(category);
         document.setField(field);
         document.setOrganization(organization);
+        if (user.getRole().getRoleName().equals("ROLE_STUDENT")) {
+            document.setContributed(true);
+        }
 
         // Student must wait for the approval
         if (user.getRole().getRoleName().equals("ROLE_STUDENT")) {
@@ -540,11 +539,13 @@ public class DocumentServiceImpl implements IDocumentService {
 
         if (isApproved) {
             document.setVerifiedStatus(1);
+            document.setNote("");
         } else {
             document.setVerifiedStatus(-1);
             document.setNote(note);
         }
         document.setUserVerified(user);
+        document.setVerifiedAt(new Timestamp(System.currentTimeMillis()));
 
         documentRepository.save(document);
     }
@@ -636,6 +637,10 @@ public class DocumentServiceImpl implements IDocumentService {
 
     public Integer parseStatus(String status) {
         return status.equals("all") ? null : Integer.valueOf(status);
+    }
+
+    public Boolean parseContributed(String contributed) {
+        return contributed.equals("all") ? null : Boolean.valueOf(contributed);
     }
 
     private DocumentResponseModel convertToDocumentModel(Document document) {

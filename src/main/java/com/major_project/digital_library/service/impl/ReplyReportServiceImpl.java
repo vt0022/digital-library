@@ -20,7 +20,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class ReplyReportServiceImpl implements IReplyReportService {
@@ -78,6 +81,17 @@ public class ReplyReportServiceImpl implements IReplyReportService {
         ReplyReportResponseModel replyReportResponseModel = modelMapper.map(replyReport, ReplyReportResponseModel.class);
 
         return replyReportResponseModel;
+    }
+
+    @Override
+    public List<ReplyReportResponseModel> checkReport(UUID reportId) {
+        ReplyReport replyReport = replyReportRepository.findById(reportId).orElseThrow(() -> new RuntimeException("Reply report not found"));
+        List<String> status = Arrays.asList(ProcessStatus.PENDING.name(), ProcessStatus.REVIEWED.name());
+        List<ReplyReport> replyReports = replyReportRepository.findAllByReplyAndStatus(replyReport, replyReport.getReply(), status);
+
+        List<ReplyReportResponseModel> replyReportResponseModels = replyReports.stream().map(this::convertToReplyReportModel).collect(Collectors.toList());
+
+        return replyReportResponseModels;
     }
 
     @Override

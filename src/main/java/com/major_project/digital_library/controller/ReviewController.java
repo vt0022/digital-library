@@ -21,6 +21,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.sql.Timestamp;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -127,12 +128,17 @@ public class ReviewController {
     public ResponseEntity<?> approveReview(@PathVariable UUID reviewId,
                                            @RequestParam boolean isApproved,
                                            @RequestParam(required = false, defaultValue = "") String note) {
+        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not found"));
         Review review = reviewService.findById(reviewId).orElseThrow(() -> new RuntimeException("Review not found"));
 
         review.setVerifiedStatus(isApproved ? 1 : -1);
         if (!isApproved)
             review.setNote(note);
+        else
+            review.setNote("");
         review.setTimesLeft(review.getTimesLeft() - 1);
+        review.setUserVerified(user);
+        review.setVerifiedAt(new Timestamp(System.currentTimeMillis()));
         review = reviewService.save(review);
 
         ReviewResponseModel reviewResponseModel = modelMapper.map(review, ReviewResponseModel.class);

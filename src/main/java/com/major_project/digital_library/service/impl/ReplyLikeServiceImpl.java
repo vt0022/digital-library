@@ -79,7 +79,8 @@ public class ReplyLikeServiceImpl implements IReplyLikeService {
 
             badgeRewardService.rewardBadge(reply.getUser(), BadgeUnit.TOTAL_REPLY_LIKES.name());
 
-            notificationService.sendNotification(NotificationMessage.LIKE_REPLY.name(), NotificationMessage.LIKE_REPLY.getMessage(), user, reply.getUser(), reply);
+            if (!reply.getUser().getUserId().equals(user.getUserId()) && !reply.getPost().getUserPosted().getUserId().equals(user.getUserId()))
+                notificationService.sendNotification(NotificationMessage.LIKE_REPLY.name(), NotificationMessage.LIKE_REPLY.getMessage(), user, reply.getUser(), reply);
 
             return false;
         }

@@ -11,6 +11,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Service
 public class NotificationServiceImpl implements INotificationService {
     private final INotificationRepository notificationRepository;
@@ -49,10 +51,10 @@ public class NotificationServiceImpl implements INotificationService {
     }
 
     @Override
-    public Page<NotificationResponseModel> getNotificationsOfUser(int size) {
+    public Page<NotificationResponseModel> getNotificationsOfUser(int page) {
         User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not logged in"));
 
-        Pageable pageable = PageRequest.of(0, size);
+        Pageable pageable = PageRequest.of(page, 10);
 
         Page<Notification> notifications = notificationRepository.findAllByRecipientOrderBySentAtDesc(user, pageable);
         Page<NotificationResponseModel> notificationResponseModels = notifications.map(this::convertToNotificationModel);
@@ -61,7 +63,26 @@ public class NotificationServiceImpl implements INotificationService {
     }
 
     @Override
-    public NotificationResponseModel convertToNotificationModel(Notification notification) {
+    public int countUnreadNotificationsOfUser() {
+        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not logged in"));
+
+        int count = (int) notificationRepository.countAllByRecipientAndIsRead(user, false);
+
+        return count;
+    }
+
+    @Override
+    public NotificationResponseModel readNotification(UUID notiID) {
+        Notification notification = notificationRepository.findById(notiID).orElseThrow(() -> new RuntimeException("Notification not found"));
+        notification.setRead(true);
+        notification = notificationRepository.save(notification);
+
+        NotificationResponseModel notificationResponseModel = convertToNotificationModel(notification);
+
+        return notificationResponseModel;
+    }
+
+    private NotificationResponseModel convertToNotificationModel(Notification notification) {
         NotificationResponseModel notificationResponseModel = modelMapper.map(notification, NotificationResponseModel.class);
 
         return notificationResponseModel;
