@@ -1,4 +1,4 @@
-package com.major_project.digital_library.util;
+package com.major_project.digital_library.service.other;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;

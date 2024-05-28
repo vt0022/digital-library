@@ -9,7 +9,7 @@ import java.util.UUID;
 public interface INotificationService {
     void sendNotification(String type, String message, User sender, User recipient, Object object);
 
-    Page<NotificationResponseModel> getNotificationsOfUser(int page);
+    Page<NotificationResponseModel> getNotificationsOfUser(int page, String status);
 
     int countUnreadNotificationsOfUser();
 

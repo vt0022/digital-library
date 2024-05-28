@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 public class StatisticsServiceImpl implements IStatisticsService {
     private static final List<Integer> ALL_MONTHS = Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12);
     private final IDocumentRepository documentRepository;
-    private final IUserRepositoty userRepositoty;
+    private final IUserRepository userRepositoty;
     private final IPostRepository postRepository;
     private final IReplyRepository replyRepository;
     private final ICategoryRepository categoryRepository;
@@ -41,7 +41,7 @@ public class StatisticsServiceImpl implements IStatisticsService {
     private final IUserService userService;
 
     @Autowired
-    public StatisticsServiceImpl(IDocumentRepository documentRepository, IUserRepositoty userRepositoty, IPostRepository postRepository, IReplyRepository replyRepository, ICategoryRepository categoryRepository, IFieldRepository fieldRepository, IOrganizationRepository organizationRepository, IReviewRepository reviewRepository, ISectionRepository sectionRepository, IPostReportRepository postReportRepository, IPostAppealRepository postAppealRepository, IReplyReportRepository replyReportRepository, IReplyAppealRepository replyAppealRepository, ISubsectionRepository subsectionRepository, ILabelRepository labelRepository, IUserService userService) {
+    public StatisticsServiceImpl(IDocumentRepository documentRepository, IUserRepository userRepositoty, IPostRepository postRepository, IReplyRepository replyRepository, ICategoryRepository categoryRepository, IFieldRepository fieldRepository, IOrganizationRepository organizationRepository, IReviewRepository reviewRepository, ISectionRepository sectionRepository, IPostReportRepository postReportRepository, IPostAppealRepository postAppealRepository, IReplyReportRepository replyReportRepository, IReplyAppealRepository replyAppealRepository, ISubsectionRepository subsectionRepository, ILabelRepository labelRepository, IUserService userService) {
 
         this.documentRepository = documentRepository;
         this.userRepositoty = userRepositoty;
@@ -70,28 +70,28 @@ public class StatisticsServiceImpl implements IStatisticsService {
             LocalDate startDateOfMonth = LocalDate.now().withDayOfMonth(1);
 
             startDate = Timestamp.valueOf(today.atStartOfDay());
-            endDate = Timestamp.valueOf(startDateOfMonth.atStartOfDay());
+            endDate = Timestamp.valueOf(today.withDayOfMonth(today.lengthOfMonth()).atTime(23, 59, 59));
         } else if (dateRange.equals("1month")) {
             LocalDate startDateOfPreviousMonth = LocalDate.now().minusMonths(1).withDayOfMonth(1);
             LocalDate endDateOfPreviousMonth = LocalDate.now().minusMonths(1).withDayOfMonth(
                     LocalDate.now().minusMonths(1).lengthOfMonth());
 
             startDate = Timestamp.valueOf(startDateOfPreviousMonth.atStartOfDay());
-            endDate = Timestamp.valueOf(endDateOfPreviousMonth.atStartOfDay());
+            endDate = Timestamp.valueOf(endDateOfPreviousMonth.atTime(23, 59, 59));
         } else if (dateRange.equals("3months")) {
             LocalDate startDateOf3LastMonth = LocalDate.now().minusMonths(3).withDayOfMonth(1);
             LocalDate endDateOf3LastMonth = LocalDate.now().minusMonths(1).withDayOfMonth(
                     LocalDate.now().minusMonths(3).lengthOfMonth());
 
             startDate = Timestamp.valueOf(startDateOf3LastMonth.atStartOfDay());
-            endDate = Timestamp.valueOf(endDateOf3LastMonth.atStartOfDay());
+            endDate = Timestamp.valueOf(endDateOf3LastMonth.atTime(23, 59, 59));
         } else if (dateRange.equals("6months")) {
             LocalDate startDateOf6LastMonth = LocalDate.now().minusMonths(6).withDayOfMonth(1);
             LocalDate endDateOf6LastMonth = LocalDate.now().minusMonths(1).withDayOfMonth(
                     LocalDate.now().minusMonths(6).lengthOfMonth());
 
             startDate = Timestamp.valueOf(startDateOf6LastMonth.atStartOfDay());
-            endDate = Timestamp.valueOf(endDateOf6LastMonth.atStartOfDay());
+            endDate = Timestamp.valueOf(endDateOf6LastMonth.atTime(23, 59, 59));
         } else if (dateRange.equals("1year")) {
             LocalDate startDateOfPreviousYear = LocalDate.now().minusYears(1).withDayOfMonth(1);
 
@@ -100,7 +100,7 @@ public class StatisticsServiceImpl implements IStatisticsService {
                     LocalDate.now().minusMonths(1).lengthOfMonth());
 
             startDate = Timestamp.valueOf(startDateOfPreviousYear.atStartOfDay());
-            endDate = Timestamp.valueOf(endDateOfPreviousYear.atStartOfDay());
+            endDate = Timestamp.valueOf(endDateOfPreviousYear.atTime(23, 59, 59));
         }
 
         return Arrays.asList(startDate, endDate);
@@ -204,7 +204,7 @@ public class StatisticsServiceImpl implements IStatisticsService {
             endDate = range.get(1);
         }
 
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userService.findLoggedInUser();
 
         long totalDocuments = getTotalDocumentCount(user.getOrganization(), startDate, endDate);
         long totalPendingDocuments = getPendingDocumentCount(user.getOrganization(), startDate, endDate);
@@ -212,12 +212,17 @@ public class StatisticsServiceImpl implements IStatisticsService {
         long totalPendingReviews = getPendingReviewCount(null, startDate, endDate);
         long totalUsers = getTotalUserCount(user.getOrganization(), startDate, endDate);
 
+        Map<String, Long> documentCountByCategory = getDocumentCountByCategory(startDate, endDate, user.getOrganization());
+        Map<String, Long> documentCountByField = getDocumentCountByField(startDate, endDate, user.getOrganization());
+
         GeneralStatisticsModel generalStatisticsModel = GeneralStatisticsModel.builder()
                 .totalDocuments((int) totalDocuments)
                 .totalPendingDocuments((int) totalPendingDocuments)
                 .totalReviews((int) totalReviews)
                 .totalPendingReviews((int) totalPendingReviews)
                 .totalUsers((int) totalUsers)
+                .documentsByCategory(documentCountByCategory)
+                .documentsByField(documentCountByField)
                 .build();
 
         return generalStatisticsModel;
@@ -225,7 +230,7 @@ public class StatisticsServiceImpl implements IStatisticsService {
 
     @Override
     public YearlyStatisticsModel getYearlyStatisticsForManager(int year) {
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userService.findLoggedInUser();
 
         Map<Integer, Long> documentCountByMonth = getDocumentCountByMonth(year, user.getOrganization());
         Map<Integer, Long> userCountByMonth = getUserCountByMonth(year, user.getOrganization());

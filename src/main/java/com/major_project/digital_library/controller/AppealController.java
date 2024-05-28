@@ -187,7 +187,7 @@ public class AppealController {
         return ResponseEntity.ok(ResponseModel.builder()
                 .status(200)
                 .error(false)
-                .message("Check post appeal successfully")
+                .message("Check reply appeal successfully")
                 .data(postAppealResponseModel)
                 .build());
     }

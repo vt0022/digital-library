@@ -17,11 +17,13 @@ import java.util.UUID;
 @Repository
 public interface IPostRepository extends JpaRepository<Post, UUID> {
     @Query("SELECT p FROM Post p " +
+            "LEFT JOIN p.label l " +
             "WHERE p.isDisabled = FALSE " +
-            "AND (p.label.isDisabled = FALSE OR p.label IS NULL) " +
+            "AND (l = NULL OR l.isDisabled = FALSE) " +
             "AND p.subsection.isDisabled = FALSE " +
+            "AND p.subsection.section.isDisabled = FALSE " +
             "AND (p.subsection = :subsection OR :subsection IS NULL) " +
-            "AND (p.label = :label OR :label IS NULL) " +
+            "AND (l = :label OR :label IS NULL) " +
             "AND (LOWER(p.title) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(p.content) LIKE LOWER(CONCAT('%', :query, '%'))) ")
     Page<Post> findViewablePosts(
             Subsection subsection,
@@ -42,11 +44,13 @@ public interface IPostRepository extends JpaRepository<Post, UUID> {
     );
 
     @Query("SELECT p FROM Post p " +
+            "LEFT JOIN p.label l " +
             "WHERE p.isDisabled = FALSE " +
-            "AND (p.label.isDisabled = FALSE OR p.label IS NULL) " +
+            "AND (l = NULL OR l.isDisabled = FALSE) " +
             "AND p.subsection.isDisabled = FALSE " +
+            "AND p.subsection.section.isDisabled = FALSE " +
             "AND (p.subsection = :subsection OR :subsection IS NULL) " +
-            "AND (p.label = :label OR :label IS NULL) " +
+            "AND (l = :label OR :label IS NULL) " +
             "AND (LOWER(p.title) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(p.content) LIKE LOWER(CONCAT('%', :query, '%'))) " +
             "ORDER BY SIZE(p.postLikes) DESC")
     Page<Post> findViewablePostsOrderByTotalLikesDesc(
@@ -69,11 +73,13 @@ public interface IPostRepository extends JpaRepository<Post, UUID> {
     );
 
     @Query("SELECT p FROM Post p " +
+            "LEFT JOIN p.label l " +
             "WHERE p.isDisabled = FALSE " +
-            "AND (p.label.isDisabled = FALSE OR p.label IS NULL) " +
+            "AND (l = NULL OR l.isDisabled = FALSE) " +
             "AND p.subsection.isDisabled = FALSE " +
+            "AND p.subsection.section.isDisabled = FALSE " +
             "AND (p.subsection = :subsection OR :subsection IS NULL) " +
-            "AND (p.label = :label OR :label IS NULL) " +
+            "AND (l = :label OR :label IS NULL) " +
             "AND (LOWER(p.title) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(p.content) LIKE LOWER(CONCAT('%', :query, '%'))) " +
             "ORDER BY SIZE(p.postLikes) ASC")
     Page<Post> findViewablePostsOrderByTotalLikesAsc(
@@ -96,11 +102,13 @@ public interface IPostRepository extends JpaRepository<Post, UUID> {
     );
 
     @Query("SELECT p FROM Post p " +
+            "LEFT JOIN p.label l " +
             "WHERE p.isDisabled = FALSE " +
-            "AND (p.label.isDisabled = FALSE OR p.label IS NULL) " +
+            "AND (l = NULL OR l.isDisabled = FALSE) " +
             "AND p.subsection.isDisabled = FALSE " +
+            "AND p.subsection.section.isDisabled = FALSE " +
             "AND (p.subsection = :subsection OR :subsection IS NULL) " +
-            "AND (p.label = :label OR :label IS NULL) " +
+            "AND (l = :label OR :label IS NULL) " +
             "AND (LOWER(p.title) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(p.content) LIKE LOWER(CONCAT('%', :query, '%'))) " +
             "ORDER BY SIZE(p.replies) DESC")
     Page<Post> findViewablePostsOrderByTotalRepliesDesc(
@@ -123,11 +131,13 @@ public interface IPostRepository extends JpaRepository<Post, UUID> {
     );
 
     @Query("SELECT p FROM Post p " +
+            "LEFT JOIN p.label l " +
             "WHERE p.isDisabled = FALSE " +
-            "AND (p.label.isDisabled = FALSE OR p.label IS NULL) " +
+            "AND (l = NULL OR l.isDisabled = FALSE) " +
             "AND p.subsection.isDisabled = FALSE " +
+            "AND p.subsection.section.isDisabled = FALSE " +
             "AND (p.subsection = :subsection OR :subsection IS NULL) " +
-            "AND (p.label = :label OR :label IS NULL) " +
+            "AND (l = :label OR :label IS NULL) " +
             "AND (LOWER(p.title) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(p.content) LIKE LOWER(CONCAT('%', :query, '%'))) " +
             "ORDER BY SIZE(p.replies) ASC")
     Page<Post> findViewablePostsOrderByTotalRepliesAsc(
@@ -150,8 +160,9 @@ public interface IPostRepository extends JpaRepository<Post, UUID> {
     );
 
     @Query("SELECT p FROM Post p " +
+            "LEFT JOIN p.label l " +
             "WHERE p.isDisabled = FALSE " +
-            "AND (p.label.isDisabled = FALSE OR p.label IS NULL) " +
+            "AND (l = NULL OR l.isDisabled = FALSE) " +
             "AND p.subsection.isDisabled = FALSE " +
             "AND p.subsection.section.isDisabled = FALSE " +
             "AND p.isDisabled = FALSE " +
@@ -169,9 +180,10 @@ public interface IPostRepository extends JpaRepository<Post, UUID> {
     @Query("SELECT p " +
             "FROM Post p " +
             "JOIN p.tags t " +
+            "LEFT JOIN p.label l " +
             "WHERE t.tagName IN :tags " +
             "AND p.isDisabled = FALSE " +
-            "AND (p.label.isDisabled = FALSE OR p.label IS NULL) " +
+            "AND (l = NULL OR l.isDisabled = FALSE) " +
             "AND p.subsection.isDisabled = FALSE " +
             "AND p.subsection.section.isDisabled = FALSE " +
             "GROUP BY p.postId " +

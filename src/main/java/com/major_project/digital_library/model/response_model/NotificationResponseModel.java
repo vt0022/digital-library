@@ -1,9 +1,6 @@
 package com.major_project.digital_library.model.response_model;
 
-import com.major_project.digital_library.entity.Document;
-import com.major_project.digital_library.model.lean_model.PostLeanModel;
-import com.major_project.digital_library.model.lean_model.ReplyLeanModel;
-import com.major_project.digital_library.model.lean_model.UserLeanModel;
+import com.major_project.digital_library.model.lean_model.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -34,7 +31,9 @@ public class NotificationResponseModel implements Serializable {
 
     private UserLeanModel recipient;
 
-    private Document document;
+    private DocumentLeanModel document;
+
+    private ReviewLeanModel review;
 
     private PostLeanModel post;
 

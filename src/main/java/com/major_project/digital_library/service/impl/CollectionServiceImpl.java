@@ -48,7 +48,7 @@ public class CollectionServiceImpl implements ICollectionService {
     public DetailCollectionResponseModel getDetailCollection(String slug) {
         Collection collection = collectionRepository.findBySlug(slug).orElseThrow(() -> new RuntimeException("Collection not found"));
 
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not logged in"));
+        User user = userService.findLoggedInUser();
 
         if (collection.isPrivate() && !collection.getUser().getUserId().equals(user.getUserId()))
             return null;
@@ -82,7 +82,7 @@ public class CollectionServiceImpl implements ICollectionService {
 
     @Override
     public Page<CollectionResponseModel> getCollectionsForUser(int page, int size) {
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not logged in"));
+        User user = userService.findLoggedInUser();
 
         Pageable pageable = PageRequest.of(page, size);
 
@@ -95,7 +95,7 @@ public class CollectionServiceImpl implements ICollectionService {
 
     @Override
     public Page<CollectionResponseModel> getCollectionsOfUser(int page, int size) {
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not logged in"));
+        User user = userService.findLoggedInUser();
 
         Pageable pageable = PageRequest.of(page, size);
 
@@ -108,7 +108,7 @@ public class CollectionServiceImpl implements ICollectionService {
 
     @Override
     public Page<CollectionResponseModel> getCollectionsOfCurrentUser(int page, int size) {
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not logged in"));
+        User user = userService.findLoggedInUser();
 
         Pageable pageable = PageRequest.of(page, size);
 
@@ -121,7 +121,7 @@ public class CollectionServiceImpl implements ICollectionService {
 
     @Override
     public CollectionResponseModel addCollection(CollectionRequestModel collectionRequestModel) {
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not logged in"));
+        User user = userService.findLoggedInUser();
 
         Collection collection = modelMapper.map(collectionRequestModel, Collection.class);
         collection.setUser(user);
@@ -177,7 +177,7 @@ public class CollectionServiceImpl implements ICollectionService {
     }
 
     public DetailCollectionResponseModel convertToDetailCollectionModel(Collection collection) {
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not logged in"));
+        User user = userService.findLoggedInUser();
 
         DetailCollectionResponseModel detailCollectionResponseModel = modelMapper.map(collection, DetailCollectionResponseModel.class);
 

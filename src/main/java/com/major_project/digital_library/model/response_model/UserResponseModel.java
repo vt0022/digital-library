@@ -28,8 +28,6 @@ public class UserResponseModel implements Serializable {
 
     private int gender;
 
-    private String phone;
-
     private String image;
 
     private String email;
@@ -38,7 +36,9 @@ public class UserResponseModel implements Serializable {
 
     private Timestamp updatedAt;
 
-    private boolean isDeleted;
+    private boolean isDisabled;
+
+    private boolean isAuthenticated;
 
     private int totalLikes;
 

@@ -36,6 +36,8 @@ public class NotificationServiceImpl implements INotificationService {
             notification.setDocument((Document) object);
         else if (object.getClass() == Post.class)
             notification.setPost((Post) object);
+        else if (object.getClass() == Reply.class)
+            notification.setReply((Reply) object);
         else if (object.getClass() == PostReport.class)
             notification.setPostReport((PostReport) object);
         else if (object.getClass() == ReplyReport.class)
@@ -51,12 +53,17 @@ public class NotificationServiceImpl implements INotificationService {
     }
 
     @Override
-    public Page<NotificationResponseModel> getNotificationsOfUser(int page) {
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not logged in"));
+    public Page<NotificationResponseModel> getNotificationsOfUser(int page, String status) {
+        User user = userService.findLoggedInUser();
 
         Pageable pageable = PageRequest.of(page, 10);
 
-        Page<Notification> notifications = notificationRepository.findAllByRecipientOrderBySentAtDesc(user, pageable);
+        Page<Notification> notifications = Page.empty();
+        if (status.equals("all"))
+            notifications = notificationRepository.findAllByRecipientOrderBySentAtDesc(user, pageable);
+        else
+            notifications = notificationRepository.findByRecipientAndIsReadOrderBySentAtDesc(user, false, pageable);
+
         Page<NotificationResponseModel> notificationResponseModels = notifications.map(this::convertToNotificationModel);
 
         return notificationResponseModels;
@@ -64,7 +71,7 @@ public class NotificationServiceImpl implements INotificationService {
 
     @Override
     public int countUnreadNotificationsOfUser() {
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not logged in"));
+        User user = userService.findLoggedInUser();
 
         int count = (int) notificationRepository.countAllByRecipientAndIsRead(user, false);
 

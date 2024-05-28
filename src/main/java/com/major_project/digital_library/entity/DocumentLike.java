@@ -30,9 +30,4 @@ public class DocumentLike implements Serializable {
     private Document document;
 
     private Timestamp likedAt;
-
-    @PrePersist
-    protected void onCreate() {
-        likedAt = new Timestamp(System.currentTimeMillis());
-    }
 }

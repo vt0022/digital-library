@@ -1,16 +1,14 @@
 package com.major_project.digital_library.service.impl;
 
+import com.major_project.digital_library.constant.NotificationMessage;
 import com.major_project.digital_library.entity.*;
 import com.major_project.digital_library.model.FileModel;
 import com.major_project.digital_library.model.request_model.DocumentRequestModel;
 import com.major_project.digital_library.model.response_model.DetailDocumentResponseModel;
 import com.major_project.digital_library.model.response_model.DocumentResponseModel;
 import com.major_project.digital_library.repository.*;
-import com.major_project.digital_library.service.ICollectionDocumentService;
-import com.major_project.digital_library.service.IDocumentService;
-import com.major_project.digital_library.service.IRecencyService;
-import com.major_project.digital_library.service.IUserService;
-import com.major_project.digital_library.util.GoogleDriveUpload;
+import com.major_project.digital_library.service.*;
+import com.major_project.digital_library.service.other.GoogleDriveService;
 import com.major_project.digital_library.util.SlugGenerator;
 import com.major_project.digital_library.util.StringHandler;
 import com.major_project.digital_library.yake.TagExtractor;
@@ -20,12 +18,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.JpaSort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.sql.Timestamp;
-import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -34,7 +31,7 @@ public class DocumentServiceImpl implements IDocumentService {
     private final ICategoryRepository categoryRepository;
     private final IFieldRepository fieldRepository;
     private final IOrganizationRepository organizationRepository;
-    private final IUserRepositoty userRepositoty;
+    private final IUserRepository userRepositoty;
     private final IDocumentLikeRepository documentLikeRepository;
     private final ISaveRepository saveRepository;
     private final IReviewRepository reviewRepository;
@@ -42,14 +39,15 @@ public class DocumentServiceImpl implements IDocumentService {
     private final ICollectionDocumentService collectionDocumentService;
     private final IUserService userService;
     private final IRecencyService recencyService;
+    private final INotificationService notificationService;
     private final ModelMapper modelMapper;
     private final SlugGenerator slugGenerator;
     private final TagExtractor tagExtractor;
-    private final GoogleDriveUpload googleDriveUpload;
+    private final GoogleDriveService googleDriveService;
     private final StringHandler stringHandler;
 
     @Autowired
-    public DocumentServiceImpl(IDocumentRepository documentRepository, ICategoryRepository categoryRepository, IFieldRepository fieldRepository, IOrganizationRepository organizationRepository, IUserRepositoty userRepositoty, IDocumentLikeRepository documentLikeRepository, ISaveRepository saveRepository, IReviewRepository reviewRepository, ICollectionRepository collectionRepository, ICollectionDocumentService collectionDocumentService, IUserService userService, IRecencyService recencyService, ModelMapper modelMapper, SlugGenerator slugGenerator, TagExtractor tagExtractor, GoogleDriveUpload googleDriveUpload, StringHandler stringHandler) {
+    public DocumentServiceImpl(IDocumentRepository documentRepository, ICategoryRepository categoryRepository, IFieldRepository fieldRepository, IOrganizationRepository organizationRepository, IUserRepository userRepositoty, IDocumentLikeRepository documentLikeRepository, ISaveRepository saveRepository, IReviewRepository reviewRepository, ICollectionRepository collectionRepository, ICollectionDocumentService collectionDocumentService, IUserService userService, IRecencyService recencyService, INotificationService notificationService, ModelMapper modelMapper, SlugGenerator slugGenerator, TagExtractor tagExtractor, GoogleDriveService googleDriveService, StringHandler stringHandler) {
         this.documentRepository = documentRepository;
         this.categoryRepository = categoryRepository;
         this.fieldRepository = fieldRepository;
@@ -62,51 +60,17 @@ public class DocumentServiceImpl implements IDocumentService {
         this.collectionDocumentService = collectionDocumentService;
         this.userService = userService;
         this.recencyService = recencyService;
+        this.notificationService = notificationService;
         this.modelMapper = modelMapper;
         this.slugGenerator = slugGenerator;
         this.tagExtractor = tagExtractor;
-        this.googleDriveUpload = googleDriveUpload;
+        this.googleDriveService = googleDriveService;
         this.stringHandler = stringHandler;
     }
 
     @Override
-    public <S extends Document> List<S> saveAll(Iterable<S> entities) {
-        return documentRepository.saveAll(entities);
-    }
-
-    @Override
-    public Optional<Document> findBySlug(String slug) {
-        return documentRepository.findBySlug(slug);
-    }
-
-    @Override
-    public List<Document> findAll() {
-        return documentRepository.findAll();
-    }
-
-    @Override
-    public <S extends Document> S save(S entity) {
-        return documentRepository.save(entity);
-    }
-
-    @Override
-    public Optional<Document> findById(UUID uuid) {
-        return documentRepository.findById(uuid);
-    }
-
-    @Override
-    public void deleteById(UUID uuid) {
-        documentRepository.deleteById(uuid);
-    }
-
-    @Override
-    public Page<Document> findAll(Pageable pageable) {
-        return documentRepository.findAll(pageable);
-    }
-
-    @Override
     public DetailDocumentResponseModel viewDocument(String slug) {
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not logged in"));
+        User user = userService.findLoggedInUser();
         Document document = documentRepository.findBySlug(slug).orElse(null);
 
         if (document == null)
@@ -135,8 +99,10 @@ public class DocumentServiceImpl implements IDocumentService {
         }
 
         // Increase views
-        document.setTotalView(document.getTotalView() + 1);
-        documentRepository.save(document);
+        if (document.getVerifiedStatus() == 1) {
+            document.setTotalView(document.getTotalView() + 1);
+            documentRepository.save(document);
+        }
 
         recencyService.addToRecentDocuments(slug);
 
@@ -230,7 +196,7 @@ public class DocumentServiceImpl implements IDocumentService {
         Pageable pageable = PageRequest.of(page, size, sort);
 
         // Find user info
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not logged in"));
+        User user = userService.findLoggedInUser();
 
         Category foundCategory = findCategoryBySlug(category);
         Field foundField = findFieldBySlug(field);
@@ -247,7 +213,7 @@ public class DocumentServiceImpl implements IDocumentService {
     @Override
     public Page<DocumentResponseModel> getOwnedDocuments(int page, int size) {
         // Find user info
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userService.findLoggedInUser();
 
         Sort sort = Sort.by(Sort.Direction.DESC, "updatedAt");
         Pageable pageable = PageRequest.of(page, size, sort);
@@ -261,7 +227,7 @@ public class DocumentServiceImpl implements IDocumentService {
 
     @Override
     public Page<DocumentResponseModel> getDocumentsByUser(UUID userId, int page, int size) {
-        User user = userService.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepositoty.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
 
         // Order maybe one of these: docId, totalView
         Sort sort = Sort.by(Sort.Direction.DESC, "updatedAt");
@@ -276,9 +242,9 @@ public class DocumentServiceImpl implements IDocumentService {
 
     @Override
     public Page<DocumentResponseModel> findDocumentsByUserForStudent(UUID userId, int page, int size, String order, String category, String field, String s) {
-        User user = userService.findLoggedInUser().orElse(null);
+        User user = userService.findLoggedInUser();
 
-        User userUploaded = userService.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        User userUploaded = userRepositoty.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
 
         // Order maybe one of these: docId, totalView
         Sort sort = Sort.by(Sort.Direction.DESC, order);
@@ -301,7 +267,7 @@ public class DocumentServiceImpl implements IDocumentService {
         Sort sort = Sort.by(Sort.Direction.DESC, order);
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        User userUploaded = userService.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        User userUploaded = userRepositoty.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
 
         Category foundCategory = findCategoryBySlug(category);
 
@@ -318,44 +284,46 @@ public class DocumentServiceImpl implements IDocumentService {
     public Page<DocumentResponseModel> getDocumentsForGuests(int page, int size, String order, String sortOrder, String category, String field, String organization, String s) {
         // Order maybe one of these: totalView, updatedAt, averageRating, totalFavorite
         // Sort order maybe one of these: asc, desc
-        Sort sort = Sort.by(sortOrder.equals("desc") ? Sort.Direction.DESC : Sort.Direction.ASC, order);
-        Pageable pageable = PageRequest.of(page, size, sort);
+        Sort sort;
+        if (order.equals("totalFavorite")) {
+            sort = JpaSort.unsafe(sortOrder.equals("desc") ? Sort.Direction.DESC : Sort.Direction.ASC, "SIZE(d.documentLikes)");
+        } else {
+            sort = Sort.by(sortOrder.equals("desc") ? Sort.Direction.DESC : Sort.Direction.ASC, order);
+        }
 
         Category foundCategory = findCategoryBySlug(category);
         Field foundField = findFieldBySlug(field);
         Organization foundOrganization = findOrganizationBySlug(organization);
 
+        Pageable pageable;
         Page<Document> documents = Page.empty();
-        if (s.equals(""))
-            documents = documentRepository.findDocumentsForGuests(foundCategory, foundField, foundOrganization, pageable);
-        else
-            documents = documentRepository.searchDocumentsForGuests(foundCategory, foundField, foundOrganization, s, pageable);
+
+        if (order.equals("averageRating")) {
+            pageable = PageRequest.of(page, size);
+
+            if (s.equals("")) {
+                documents = documentRepository.findDocumentsForGuestsOrderByAverageRating(foundCategory, foundField, foundOrganization, pageable);
+            } else {
+                documents = documentRepository.searchDocumentsForGuestsOrderByAverageRating(foundCategory, foundField, foundOrganization, s, pageable);
+            }
+        } else {
+            pageable = PageRequest.of(page, size, sort);
+
+            if (s.equals("")) {
+                documents = documentRepository.findDocumentsForGuests(foundCategory, foundField, foundOrganization, pageable);
+            } else {
+                documents = documentRepository.searchDocumentsForGuests(foundCategory, foundField, foundOrganization, s, pageable);
+            }
+        }
 
         Page<DocumentResponseModel> documentModels = documents.map(this::convertToDocumentModel);
 
         return documentModels;
     }
 
-//    public Page<DocumentResponseModel> searchDocumentsForGuests(int page, int size, String order, String sortOrder, String category, String field, String organization, String s) {
-//        // Order maybe one of these: totalView, updatedAt, averageRating, totalFavorite
-//        // Sort order maybe one of these: asc, desc
-//        Sort sort = Sort.by(sortOrder.equals("desc") ? Sort.Direction.DESC : Sort.Direction.ASC, order);
-//        Pageable pageable = PageRequest.of(page, size, sort);
-//
-//        Category foundCategory = findCategoryBySlug(category);
-//        Field foundField = findFieldBySlug(field);
-//        Organization foundOrganization = findOrganizationBySlug(organization);
-//
-//        Page<Document> documents = documentRepository.searchDocumentsForGuests(foundCategory, foundField, foundOrganization, s, pageable);
-//
-//        Page<DocumentResponseModel> documentModels = documents.map(this::convertToDocumentModel);
-//
-//        return documentModels;
-//    }
-
     @Override
     public Page<DocumentResponseModel> getPendingDocuments(int page, int size, String status, String organization) {
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userService.findLoggedInUser();
 
         Integer verifiedStatus = parseStatus(status);
 
@@ -379,70 +347,57 @@ public class DocumentServiceImpl implements IDocumentService {
     @Override
     public Page<DocumentResponseModel> getDocumentsForStudent(int page, int size, String order, String sortOrder, String category, String field, String organization, String s) {
         // Find user info and organization
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userService.findLoggedInUser();
         Organization userOrganization = user.getOrganization();
 
         // Order maybe one of these: totalView, updatedAt, averageRating, totalFavorite
         // Sort order maybe one of these: asc, desc
-        Sort sort = Sort.by(sortOrder.equals("desc") ? Sort.Direction.DESC : Sort.Direction.ASC, order);
-        Pageable pageable = PageRequest.of(page, size, sort);
+        Sort sort;
+        if (order.equals("totalFavorite")) {
+            sort = JpaSort.unsafe(sortOrder.equals("desc") ? Sort.Direction.DESC : Sort.Direction.ASC, "SIZE(d.documentLikes)");
+        } else {
+            sort = Sort.by(sortOrder.equals("desc") ? Sort.Direction.DESC : Sort.Direction.ASC, order);
+        }
 
         Category foundCategory = findCategoryBySlug(category);
         Field foundField = findFieldBySlug(field);
         Organization foundOrganization = findOrganizationBySlug(organization);
 
+        Pageable pageable;
         Page<Document> documents = Page.empty();
-        if (s.equals(""))
-            documents = documentRepository.findDocumentsForStudents(foundCategory, foundField, foundOrganization, userOrganization, pageable);
-        else
-            documents = documentRepository.searchDocumentsForStudents(foundCategory, foundField, foundOrganization, userOrganization, s, pageable);
+
+        if (order.equals("averageRating")) {
+            pageable = PageRequest.of(page, size);
+
+            if (s.equals("")) {
+                documents = documentRepository.findDocumentsForStudentsOrderByAverageRating(foundCategory, foundField, foundOrganization, userOrganization, pageable);
+            } else {
+                documents = documentRepository.searchDocumentsForStudentsOrderByAverageRating(foundCategory, foundField, foundOrganization, userOrganization, s, pageable);
+            }
+        } else {
+            pageable = PageRequest.of(page, size, sort);
+
+            if (s.equals("")) {
+                documents = documentRepository.findDocumentsForStudents(foundCategory, foundField, foundOrganization, userOrganization, pageable);
+            } else {
+                documents = documentRepository.searchDocumentsForStudents(foundCategory, foundField, foundOrganization, userOrganization, s, pageable);
+            }
+        }
 
         Page<DocumentResponseModel> documentModels = documents.map(this::convertToDocumentModel);
 
         return documentModels;
     }
 
-//    public ResponseEntity<?> searchDocumentsForStudents(int page, int size, String order, String sortOrder, String category, String field, String organization, String s) {
-//        // Find user info and organization
-//        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not found"));
-//        Organization userOrganization = user.getOrganization();
-//
-//        // Order maybe one of these: totalView, updatedAt, averageRating, totalFavorite
-//        // Sort order maybe one of these: asc, desc
-//        Sort sort = Sort.by(sortOrder.equals("desc") ? Sort.Direction.DESC : Sort.Direction.ASC, order);
-//        Pageable pageable = PageRequest.of(page, size, sort);
-//
-//        Category foundCategory = category.equals("all") ?
-//                null : categoryRepository.findBySlug(category).orElseThrow(() -> new RuntimeException("Category not found"));
-//
-//        Field foundField = field.equals("all") ?
-//                null : fieldRepository.findBySlug(field).orElseThrow(() -> new RuntimeException("Field not found"));
-//
-//        Organization foundOrganization = organization.equals("all") ?
-//                null : organizationRepository.findBySlug(organization).orElseThrow(() -> new RuntimeException("Organization not found"));
-//
-//        Page<Document> documents = documentRepository.searchDocumentsForStudents(foundCategory, foundField, foundOrganization, userOrganization, s, pageable);
-//
-//        Page<DocumentResponseModel> documentModels = documents.map(this::convertToDocumentModel);
-//        return ResponseEntity.ok(ResponseModel
-//                .builder()
-//                .status(200)
-//                .error(false)
-//                .message("Get documents for students successfully")
-//                .data(documentModels)
-//                .build());
-//    }
-
-
     @Override
     public DocumentResponseModel uploadDocument(DocumentRequestModel documentRequestModel,
                                                 MultipartFile multipartFile) {
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userService.findLoggedInUser();
 
         Document document = modelMapper.map(documentRequestModel, Document.class);
 
         // Upload file document
-        FileModel gd = googleDriveUpload.uploadFile(multipartFile, documentRequestModel.getDocName(), null, null);
+        FileModel gd = googleDriveService.uploadFile(multipartFile, documentRequestModel.getDocName(), null, null);
 
         // Find category and field
         Category category = categoryRepository.findById(documentRequestModel.getCategoryId()).orElse(null);
@@ -478,7 +433,7 @@ public class DocumentServiceImpl implements IDocumentService {
     @Override
     public DocumentResponseModel updateDocument(String slug, DocumentRequestModel documentRequestModel,
                                                 MultipartFile multipartFile) {
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userService.findLoggedInUser();
 
         Document document = documentRepository.findBySlug(slug).orElseThrow(() -> new RuntimeException("Document not found!"));
         if (!document.getDocName().equals(documentRequestModel.getDocName()))
@@ -492,7 +447,7 @@ public class DocumentServiceImpl implements IDocumentService {
             String fileId = document.getViewUrl() != null ? stringHandler.getFileId(document.getViewUrl()) : null;
             String thumbnailId = document.getThumbnail() != null ? stringHandler.getFileId(document.getThumbnail()) : null;
             // Upload file
-            FileModel gd = googleDriveUpload.uploadFile(multipartFile, documentRequestModel.getDocName(), fileId, thumbnailId);
+            FileModel gd = googleDriveService.uploadFile(multipartFile, documentRequestModel.getDocName(), fileId, thumbnailId);
             // Update file properties for document without overwriting existing properties
             document.setThumbnail(gd.getThumbnail());
             document.setViewUrl(gd.getViewUrl());
@@ -525,24 +480,26 @@ public class DocumentServiceImpl implements IDocumentService {
     @Override
     public void deleteDocument(UUID docId) {
         Document document = documentRepository.findById(docId).orElseThrow(() -> new RuntimeException("Document not found!"));
-        googleDriveUpload.deleteFile(stringHandler.getFileId(document.getThumbnail()));
-        googleDriveUpload.deleteFile(stringHandler.getFileId(document.getViewUrl()));
+        googleDriveService.deleteFile(stringHandler.getFileId(document.getThumbnail()));
+        googleDriveService.deleteFile(stringHandler.getFileId(document.getViewUrl()));
         documentRepository.delete(document);
     }
 
     @Override
     public void approveDocument(UUID docId, boolean isApproved, String note) {
         // Find user info
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userService.findLoggedInUser();
         // Find document
         Document document = documentRepository.findById(docId).orElseThrow(() -> new RuntimeException("Document not found!"));
 
         if (isApproved) {
             document.setVerifiedStatus(1);
             document.setNote("");
+            notificationService.sendNotification(NotificationMessage.ACCEPT_DOCUMENT.name(), NotificationMessage.ACCEPT_DOCUMENT.getMessage(), user, document.getUserUploaded(), document);
         } else {
             document.setVerifiedStatus(-1);
             document.setNote(note);
+            notificationService.sendNotification(NotificationMessage.REJECT_DOCUMENT.name(), NotificationMessage.REJECT_DOCUMENT.getMessage(), user, document.getUserUploaded(), document);
         }
         document.setUserVerified(user);
         document.setVerifiedAt(new Timestamp(System.currentTimeMillis()));
@@ -662,7 +619,7 @@ public class DocumentServiceImpl implements IDocumentService {
     }
 
     private DetailDocumentResponseModel convertToDetailDocumentModel(Document document) {
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userService.findLoggedInUser();
 
         DetailDocumentResponseModel documentResponseModel = modelMapper.map(document, DetailDocumentResponseModel.class);
 

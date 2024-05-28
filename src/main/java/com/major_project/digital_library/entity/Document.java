@@ -101,6 +101,9 @@ public class Document {
     @OneToMany(mappedBy = "document", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CollectionDocument> collectionDocuments = new ArrayList<>();
 
+    @OneToMany(mappedBy = "document", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Notification> notifications = new ArrayList<>();
+
     @PrePersist
     protected void onCreate() {
         uploadedAt = new Timestamp(System.currentTimeMillis());

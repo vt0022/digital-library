@@ -68,7 +68,7 @@ public class PostLikeServiceImpl implements IPostLikeService {
 
     @Override
     public boolean likePost(UUID postId) {
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not logged in"));
+        User user = userService.findLoggedInUser();
         Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
 
         Optional<PostLike> postLike = postLikeRepository.findByUserAndPost(user, post);
@@ -93,7 +93,7 @@ public class PostLikeServiceImpl implements IPostLikeService {
 
     @Override
     public Page<PostLikeResponseModel> findByUser(int page, int size) {
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not logged in"));
+        User user = userService.findLoggedInUser();
 
         Pageable pageable = PageRequest.of(page, size);
         Page<PostLike> postLikes = postLikeRepository.findAllByUser(user, pageable);

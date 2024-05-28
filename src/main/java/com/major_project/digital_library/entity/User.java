@@ -39,11 +39,8 @@ public class User implements Serializable, UserDetails {
     private String lastName;
 
     private Timestamp dateOfBirth;
-
+    
     private int gender;
-
-    @Column(length = 15)
-    private String phone;
 
     private String image;
 
@@ -57,7 +54,9 @@ public class User implements Serializable, UserDetails {
 
     private Timestamp updatedAt;
 
-    private boolean isDeleted;
+    private boolean isDisabled;
+
+    private boolean isAuthenticated;
 
     @ManyToOne
     @JoinColumn(name = "orgId")

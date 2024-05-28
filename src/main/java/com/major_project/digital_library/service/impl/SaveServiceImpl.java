@@ -37,7 +37,7 @@ public class SaveServiceImpl implements ISaveService {
 
     @Override
     public void saveDocument(String slug) {
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userService.findLoggedInUser();
         Document document = documentRepository.findBySlug(slug).orElseThrow(() -> new RuntimeException("Document not found"));
 
         Optional<Save> saveOptional = saveRepository.findByUserAndDocument(user, document);
@@ -53,7 +53,7 @@ public class SaveServiceImpl implements ISaveService {
 
     @Override
     public SaveModel unsaveDocument(String slug) {
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userService.findLoggedInUser();
         Document document = documentRepository.findBySlug(slug).orElseThrow(() -> new RuntimeException("Document not found"));
 
         Optional<Save> saveOptional = saveRepository.findByUserAndDocument(user, document);
@@ -73,7 +73,7 @@ public class SaveServiceImpl implements ISaveService {
 
     @Override
     public void undoUnsave(String slug, SaveModel saveModel) {
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userService.findLoggedInUser();
         Document document = documentRepository.findBySlug(saveModel.getSlug()).orElseThrow(() -> new RuntimeException("Document not found"));
 
         Optional<Save> saveOptional = saveRepository.findByUserAndDocument(user, document);
@@ -89,7 +89,7 @@ public class SaveServiceImpl implements ISaveService {
 
     @Override
     public Page<DocumentResponseModel> getSavedDocuments(int page, int size, String s) {
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userService.findLoggedInUser();
 
         Pageable pageable = PageRequest.of(page, size);
         Page<Document> documents = Page.empty();

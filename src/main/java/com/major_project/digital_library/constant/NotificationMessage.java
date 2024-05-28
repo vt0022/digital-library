@@ -14,7 +14,11 @@ public enum NotificationMessage {
     DELETE_POST("Bài đăng của bạn đã bị xoá vì vi phạm tiêu chuẩn cộng đồng về"),
     DELETE_REPLY("Bình luận của bạn đã bị xoá vì vi phạm tiêu chuẩn cộng đồng về"),
     RESTORE_POST("Bài đăng của bạn đã được khôi phục. Rất xin lỗi vì sự nhầm lẫn."),
-    RESTORE_REPLY("Bình luận của bạn đã được khôi phục. Rất xin lỗi vì sự nhầm lẫn.");
+    RESTORE_REPLY("Bình luận của bạn đã được khôi phục. Rất xin lỗi vì sự nhầm lẫn."),
+    ACCEPT_DOCUMENT("Tài liệu của bạn đã được duyệt."),
+    REJECT_DOCUMENT("Tài liệu của bạn đã bị từ chối."),
+    ACCEPT_REVIEW("Đánh giá của bạn đã được duyệt."),
+    REJECT_REVIEW("Đánh giá của bạn đã bị từ chối.");
 
     private final String message;
 

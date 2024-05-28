@@ -50,7 +50,7 @@ public class GlobalExceptionHandler {
             message = "Invalid signature";
             statusCode = HttpStatus.UNAUTHORIZED.value();
         } else if (e instanceof BadCredentialsException) {
-            message = "Invalid password";
+            message = e.getMessage();
             statusCode = HttpStatus.UNAUTHORIZED.value();
         } else if (e instanceof UserAuthenticationException) {
             message = "User unauthorized. Please log in again";

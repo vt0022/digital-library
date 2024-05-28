@@ -1,4 +1,4 @@
-package com.major_project.digital_library.util;
+package com.major_project.digital_library.service.other;
 
 import net.coobird.thumbnailator.Thumbnails;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -11,7 +11,7 @@ import java.io.File;
 import java.io.IOException;
 
 @Component
-public class ThumbnailGenerator {
+public class ThumbnailGeneratorService {
     public BufferedImage generateThumbnail(File pdfFile) {
         try {
             // Load the PDF and render a page as an image

@@ -74,7 +74,7 @@ public class SecurityConfig {
                                 "/api/v2/api-docs/**").permitAll()
 
                         .requestMatchers(
-                                "/api/v2/auth/*").permitAll()
+                                "/api/v2/auth/**").permitAll()
 
                         .requestMatchers(
                                 "/api/v2/init/**",
@@ -198,8 +198,9 @@ public class SecurityConfig {
                                 "/api/v2/user/organizations/*/latest",
                                 "/api/v2/user/organizations/*").hasAuthority("ROLE_MANAGER")
 
-                        .requestMatchers(
-                                "/api/v2/user/latest").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers("/api/v2/user/*/enable",
+                                "/api/v2/user/*/disable",
+                                "/api/v2/user/latest").hasAnyAuthority("ROLE_ADMIN", "ROLE_MANAGER")
                         .requestMatchers(HttpMethod.POST,
                                 "/api/v2/users/*").hasAnyAuthority("ROLE_ADMIN", "ROLE_MANAGER")
                         .requestMatchers(HttpMethod.DELETE,
@@ -335,6 +336,7 @@ public class SecurityConfig {
                                 "/api/v2/appeals/post",
                                 "/api/v2/appeals/reply").hasAuthority("ROLE_ADMIN")
 
+                        .requestMatchers("/api/v2/recaptcha/verify").permitAll()
 
                         .anyRequest().authenticated())
 

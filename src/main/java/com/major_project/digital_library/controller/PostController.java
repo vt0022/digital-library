@@ -6,7 +6,7 @@ import com.major_project.digital_library.service.IPostHistoryService;
 import com.major_project.digital_library.service.IPostLikeService;
 import com.major_project.digital_library.service.IPostService;
 import com.major_project.digital_library.service.IUserService;
-import com.major_project.digital_library.util.GoogleDriveUpload;
+import com.major_project.digital_library.service.other.GoogleDriveService;
 import io.swagger.v3.oas.annotations.Operation;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,16 +25,16 @@ public class PostController {
     private final IPostLikeService postLikeService;
     private final IPostHistoryService postHistoryService;
     private final ModelMapper modelMapper;
-    private final GoogleDriveUpload googleDriveUpload;
+    private final GoogleDriveService googleDriveService;
 
     @Autowired
-    public PostController(IPostService postService, IUserService userService, IPostLikeService postLikeService, IPostHistoryService postHistoryService, ModelMapper modelMapper, GoogleDriveUpload googleDriveUpload) {
+    public PostController(IPostService postService, IUserService userService, IPostLikeService postLikeService, IPostHistoryService postHistoryService, ModelMapper modelMapper, GoogleDriveService googleDriveService) {
         this.postService = postService;
         this.userService = userService;
         this.postLikeService = postLikeService;
         this.postHistoryService = postHistoryService;
         this.modelMapper = modelMapper;
-        this.googleDriveUpload = googleDriveUpload;
+        this.googleDriveService = googleDriveService;
     }
 
     @Operation(summary = "Hiển thị chi tiết bài viết cho khách")

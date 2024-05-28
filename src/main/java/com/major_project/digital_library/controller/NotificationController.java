@@ -23,9 +23,10 @@ public class NotificationController {
 
     @Operation(summary = "Lấy thông báo của người dùng")
     @GetMapping("/mine")
-    public ResponseEntity<?> getUserNotifications(@RequestParam(defaultValue = "0") int page
+    public ResponseEntity<?> getUserNotifications(@RequestParam(defaultValue = "0") int page,
+                                                  @RequestParam(defaultValue = "all") String status
     ) {
-        Page<NotificationResponseModel> notificationResponseModels = notificationService.getNotificationsOfUser(page);
+        Page<NotificationResponseModel> notificationResponseModels = notificationService.getNotificationsOfUser(page, status);
 
         return ResponseEntity.ok(ResponseModel.builder()
                 .status(200)

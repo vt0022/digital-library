@@ -22,6 +22,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -32,7 +33,7 @@ public class PostServiceImpl implements IPostService {
     private final IPostRepository postRepository;
     private final IPostLikeRepository postLikeRepository;
     private final IPostHistoryRepository postHistoryRepository;
-    private final IUserRepositoty userRepository;
+    private final IUserRepository userRepository;
     private final ISubsectionRepository subsectionRepository;
     private final ILabelRepository labelRepository;
     private final ITagRepository tagRepository;
@@ -43,7 +44,7 @@ public class PostServiceImpl implements IPostService {
     private final TagExtractor tagExtractor;
 
     @Autowired
-    public PostServiceImpl(IPostRepository postRepository, IPostLikeRepository postLikeRepository, IPostHistoryRepository postHistoryRepository, IUserRepositoty userRepository, ISubsectionRepository subsectionRepository, ILabelRepository labelRepository, ITagRepository tagRepository, IUserService userService, IBadgeService badgeService, IBadgeRewardService badgeRewardService, ModelMapper modelMapper, TagExtractor tagExtractor) {
+    public PostServiceImpl(IPostRepository postRepository, IPostLikeRepository postLikeRepository, IPostHistoryRepository postHistoryRepository, IUserRepository userRepository, ISubsectionRepository subsectionRepository, ILabelRepository labelRepository, ITagRepository tagRepository, IUserService userService, IBadgeService badgeService, IBadgeRewardService badgeRewardService, ModelMapper modelMapper, TagExtractor tagExtractor) {
         this.postRepository = postRepository;
         this.postLikeRepository = postLikeRepository;
         this.postHistoryRepository = postHistoryRepository;
@@ -61,8 +62,10 @@ public class PostServiceImpl implements IPostService {
     @Override
     public DetailPostResponseModel getPostDetail(UUID postId) {
         Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
-        post.setTotalViews(post.getTotalViews() + 1);
-        postRepository.save(post);
+        if (!post.isDisabled()) {
+            post.setTotalViews(post.getTotalViews() + 1);
+            postRepository.save(post);
+        }
 
         badgeRewardService.rewardBadge(post.getUserPosted(), String.valueOf(BadgeUnit.TOTAL_POST_VIEWS));
 
@@ -74,14 +77,22 @@ public class PostServiceImpl implements IPostService {
     @Override
     public PostResponseModel getPostDetailForGuest(UUID postId) {
         Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
-        post.setTotalViews(post.getTotalViews() + 1);
-        postRepository.save(post);
 
-        badgeRewardService.rewardBadge(post.getUserPosted(), String.valueOf(BadgeUnit.TOTAL_POST_VIEWS));
+        boolean isLabelDisabled = post.getLabel() != null && post.getLabel().isDisabled();
+        boolean isSectionDisabled = post.getSubsection() != null && post.getSubsection().getSection() != null && post.getSubsection().getSection().isDisabled();
+        boolean isSubsectionDisabled = post.getSubsection() != null && post.getSubsection().isDisabled();
 
-        PostResponseModel postResponseModel = convertToPostModel(post);
+        if (!post.isDisabled() && !isLabelDisabled && !isSectionDisabled && !isSubsectionDisabled) {
+            post.setTotalViews(post.getTotalViews() + 1);
+            postRepository.save(post);
 
-        return postResponseModel;
+            badgeRewardService.rewardBadge(post.getUserPosted(), String.valueOf(BadgeUnit.TOTAL_POST_VIEWS));
+
+            PostResponseModel postResponseModel = convertToPostModel(post);
+
+            return postResponseModel;
+        } else
+            return null;
     }
 
     @Override
@@ -194,7 +205,7 @@ public class PostServiceImpl implements IPostService {
 
     @Override
     public Page<PostResponseModel> findRelatedPosts(String query) {
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not logged in"));
+        User user = userService.findLoggedInUser();
 
         List<String> tags = tagExtractor.findKeywords(query);
 
@@ -211,7 +222,7 @@ public class PostServiceImpl implements IPostService {
 
     @Override
     public PostResponseModel addPost(PostRequestModel postRequestModel) {
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not logged in"));
+        User user = userService.findLoggedInUser();
 
         Subsection subsection = subsectionRepository.findById(postRequestModel.getSubsectionId()).orElseThrow(() -> new RuntimeException("Subsection not found"));
         Label label = postRequestModel.getLabelId() == null ? null : labelRepository.findById(postRequestModel.getLabelId()).orElseThrow(() -> new RuntimeException("Label not found"));
@@ -253,7 +264,7 @@ public class PostServiceImpl implements IPostService {
 
     @Override
     public PostResponseModel editPost(UUID postId, PostRequestModel postRequestModel) {
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not logged in"));
+        User user = userService.findLoggedInUser();
         Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
 
         if (!post.getUserPosted().getUserId().equals(user.getUserId()) && !user.getRole().getRoleName().equals("ROLE_ADMIN"))
@@ -274,6 +285,7 @@ public class PostServiceImpl implements IPostService {
         post.setContent(postRequestModel.getContent());
         post.setSubsection(subsection);
         post.setLabel(label);
+        post.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
 
         post.getTags().clear();
         for (String keyword : keywords) {
@@ -302,7 +314,7 @@ public class PostServiceImpl implements IPostService {
 
     @Override
     public boolean deletePost(UUID postId) {
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not logged in"));
+        User user = userService.findLoggedInUser();
         Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
 
         if (!post.getUserPosted().getUserId().equals(user.getUserId()) && !user.getRole().getRoleName().equals("ROLE_ADMIN"))
@@ -338,7 +350,7 @@ public class PostServiceImpl implements IPostService {
     }
 
     private DetailPostResponseModel convertToDetailPostModel(Post post) {
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not logged in"));
+        User user = userService.findLoggedInUser();
 
         DetailPostResponseModel detailPostResponseModel = modelMapper.map(post, DetailPostResponseModel.class);
 

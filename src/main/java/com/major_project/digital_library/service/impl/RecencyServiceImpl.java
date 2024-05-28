@@ -35,7 +35,7 @@ public class RecencyServiceImpl implements IRecencyService {
 
     @Override
     public List<DocumentResponseModel> getRecentDocuments() {
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userService.findLoggedInUser();
 
         List<Document> documents = recencyRepository.findRecentDocuments(user, user.getOrganization());
 
@@ -48,7 +48,7 @@ public class RecencyServiceImpl implements IRecencyService {
 
     @Override
     public void addToRecentDocuments(String slug) {
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userService.findLoggedInUser();
         Document document = documentRepository.findBySlug(slug).orElseThrow(() -> new RuntimeException("Document not found"));
 
         Optional<Recency> recencyOptional = recencyRepository.findByUserAndDocument(user, document);

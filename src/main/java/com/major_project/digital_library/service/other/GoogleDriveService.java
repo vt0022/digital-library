@@ -1,4 +1,4 @@
-package com.major_project.digital_library.util;
+package com.major_project.digital_library.service.other;
 
 import com.google.api.client.http.FileContent;
 import com.google.api.services.drive.Drive;
@@ -15,14 +15,14 @@ import java.util.Collections;
 import java.util.List;
 
 @Service
-public class GoogleDriveUpload {
+public class GoogleDriveService {
     private final Drive googleDrive;
-    private final ThumbnailGenerator thumbnailGenerator;
+    private final ThumbnailGeneratorService thumbnailGeneratorService;
 
     @Autowired
-    public GoogleDriveUpload(Drive googleDrive, ThumbnailGenerator thumbnailGenerator) {
+    public GoogleDriveService(Drive googleDrive, ThumbnailGeneratorService thumbnailGeneratorService) {
         this.googleDrive = googleDrive;
-        this.thumbnailGenerator = thumbnailGenerator;
+        this.thumbnailGeneratorService = thumbnailGeneratorService;
     }
 
     public void deleteFile(String fileId) {
@@ -66,7 +66,7 @@ public class GoogleDriveUpload {
             FileModel gd = new FileModel();
             gd.setName(fileName);
             gd.setThumbnail(generateThumbnail(tempFile, name.concat(".jpg"), thumbnailId));
-            gd.setViewUrl("https://drive.google.com/d/" + file.getId() + "/preview");
+            gd.setViewUrl("https://drive.google.com/file/d/" + file.getId() + "/preview");
             gd.setDownloadUrl(file.getWebContentLink());
             tempFile.delete();
             return gd;
@@ -79,7 +79,7 @@ public class GoogleDriveUpload {
 
     public String generateThumbnail(java.io.File pdfFile, String fileName, String thumbnailId) {
         try {
-            BufferedImage thumbnail = thumbnailGenerator.generateThumbnail(pdfFile);
+            BufferedImage thumbnail = thumbnailGeneratorService.generateThumbnail(pdfFile);
 
             // Set the folder to store thumbnail
             File ggDriveFile = new File();

@@ -63,7 +63,7 @@ public class ReplyLikeServiceImpl implements IReplyLikeService {
 
     @Override
     public boolean likeReply(UUID replyId) {
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not logged in"));
+        User user = userService.findLoggedInUser();
         Reply reply = replyRepository.findById(replyId).orElseThrow(() -> new RuntimeException("Reply not found"));
 
         Optional<ReplyLike> replyLike = replyLikeRepository.findByUserAndReply(user, reply);
@@ -79,7 +79,7 @@ public class ReplyLikeServiceImpl implements IReplyLikeService {
 
             badgeRewardService.rewardBadge(reply.getUser(), BadgeUnit.TOTAL_REPLY_LIKES.name());
 
-            if (!reply.getUser().getUserId().equals(user.getUserId()) && !reply.getPost().getUserPosted().getUserId().equals(user.getUserId()))
+            if (!reply.getUser().getUserId().equals(user.getUserId()))
                 notificationService.sendNotification(NotificationMessage.LIKE_REPLY.name(), NotificationMessage.LIKE_REPLY.getMessage(), user, reply.getUser(), reply);
 
             return false;
@@ -88,7 +88,7 @@ public class ReplyLikeServiceImpl implements IReplyLikeService {
 
     @Override
     public Page<ReplyLikeResponseModel> findByUser(int page, int size) {
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not logged in"));
+        User user = userService.findLoggedInUser();
 
         Pageable pageable = PageRequest.of(page, size);
         Page<ReplyLike> replyLikes = replyLikeRepository.findAllByUser(user, pageable);

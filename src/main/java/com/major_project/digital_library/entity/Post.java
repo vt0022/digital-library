@@ -76,9 +76,4 @@ public class Post {
     protected void onCreate() {
         createdAt = new Timestamp(System.currentTimeMillis());
     }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = new Timestamp(System.currentTimeMillis());
-    }
 }

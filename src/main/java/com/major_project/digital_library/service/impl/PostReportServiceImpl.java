@@ -58,7 +58,7 @@ public class PostReportServiceImpl implements IPostReportService {
     @Override
     public PostReportResponseModel reportPost(PostReportRequestModel postReportRequestModel) {
         Post post = postRepository.findById(postReportRequestModel.getPostId()).orElseThrow(() -> new RuntimeException("Post not found"));
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not logged in"));
+        User user = userService.findLoggedInUser();
 
         PostReport postReport = new PostReport();
         postReport.setPost(post);
@@ -84,7 +84,7 @@ public class PostReportServiceImpl implements IPostReportService {
     }
 
     public boolean handleReport(UUID reportId, String type) {
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not logged in"));
+        User user = userService.findLoggedInUser();
         PostReport postReport = postReportRepository.findById(reportId).orElseThrow(() -> new RuntimeException("Post report not found"));
         Post post = postReport.getPost();
 

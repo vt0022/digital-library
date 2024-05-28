@@ -6,7 +6,7 @@ import com.major_project.digital_library.entity.*;
 import com.major_project.digital_library.repository.IBadgeRepository;
 import com.major_project.digital_library.repository.IBadgeRewardRepository;
 import com.major_project.digital_library.repository.IBadgeTypeRepository;
-import com.major_project.digital_library.repository.IUserRepositoty;
+import com.major_project.digital_library.repository.IUserRepository;
 import com.major_project.digital_library.service.IBadgeRewardService;
 import com.major_project.digital_library.service.INotificationService;
 import org.modelmapper.ModelMapper;
@@ -21,12 +21,12 @@ public class BadgeRewardServiceImpl implements IBadgeRewardService {
     private final IBadgeRewardRepository badgeRewardRepository;
     private final IBadgeRepository badgeRepository;
     private final IBadgeTypeRepository badgeTypeRepository;
-    private final IUserRepositoty userRepositoty;
+    private final IUserRepository userRepositoty;
     private final INotificationService notificationService;
     private final ModelMapper modelMapper;
 
     @Autowired
-    public BadgeRewardServiceImpl(IBadgeRewardRepository badgeRewardRepository, IBadgeRepository badgeRepository, IBadgeTypeRepository badgeTypeRepository, IUserRepositoty userRepositoty, INotificationService notificationService, ModelMapper modelMapper) {
+    public BadgeRewardServiceImpl(IBadgeRewardRepository badgeRewardRepository, IBadgeRepository badgeRepository, IBadgeTypeRepository badgeTypeRepository, IUserRepository userRepositoty, INotificationService notificationService, ModelMapper modelMapper) {
         this.badgeRewardRepository = badgeRewardRepository;
         this.badgeRepository = badgeRepository;
         this.badgeTypeRepository = badgeTypeRepository;

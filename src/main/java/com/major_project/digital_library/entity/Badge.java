@@ -30,8 +30,8 @@ public class Badge {
 
     private int priority;
 
-    @OneToOne(mappedBy = "badge", cascade = CascadeType.MERGE)
-    private Notification notification;
+    @OneToMany(mappedBy = "badge", cascade = CascadeType.MERGE)
+    private List<Notification> notifications = new ArrayList<>();
 
     @ManyToOne
     @JoinColumn(name = "badgeTypeId")

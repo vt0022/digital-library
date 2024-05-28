@@ -40,12 +40,20 @@ public class Notification {
     private Document document;
 
     @ManyToOne
+    @JoinColumn(name = "reviewId")
+    private Review review;
+
+    @ManyToOne
     @JoinColumn(name = "postId")
     private Post post;
 
     @ManyToOne
     @JoinColumn(name = "replyId")
     private Reply reply;
+
+    @ManyToOne
+    @JoinColumn(name = "badgeId")
+    private Badge badge;
 
     @OneToOne
     @JoinColumn(name = "postReportId")
@@ -62,10 +70,6 @@ public class Notification {
     @OneToOne
     @JoinColumn(name = "replyAppealId")
     private ReplyAppeal replyAppeal;
-
-    @OneToOne
-    @JoinColumn(name = "badgeId")
-    private Badge badge;
 
     @PrePersist
     protected void onCreate() {

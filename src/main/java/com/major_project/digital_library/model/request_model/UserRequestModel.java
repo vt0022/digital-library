@@ -24,8 +24,6 @@ public class UserRequestModel implements Serializable {
 
     private int gender;
 
-    private String phone;
-
     private String email;
 
     private String password;

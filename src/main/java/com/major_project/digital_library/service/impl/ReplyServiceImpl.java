@@ -8,10 +8,7 @@ import com.major_project.digital_library.entity.User;
 import com.major_project.digital_library.model.lean_model.BadgeLeanModel;
 import com.major_project.digital_library.model.request_model.ReplyRequestModel;
 import com.major_project.digital_library.model.response_model.ReplyResponseModel;
-import com.major_project.digital_library.repository.IPostRepository;
-import com.major_project.digital_library.repository.IReplyHistoryRepository;
-import com.major_project.digital_library.repository.IReplyLikeRepository;
-import com.major_project.digital_library.repository.IReplyRepository;
+import com.major_project.digital_library.repository.*;
 import com.major_project.digital_library.service.IBadgeService;
 import com.major_project.digital_library.service.INotificationService;
 import com.major_project.digital_library.service.IReplyService;
@@ -23,6 +20,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.sql.Timestamp;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -33,18 +31,20 @@ public class ReplyServiceImpl implements IReplyService {
     private final IReplyLikeRepository replyLikeRepository;
     private final IPostRepository postRepository;
     private final IReplyHistoryRepository replyHistoryRepository;
+    private final IUserRepository userRepository;
     private final IUserService userService;
     private final IBadgeService badgeService;
     private final INotificationService notificationService;
     private final ModelMapper modelMapper;
 
     @Autowired
-    public ReplyServiceImpl(IReplyRepository replyRepository, IUserService userService, IReplyLikeRepository replyLikeRepository, IPostRepository postRepository, IReplyHistoryRepository replyHistoryRepository, IBadgeService badgeService, INotificationService notificationService, ModelMapper modelMapper) {
+    public ReplyServiceImpl(IReplyRepository replyRepository, IUserService userService, IReplyLikeRepository replyLikeRepository, IPostRepository postRepository, IReplyHistoryRepository replyHistoryRepository, IUserRepository userRepository, IBadgeService badgeService, INotificationService notificationService, ModelMapper modelMapper) {
         this.replyRepository = replyRepository;
         this.userService = userService;
         this.replyLikeRepository = replyLikeRepository;
         this.postRepository = postRepository;
         this.replyHistoryRepository = replyHistoryRepository;
+        this.userRepository = userRepository;
         this.badgeService = badgeService;
         this.notificationService = notificationService;
         this.modelMapper = modelMapper;
@@ -112,7 +112,7 @@ public class ReplyServiceImpl implements IReplyService {
     public ReplyResponseModel addReply(UUID postId, ReplyRequestModel replyRequestModel) {
         Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
 
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not logged in"));
+        User user = userService.findLoggedInUser();
 
         Reply parentReply = replyRequestModel.getParentReplyId() == null ? null : replyRepository.findById(replyRequestModel.getParentReplyId()).orElse(null);
 
@@ -134,7 +134,7 @@ public class ReplyServiceImpl implements IReplyService {
 
     @Override
     public ReplyResponseModel editReply(UUID replyId, Map<String, String> replyContent) {
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not logged in"));
+        User user = userService.findLoggedInUser();
         Reply reply = replyRepository.findById(replyId).orElseThrow(() -> new RuntimeException("Reply not found"));
 
         if (!reply.getUser().getUserId().equals(user.getUserId()) && !user.getRole().getRoleName().equals("ROLE_ADMIN"))
@@ -145,6 +145,7 @@ public class ReplyServiceImpl implements IReplyService {
         replyHistoryRepository.save(replyHistory);
 
         reply.setContent(replyContent.get("content"));
+        reply.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
         replyRepository.save(reply);
 
         ReplyResponseModel replyResponseModel = modelMapper.map(reply, ReplyResponseModel.class);
@@ -153,7 +154,7 @@ public class ReplyServiceImpl implements IReplyService {
 
     @Override
     public boolean deleteReply(UUID replyId) {
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not logged in"));
+        User user = userService.findLoggedInUser();
         Reply reply = replyRepository.findById(replyId).orElseThrow(() -> new RuntimeException("Reply not found"));
 
         if (!reply.getUser().getUserId().equals(user.getUserId()) && !user.getRole().getRoleName().equals("ROLE_ADMIN"))
@@ -166,7 +167,7 @@ public class ReplyServiceImpl implements IReplyService {
 
     @Override
     public Page<ReplyResponseModel> getViewableRepliesOfUser(UUID userId, int page, int size) {
-        User user = userService.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
 
         Pageable pageable = PageRequest.of(page, size);
         Page<Reply> replies = replyRepository.findViewableRepliesByUser(user, pageable);
@@ -178,7 +179,7 @@ public class ReplyServiceImpl implements IReplyService {
 
     @Override
     public Page<ReplyResponseModel> getAllRepliesOfUser(UUID userId, int page, int size) {
-        User user = userService.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
 
         Pageable pageable = PageRequest.of(page, size);
         Page<Reply> replies = replyRepository.findAllByUserOrderByCreatedAtDesc(user, pageable);
@@ -202,7 +203,7 @@ public class ReplyServiceImpl implements IReplyService {
     }
 
     private ReplyResponseModel convertToReplyModel(Reply reply) {
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not logged in"));
+        User user = userService.findLoggedInUser();
         boolean isLiked = replyLikeRepository.existsByUserAndReply(user, reply);
         boolean isMy = reply.getUser().getUserId().equals(user.getUserId());
         BadgeLeanModel badge = badgeService.findBestBadge(reply.getUser().getUserId());

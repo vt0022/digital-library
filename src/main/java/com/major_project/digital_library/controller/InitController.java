@@ -2,12 +2,13 @@ package com.major_project.digital_library.controller;
 
 import com.major_project.digital_library.constant.BadgeUnit;
 import com.major_project.digital_library.constant.NotificationMessage;
+import com.major_project.digital_library.entity.Collection;
 import com.major_project.digital_library.entity.*;
 import com.major_project.digital_library.model.FileModel;
 import com.major_project.digital_library.model.response_model.ResponseModel;
 import com.major_project.digital_library.repository.*;
 import com.major_project.digital_library.service.*;
-import com.major_project.digital_library.util.GoogleDriveUpload;
+import com.major_project.digital_library.service.other.GoogleDriveService;
 import com.major_project.digital_library.util.SlugGenerator;
 import com.major_project.digital_library.yake.TagExtractor;
 import org.apache.commons.io.IOUtils;
@@ -30,10 +31,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.Timestamp;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -51,6 +50,7 @@ public class InitController {
     private final ISaveService saveService;
     private final ISaveRepository saveRepository;
     private final IReviewService reviewService;
+    private final IDocumentRepository documentRepository;
     private final IDocumentLikeService favoriteService;
     private final IDocumentLikeRepository documentLikeRepository;
     private final IRecencyService recencyService;
@@ -62,25 +62,29 @@ public class InitController {
     private final INotificationRepository notificationRepository;
     private final IReplyService replyService;
     private final IPostService postService;
+    private final IReviewRepository reviewRepository;
     private final IReplyLikeService replyLikeService;
     private final ISubsectionRepository subsectionRepository;
     private final ISectionRepository sectionRepository;
     private final ILabelRepository labelRepository;
     private final IBadgeTypeRepository badgeTypeRepository;
     private final IBadgeRepository badgeRepository;
-    private final GoogleDriveUpload googleDriveUpload;
+    private final GoogleDriveService googleDriveService;
     private final ModelMapper modelMapper;
     private final SlugGenerator slugGenerator;
-    private final IUserRepositoty userRepositoty;
+    private final IUserRepository userRepositoty;
     private final IBadgeRewardRepository badgeRewardRepository;
     private final ITagRepository tagRepository;
     private final IPostRepository postRepository;
     private final ICollectionRepository collectionRepository;
     private final ICollectionDocumentRepository collectionDocumentRepository;
+    private final IPostHistoryRepository postHistoryRepository;
+    private final IReplyHistoryRepository replyHistoryRepository;
+    private final IUserRepository userRepository;
     private final TagExtractor tagExtractor;
 
     @Autowired
-    public InitController(IUserService userService, IDocumentService documentService, IFieldService fieldService, ICategoryService categoryService, IOrganizationService organizationService, IRoleService roleService, ISaveService saveService, ISaveRepository saveRepository, IReviewService reviewService, IDocumentLikeService favoriteService, IDocumentLikeRepository documentLikeRepository, IRecencyService recencyService, IRecencyRepository recencyRepository, IPostLikeService postLikeService, IPostLikeRepository postLikeRepository, IReplyLikeRepository replyLikeRepository, IReplyRepository replyRepository, INotificationRepository notificationRepository, IReplyService replyService, IPostService postService, IReplyLikeService replyLikeService, ISubsectionRepository subsectionRepository, ISectionRepository sectionRepository, ILabelRepository labelRepository, IBadgeTypeRepository badgeTypeRepository, IBadgeRepository badgeRepository, GoogleDriveUpload googleDriveUpload, ModelMapper modelMapper, SlugGenerator slugGenerator, IUserRepositoty userRepositoty, IBadgeRewardRepository badgeRewardRepository, ITagRepository tagRepository, IPostRepository postRepository, ICollectionRepository collectionRepository, ICollectionDocumentRepository collectionDocumentRepository, TagExtractor tagExtractor) {
+    public InitController(IUserService userService, IDocumentService documentService, IFieldService fieldService, ICategoryService categoryService, IOrganizationService organizationService, IRoleService roleService, ISaveService saveService, ISaveRepository saveRepository, IReviewService reviewService, IDocumentRepository documentRepository, IDocumentLikeService favoriteService, IDocumentLikeRepository documentLikeRepository, IRecencyService recencyService, IRecencyRepository recencyRepository, IPostLikeService postLikeService, IPostLikeRepository postLikeRepository, IReplyLikeRepository replyLikeRepository, IReplyRepository replyRepository, INotificationRepository notificationRepository, IReplyService replyService, IPostService postService, IReviewRepository reviewRepository, IReplyLikeService replyLikeService, ISubsectionRepository subsectionRepository, ISectionRepository sectionRepository, ILabelRepository labelRepository, IBadgeTypeRepository badgeTypeRepository, IBadgeRepository badgeRepository, GoogleDriveService googleDriveService, ModelMapper modelMapper, SlugGenerator slugGenerator, IUserRepository userRepositoty, IBadgeRewardRepository badgeRewardRepository, ITagRepository tagRepository, IPostRepository postRepository, ICollectionRepository collectionRepository, ICollectionDocumentRepository collectionDocumentRepository, IPostHistoryRepository postHistoryRepository, IReplyHistoryRepository replyHistoryRepository, IUserRepository userRepository, TagExtractor tagExtractor) {
         this.userService = userService;
         this.documentService = documentService;
         this.fieldService = fieldService;
@@ -90,6 +94,7 @@ public class InitController {
         this.saveService = saveService;
         this.saveRepository = saveRepository;
         this.reviewService = reviewService;
+        this.documentRepository = documentRepository;
         this.favoriteService = favoriteService;
         this.documentLikeRepository = documentLikeRepository;
         this.recencyService = recencyService;
@@ -101,13 +106,14 @@ public class InitController {
         this.notificationRepository = notificationRepository;
         this.replyService = replyService;
         this.postService = postService;
+        this.reviewRepository = reviewRepository;
         this.replyLikeService = replyLikeService;
         this.subsectionRepository = subsectionRepository;
         this.sectionRepository = sectionRepository;
         this.labelRepository = labelRepository;
         this.badgeTypeRepository = badgeTypeRepository;
         this.badgeRepository = badgeRepository;
-        this.googleDriveUpload = googleDriveUpload;
+        this.googleDriveService = googleDriveService;
         this.modelMapper = modelMapper;
         this.slugGenerator = slugGenerator;
         this.userRepositoty = userRepositoty;
@@ -116,6 +122,9 @@ public class InitController {
         this.postRepository = postRepository;
         this.collectionRepository = collectionRepository;
         this.collectionDocumentRepository = collectionDocumentRepository;
+        this.postHistoryRepository = postHistoryRepository;
+        this.replyHistoryRepository = replyHistoryRepository;
+        this.userRepository = userRepository;
         this.tagExtractor = tagExtractor;
     }
 
@@ -155,14 +164,14 @@ public class InitController {
                         docFile.getName(), "application/pdf", IOUtils.toByteArray(input));
                 try {
                     // Upload file document
-                    FileModel gd = googleDriveUpload.uploadFile(multipartFile, docFile.getName(), null, null);
+                    FileModel gd = googleDriveService.uploadFile(multipartFile, docFile.getName(), null, null);
 
                     // Find
                     Category category = categoryService.findById(categoryId).orElse(null);
                     Field field = fieldService.findById(fieldId).orElse(null);
                     Organization organization = organizationService.findById(orgId).orElse(null);
-                    User userUploaded = userService.findById(uploadedBy).orElse(null);
-                    User userVerified = userService.findById(verifiedBy).orElse(null);
+                    User userUploaded = userRepository.findById(uploadedBy).orElse(null);
+                    User userVerified = userRepository.findById(verifiedBy).orElse(null);
 
                     // Map
                     Document document = modelMapper.map(gd, Document.class);
@@ -181,7 +190,7 @@ public class InitController {
                     int randomNumber = random.nextInt(191) + 10;
                     document.setTotalView(randomNumber);
 
-                    documentService.save(document);
+                    documentRepository.save(document);
                 } catch (Exception e) {
                     System.out.println(docFile.getName());
                 }
@@ -243,7 +252,6 @@ public class InitController {
                     user.setEmail(email);
                     user.setPassword(password);
                     user.setDateOfBirth(dOB);
-                    user.setPhone(phone);
                     user.setGender(gender);
                     user.setOrganization(organization);
                     user.setRole(role);
@@ -286,7 +294,7 @@ public class InitController {
                 String password = formatter.formatCellValue(passwordCell);
 
                 try {
-                    User user = userService.findByEmail(email).orElse(null);
+                    User user = userRepository.findByEmail(email).orElse(null);
                     user.setPassword(password);
 
                     userService.save(user);
@@ -309,7 +317,7 @@ public class InitController {
     @PutMapping("/auth/123")
     public ResponseEntity<?> refactorUserImage() throws IOException {
         Pageable pageable = PageRequest.of(0, 1000);
-        List<User> users = userService.findAll(pageable).getContent();
+        List<User> users = userRepository.findAll(pageable).getContent();
 
         for (User user : users) {
             if (user.getImage() != null) {
@@ -329,7 +337,7 @@ public class InitController {
     @PutMapping("/auth/456")
     public ResponseEntity<?> refactorDoc() throws IOException {
         Pageable pageable = PageRequest.of(0, 1000);
-        List<Document> documents = documentService.findAll();
+        List<Document> documents = documentRepository.findAll();
 
         for (Document document : documents) {
             if (document.getThumbnail() != null) {
@@ -337,7 +345,7 @@ public class InitController {
                 String id = getId(document.getViewUrl());
                 document.setThumbnail(url);
                 document.setViewUrl("https://drive.google.com/file/d/" + id + "/preview");
-                documentService.save(document);
+                documentRepository.save(document);
             }
         }
 
@@ -371,8 +379,8 @@ public class InitController {
                 DocumentLike documentLike = new DocumentLike();
                 try {
 
-                    User user = userService.findById(userId).orElse(null);
-                    Document document = documentService.findById(docId).orElse(null);
+                    User user = userRepository.findById(userId).orElse(null);
+                    Document document = documentRepository.findById(docId).orElse(null);
 
                     documentLike.setDocument(document);
                     documentLike.setUser(user);
@@ -421,8 +429,8 @@ public class InitController {
                 Review review = new Review();
                 try {
 
-                    User user = userService.findById(userId).orElse(null);
-                    Document document = documentService.findById(docId).orElse(null);
+                    User user = userRepository.findById(userId).orElse(null);
+                    Document document = documentRepository.findById(docId).orElse(null);
 
                     review.setUser(user);
                     review.setDocument(document);
@@ -469,8 +477,8 @@ public class InitController {
                 Save save = new Save();
                 try {
 
-                    User user = userService.findById(userId).orElse(null);
-                    Document document = documentService.findById(docId).orElse(null);
+                    User user = userRepository.findById(userId).orElse(null);
+                    Document document = documentRepository.findById(docId).orElse(null);
 
                     save.setDocument(document);
                     save.setUser(user);
@@ -517,8 +525,8 @@ public class InitController {
                 Recency recency = new Recency();
                 try {
 
-                    User user = userService.findById(userId).orElse(null);
-                    Document document = documentService.findById(docId).orElse(null);
+                    User user = userRepository.findById(userId).orElse(null);
+                    Document document = documentRepository.findById(docId).orElse(null);
 
                     recency.setDocument(document);
                     recency.setAccessedAt(accessedAt);
@@ -571,7 +579,7 @@ public class InitController {
 
                 Post post = new Post();
                 try {
-                    User user = userService.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+                    User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
                     Subsection subsection = subsectionRepository.findById(subId).orElseThrow(() -> new RuntimeException("Subsection not found"));
                     Label label = labelId == null ? null : labelRepository.findById(labelId).orElseThrow(() -> new RuntimeException("Label not found"));
 
@@ -645,7 +653,7 @@ public class InitController {
 
                 Reply reply = new Reply();
                 try {
-                    User userReply = userService.findById(userReplyId).orElseThrow(() -> new RuntimeException("User not found"));
+                    User userReply = userRepository.findById(userReplyId).orElseThrow(() -> new RuntimeException("User not found"));
                     Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
 
                     reply.setReplyId(id);
@@ -734,7 +742,7 @@ public class InitController {
 
                 try {
                     Reply reply = replyService.findById(replyId).orElseThrow(() -> new RuntimeException("Reply not found"));
-                    User user = userService.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+                    User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
 
                     ReplyLike replyLike = new ReplyLike();
                     replyLike.setReply(reply);
@@ -780,7 +788,7 @@ public class InitController {
 
                 try {
                     Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
-                    User user = userService.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+                    User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
 
                     PostLike postLike = new PostLike();
                     postLike.setPost(post);
@@ -1134,7 +1142,7 @@ public class InitController {
 
     @PostMapping("/tags/document")
     public ResponseEntity<?> addTagsForDocument() {
-        List<Document> documents = documentService.findAll();
+        List<Document> documents = documentRepository.findAll();
         for (Document document : documents) {
             try {
                 List<String> keywords = tagExtractor.findKeywords(document.getDocName().concat(". ").concat(document.getDocIntroduction()));
@@ -1151,7 +1159,7 @@ public class InitController {
 
                     if (!document.getTags().contains(tag)) {
                         document.getTags().add(tag);
-                        documentService.save(document);
+                        documentRepository.save(document);
                     }
                 }
             } catch (Exception e) {
@@ -1168,11 +1176,11 @@ public class InitController {
 
     @PostMapping("/document/share")
     public ResponseEntity<?> refactorShare() {
-        List<Document> documents = documentService.findAll();
+        List<Document> documents = documentRepository.findAll();
         for (Document document : documents) {
             if (document.getUserUploaded().getRole().getRoleName().equals("ROLE_STUDENT")) {
                 document.setContributed(true);
-                documentService.save(document);
+                documentRepository.save(document);
             }
         }
 
@@ -1223,7 +1231,7 @@ public class InitController {
                 UUID userId = UUID.fromString(formatter.formatCellValue(cellUser));
 
                 try {
-                    User user = userService.findById(userId).orElse(null);
+                    User user = userRepository.findById(userId).orElse(null);
 
                     Collection collection = new Collection();
                     collection.setCollectionName(name);
@@ -1268,7 +1276,7 @@ public class InitController {
 
                 try {
                     Collection collection = collectionRepository.findById(collectionId).orElse(null);
-                    Document document = documentService.findById(docId).orElse(null);
+                    Document document = documentRepository.findById(docId).orElse(null);
 
                     CollectionDocument collectionDocument = new CollectionDocument();
                     collectionDocument.setCollection(collection);
@@ -1297,53 +1305,296 @@ public class InitController {
         List<ReplyLike> replyLikes = replyLikeRepository.findAll();
         List<Reply> replies = replyRepository.findAll();
         List<User> users = userRepositoty.findAll().stream().filter(u -> u.getRole().getRoleName().equals("ROLE_STUDENT")).collect(Collectors.toList());
-        List<Badge> badges = badgeRepository.findAll();
+        List<BadgeReward> badges = badgeRewardRepository.findAll();
+        List<Review> reviews = reviewRepository.findAll();
+        List<Document> documents = documentRepository.findAll();
 
         for (PostLike postLike : postLikes) {
-            Notification notification = new Notification();
-            notification.setPost(postLike.getPost());
-            notification.setSender(postLike.getUser());
-            notification.setRecipient(postLike.getPost().getUserPosted());
-            notification.setSentAt(postLike.getLikedAt());
-            notification.setType(NotificationMessage.LIKE_POST.name());
-            notification.setMessage(NotificationMessage.LIKE_POST.getMessage());
-            notificationRepository.save(notification);
+            if (!postLike.getUser().getUserId().equals(postLike.getPost().getUserPosted().getUserId())) {
+                Notification notification = new Notification();
+                notification.setPost(postLike.getPost());
+                notification.setSender(postLike.getUser());
+                notification.setRecipient(postLike.getPost().getUserPosted());
+                notification.setSentAt(postLike.getLikedAt());
+                notification.setType(NotificationMessage.LIKE_POST.name());
+                notification.setMessage(NotificationMessage.LIKE_POST.getMessage());
+                notificationRepository.save(notification);
+            }
         }
         for (ReplyLike replyLike : replyLikes) {
-            Notification notification = new Notification();
-            notification.setReply(replyLike.getReply());
-            notification.setSender(replyLike.getUser());
-            notification.setRecipient(replyLike.getReply().getUser());
-            notification.setSentAt(replyLike.getLikedAt());
-            notification.setType(NotificationMessage.LIKE_REPLY.name());
-            notification.setMessage(NotificationMessage.LIKE_REPLY.getMessage());
-            notificationRepository.save(notification);
+            if (!replyLike.getUser().getUserId().equals(replyLike.getReply().getUser().getUserId())) {
+                Notification notification = new Notification();
+                notification.setReply(replyLike.getReply());
+                notification.setSender(replyLike.getUser());
+                notification.setRecipient(replyLike.getReply().getUser());
+                notification.setSentAt(replyLike.getLikedAt());
+                notification.setType(NotificationMessage.LIKE_REPLY.name());
+                notification.setMessage(NotificationMessage.LIKE_REPLY.getMessage());
+                notificationRepository.save(notification);
+            }
         }
         for (Reply reply : replies) {
+            if (!reply.getUser().getUserId().equals(reply.getPost().getUserPosted().getUserId())) {
+                Notification notification = new Notification();
+                notification.setReply(reply);
+                notification.setSender(reply.getUser());
+                notification.setRecipient(reply.getPost().getUserPosted());
+                notification.setSentAt(reply.getCreatedAt());
+                notification.setType(NotificationMessage.REPLY.name());
+                notification.setMessage(NotificationMessage.REPLY.getMessage());
+                notificationRepository.save(notification);
+            }
+        }
+        for (BadgeReward badge : badges) {
             Notification notification = new Notification();
-            notification.setReply(reply);
-            notification.setSender(reply.getUser());
-            notification.setRecipient(reply.getPost().getUserPosted());
-            notification.setSentAt(reply.getCreatedAt());
-            notification.setType(NotificationMessage.REPLY.name());
-            notification.setMessage(NotificationMessage.REPLY.getMessage());
+            notification.setBadge(badge.getBadge());
+            notification.setSender(null);
+            notification.setRecipient(badge.getUser());
+            notification.setSentAt(badge.getRewardedAt());
+            notification.setType(NotificationMessage.REWARD_BADGE.name());
+            notification.setMessage(NotificationMessage.REWARD_BADGE.getMessage());
             notificationRepository.save(notification);
         }
-//        for (Badge badge : badges) {
-//            Notification notification = new Notification();
-//            notification.setReply(badge);
-//            notification.setSender(reply.getUser());
-//            notification.setRecipient(reply.getPost().getUserPosted());
-//            notification.setSentAt(reply.getCreatedAt());
-//            notification.setType(NotificationMessage.REPLY.name());
-//            notification.setMessage(NotificationMessage.REPLY.getMessage());
-//            notificationRepository.save(notification);
-//        }
+        for (Document document : documents) {
+            if (document.getVerifiedStatus() != 0) {
+                Notification notification = new Notification();
+                notification.setDocument(document);
+                notification.setSender(document.getUserVerified());
+                notification.setRecipient(document.getUserUploaded());
+                notification.setSentAt(document.getVerifiedAt());
+                if (document.getVerifiedStatus() == 1) {
+                    notification.setType(NotificationMessage.ACCEPT_DOCUMENT.name());
+                    notification.setMessage(NotificationMessage.ACCEPT_DOCUMENT.getMessage());
+                } else {
+                    notification.setType(NotificationMessage.REJECT_DOCUMENT.name());
+                    notification.setMessage(NotificationMessage.REJECT_DOCUMENT.getMessage());
+                }
+                notificationRepository.save(notification);
+            }
+        }
+        for (Review review : reviews) {
+            if (review.getVerifiedStatus() != 0) {
+                Notification notification = new Notification();
+                notification.setReview(review);
+                notification.setSender(review.getUserVerified());
+                notification.setRecipient(review.getUser());
+                notification.setSentAt(review.getVerifiedAt());
+                if (review.getVerifiedStatus() == 1) {
+                    notification.setType(NotificationMessage.ACCEPT_REVIEW.name());
+                    notification.setMessage(NotificationMessage.ACCEPT_REVIEW.getMessage());
+                } else {
+                    notification.setType(NotificationMessage.REJECT_REVIEW.name());
+                    notification.setMessage(NotificationMessage.REJECT_REVIEW.getMessage());
+                }
+                notificationRepository.save(notification);
+            }
+        }
 
         return ResponseEntity.ok(ResponseModel.builder()
                 .status(200)
                 .error(false)
                 .message("Init notifications successfully")
+                .build());
+    }
+
+    @PostMapping("/post_reply_updated")
+    public ResponseEntity<?> resetPostAndReplyUpdated() {
+        List<Post> posts = postRepository.findAll();
+        List<Reply> replies = replyRepository.findAll();
+
+//        for (Post post : posts) {
+//            if (post.getPostHistories().isEmpty()) {
+//                post.setUpdatedAt(null);
+//                postRepository.save(post);
+//            } else {
+//                for (PostHistory postHistory : post.getPostHistories()) {
+//                    if (postHistory.getLoggedAt().before(post.getCreatedAt())) {
+//                        long minOffset = 1 * 24 * 60 * 60 * 1000; // 1 ngày
+//                        long maxOffset = 10 * 24 * 60 * 60 * 1000; // 10 ngày
+//                        // Tạo khoảng thời gian ngẫu nhiên trong khoảng từ minOffset đến maxOffset
+//                        long randomOffset = ThreadLocalRandom.current().nextLong(minOffset, maxOffset + 1);
+//
+//                        postHistory.setLoggedAt(new Timestamp(post.getCreatedAt().getTime() + randomOffset));
+//                        postHistoryRepository.save(postHistory);
+//                    }
+//                }
+//                PostHistory latestP = post.getPostHistories().stream()
+//                        .max(Comparator.comparing(PostHistory::getLoggedAt)).get();
+//                post.setUpdatedAt(latestP.getLoggedAt());
+//                postRepository.save(post);
+//            }
+//        }
+//
+//        for (Post post : posts) {
+//            if (!post.getReplies().isEmpty()) {
+//                List<Reply> sortedReplyList = post.getReplies().stream()
+//                        .sorted(Comparator.comparing(Reply::getCreatedAt))
+//                        .collect(Collectors.toList());
+//                Reply earliestReply = sortedReplyList.get(0);
+//                for (Reply sortedReply : sortedReplyList) {
+//                    sortedReply.setCreatedAt(new Timestamp(post.getCreatedAt().getTime()
+//                            + (sortedReply.getCreatedAt().getTime()
+//                            - earliestReply.getCreatedAt().getTime())));
+//
+//                    if (sortedReply.getReplyHistories().isEmpty()) {
+//                        sortedReply.setUpdatedAt(null);
+//                    }
+//                    replyRepository.save(sortedReply);
+//                }
+//            }
+//        }
+
+        for (Reply reply : replies) {
+            if (reply.getReplyHistories().isEmpty()) {
+                reply.setUpdatedAt(null);
+                replyRepository.save(reply);
+            } else {
+                for (ReplyHistory replyHistory : reply.getReplyHistories()) {
+                    if (replyHistory.getLoggedAt().before(reply.getCreatedAt())) {
+                        long minOffset = 1 * 24 * 60 * 60 * 1000; // 1 ngày
+                        long maxOffset = 10 * 24 * 60 * 60 * 1000; // 10 ngày
+                        // Tạo khoảng thời gian ngẫu nhiên trong khoảng từ minOffset đến maxOffset
+                        long randomOffset = ThreadLocalRandom.current().nextLong(minOffset, maxOffset + 1);
+
+                        replyHistory.setLoggedAt(new Timestamp(reply.getCreatedAt().getTime() + randomOffset));
+                        replyHistoryRepository.save(replyHistory);
+                    }
+                }
+                ReplyHistory latestP = reply.getReplyHistories().stream()
+                        .max(Comparator.comparing(ReplyHistory::getLoggedAt)).get();
+                reply.setUpdatedAt(latestP.getLoggedAt());
+                replyRepository.save(reply);
+            }
+        }
+
+        return ResponseEntity.ok(ResponseModel.builder()
+                .status(200)
+                .error(false)
+                .message("Reset updated successfully")
+                .build());
+    }
+
+    @PostMapping("/post_likes_time")
+    public ResponseEntity<?> initPostLikesTime() {
+        List<Post> posts = postRepository.findAll();
+
+        for (Post post : posts) {
+            if (!post.getPostLikes().isEmpty()) {
+                for (PostLike postLike : post.getPostLikes()) {
+                    long minOffset = 1 * 24 * 60 * 60 * 1000; // 1 ngày
+                    long maxOffset = 10 * 24 * 60 * 60 * 1000; // 10 ngày
+                    // Tạo khoảng thời gian ngẫu nhiên trong khoảng từ minOffset đến maxOffset
+                    long randomOffset = ThreadLocalRandom.current().nextLong(minOffset, maxOffset + 1);
+
+                    postLike.setLikedAt(new Timestamp(post.getCreatedAt().getTime() + randomOffset));
+                    postLikeRepository.save(postLike);
+                }
+            }
+        }
+
+        return ResponseEntity.ok(ResponseModel.builder()
+                .status(200)
+                .error(false)
+                .message("Reset post like times successfully")
+                .build());
+    }
+
+    @PostMapping("/reply_likes_time")
+    public ResponseEntity<?> initReplyLikesTime() {
+        List<Reply> replies = replyRepository.findAll();
+
+        for (Reply post : replies) {
+            if (!post.getReplyLikes().isEmpty()) {
+                for (ReplyLike replyLike : post.getReplyLikes()) {
+                    long minOffset = 1 * 24 * 60 * 60 * 1000; // 1 ngày
+                    long maxOffset = 10 * 24 * 60 * 60 * 1000; // 10 ngày
+                    // Tạo khoảng thời gian ngẫu nhiên trong khoảng từ minOffset đến maxOffset
+                    long randomOffset = ThreadLocalRandom.current().nextLong(minOffset, maxOffset + 1);
+
+                    replyLike.setLikedAt(new Timestamp(post.getCreatedAt().getTime() + randomOffset));
+                    replyLikeRepository.save(replyLike);
+                }
+            }
+        }
+
+        return ResponseEntity.ok(ResponseModel.builder()
+                .status(200)
+                .error(false)
+                .message("Reset reply like times successfully")
+                .build());
+    }
+
+    @PostMapping("/document_verified_time")
+    public ResponseEntity<?> initDocVerifiedTime() {
+        List<Document> documents = documentRepository.findAll();
+
+        for (Document document : documents) {
+            if (document.getUserUploaded().getRole().getRoleName().equals("ROLE_STUDENT")) {
+                if (document.getVerifiedStatus() != 0) {
+                    long minOffset = 1 * 1 * 60 * 60 * 1000; // 1 giờ
+                    long maxOffset = 2 * 24 * 60 * 60 * 1000; // 2 ngày
+                    // Tạo khoảng thời gian ngẫu nhiên trong khoảng từ minOffset đến maxOffset
+                    long randomOffset = ThreadLocalRandom.current().nextLong(minOffset, maxOffset + 1);
+
+                    document.setVerifiedAt(new Timestamp(document.getUploadedAt().getTime() + randomOffset));
+                } else {
+                    document.setVerifiedAt(null);
+                    document.setUserVerified(null);
+                }
+            } else {
+                document.setVerifiedAt(new Timestamp(document.getUploadedAt().getTime() + 10000));
+                document.setUserVerified(document.getUserUploaded());
+            }
+            documentRepository.save(document);
+        }
+
+        return ResponseEntity.ok(ResponseModel.builder()
+                .status(200)
+                .error(false)
+                .message("Init doc verified successfully")
+                .build());
+    }
+
+    @PostMapping("/review_verified_time")
+    public ResponseEntity<?> initReviewVerifiedTime() {
+        List<Review> reviews = reviewRepository.findAll();
+
+        // Thiết lập createdAt cho từng review
+        for (Review review : reviews) {
+            long minOffset = 2 * 24 * 60 * 60 * 1000L; // 2 ngày
+            long maxOffset = 30 * 24 * 60 * 60 * 1000L; // 30 ngày
+            long randomOffset = ThreadLocalRandom.current().nextLong(minOffset, maxOffset + 1);
+            review.setCreatedAt(new Timestamp(review.getDocument().getUploadedAt().getTime() + randomOffset));
+            reviewRepository.save(review);
+        }
+
+        // Thiết lập updatedAt cho từng review
+        for (Review review : reviews) {
+            long minOffset = 12 * 60 * 60 * 1000L; // 12 giờ
+            long maxOffset = 10 * 24 * 60 * 60 * 1000L; // 10 ngày
+            long randomOffset = ThreadLocalRandom.current().nextLong(minOffset, maxOffset + 1);
+            review.setUpdatedAt(new Timestamp(review.getCreatedAt().getTime() + randomOffset));
+            reviewRepository.save(review);
+        }
+
+        // Thiết lập verifiedAt cho từng review dựa trên verifiedStatus
+        for (Review review : reviews) {
+            if (review.getVerifiedStatus() != 0) {
+                long minOffset = 1 * 60 * 60 * 1000L; // 1 giờ
+                long maxOffset = 2 * 24 * 60 * 60 * 1000L; // 2 ngày
+                long randomOffset = ThreadLocalRandom.current().nextLong(minOffset, maxOffset + 1);
+                review.setVerifiedAt(new Timestamp(review.getUpdatedAt().getTime() + randomOffset));
+            } else {
+                review.setVerifiedAt(null);
+                review.setUserVerified(null);
+            }
+            reviewRepository.save(review);
+        }
+
+        return ResponseEntity.ok(ResponseModel.builder()
+                .status(200)
+                .error(false)
+                .message("Init doc verified successfully")
                 .build());
     }
 

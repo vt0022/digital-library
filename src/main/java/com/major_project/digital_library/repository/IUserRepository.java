@@ -15,27 +15,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface IUserRepositoty extends JpaRepository<User, UUID> {
-
+public interface IUserRepository extends JpaRepository<User, UUID> {
     Optional<User> findByEmail(String email);
-
-    Optional<User> findByEmailAndIsDeleted(String email, boolean isDeleted);
-
-    @Query("SELECT u FROM User u WHERE MONTH(u.createdAt) = MONTH(CURRENT_DATE) AND YEAR(u.createdAt) = YEAR(CURRENT_DATE) ORDER BY u.createdAt DESC")
-    Page<User> findLatestUsers(Pageable pageable);
-
-    @Query("SELECT u FROM User u " +
-            "WHERE MONTH(u.createdAt) = MONTH(CURRENT_DATE) " +
-            "AND YEAR(u.createdAt) = YEAR(CURRENT_DATE) " +
-            "AND u.organization = :organization " +
-            "AND u.role.roleName <> 'ROLE_MANAGER' " +
-            "ORDER BY u.createdAt DESC")
-    Page<User> findLatestUsersByOrganization(Organization organization, Pageable pageable);
-
-    @Query("SELECT u FROM User u " +
-            "WHERE u.organization = :organization " +
-            "AND u.role.roleName <> 'ROLE_MANAGER'")
-    Page<User> findByOrganization(Organization organization, Pageable pageable);
 
     long countByCreatedAtBetween(Timestamp startDate, Timestamp endDate);
 
@@ -55,7 +36,7 @@ public interface IUserRepositoty extends JpaRepository<User, UUID> {
     List<Object[]> countUsersByOrganizationAndDateRange(Timestamp startDate, Timestamp endDate);
 
     @Query("SELECT u FROM User u " +
-            "WHERE (u.isDeleted = :isDeleted OR :isDeleted IS NULL) " +
+            "WHERE (u.isDisabled = :isDisabled OR :isDisabled IS NULL) " +
             "AND (u.gender = :gender OR :gender IS NULL) " +
             "AND (u.organization = :organization OR :organization IS NULL) " +
             "AND (u.role = :role OR :role IS NULL) " +
@@ -63,10 +44,10 @@ public interface IUserRepositoty extends JpaRepository<User, UUID> {
             "AND (LOWER(u.firstName) LIKE LOWER(CONCAT('%', :query, '%')) " +
             "OR LOWER(u.lastName) LIKE LOWER(CONCAT('%', :query, '%')) " +
             "OR LOWER(u.email) LIKE LOWER(CONCAT('%', :query, '%')))")
-    Page<User> searchUsers(Boolean isDeleted, Integer gender, Organization organization, Role role, String roleName, String query, Pageable pageable);
+    Page<User> findUsers(Boolean isDisabled, Integer gender, Organization organization, Role role, String roleName, String query, Pageable pageable);
 
     @Query("SELECT u FROM User u " +
-            "WHERE (u.isDeleted = :isDeleted OR :isDeleted IS NULL) " +
+            "WHERE (u.isDisabled = :isDisabled OR :isDisabled IS NULL) " +
             "AND (u.gender = :gender OR :gender IS NULL) " +
             "AND (u.organization = :organization OR :organization IS NULL) " +
             "AND (u.role = :role OR :role IS NULL) " +
@@ -76,7 +57,7 @@ public interface IUserRepositoty extends JpaRepository<User, UUID> {
             "OR LOWER(u.email) LIKE LOWER(CONCAT('%', :query, '%'))) " +
             "AND MONTH(u.createdAt) = MONTH(CURRENT_DATE) " +
             "AND YEAR(u.createdAt) = YEAR(CURRENT_DATE)")
-    Page<User> searchLatestUsers(Boolean isDeleted, Integer gender, Organization organization, Role role, String roleName, String query, Pageable pageable);
+    Page<User> findLatestUsers(Boolean isDisabled, Integer gender, Organization organization, Role role, String roleName, String query, Pageable pageable);
 
     @Query("SELECT MONTH(u.createdAt) as month, COUNT(u) as count " +
             "FROM User u " +

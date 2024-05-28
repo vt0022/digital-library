@@ -58,7 +58,7 @@ public class PostAppealServiceImpl implements IPostAppealService {
     @Override
     public PostAppealResponseModel appealPost(PostAppealRequestModel postAppealRequestModel) {
         PostReport postReport = postReportRepository.findById(postAppealRequestModel.getReportId()).orElseThrow(() -> new RuntimeException("Post appeal not found"));
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not logged in"));
+        User user = userService.findLoggedInUser();
 
         PostAppeal postAppeal = new PostAppeal();
         postAppeal.setPostReport(postReport);
@@ -85,7 +85,7 @@ public class PostAppealServiceImpl implements IPostAppealService {
 
     @Override
     public boolean handleAppeal(UUID appealId, String type) {
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not logged in"));
+        User user = userService.findLoggedInUser();
         PostAppeal postAppeal = postAppealRepository.findById(appealId).orElseThrow(() -> new RuntimeException("Post appeal not found"));
         Post post = postAppeal.getPostReport().getPost();
 

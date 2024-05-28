@@ -58,7 +58,7 @@ public class ReplyReportServiceImpl implements IReplyReportService {
     @Override
     public ReplyReportResponseModel reportReply(ReplyReportRequestModel replyReportRequestModel) {
         Reply reply = replyRepository.findById(replyReportRequestModel.getReplyId()).orElseThrow(() -> new RuntimeException("Reply not found"));
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not logged in"));
+        User user = userService.findLoggedInUser();
 
         ReplyReport replyReport = new ReplyReport();
         replyReport.setReply(reply);
@@ -96,7 +96,7 @@ public class ReplyReportServiceImpl implements IReplyReportService {
 
     @Override
     public boolean handleReport(UUID reportId, String type) {
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not logged in"));
+        User user = userService.findLoggedInUser();
         ReplyReport replyReport = replyReportRepository.findById(reportId).orElseThrow(() -> new RuntimeException("Reply report not found"));
         Reply reply = replyReport.getReply();
 
@@ -112,7 +112,14 @@ public class ReplyReportServiceImpl implements IReplyReportService {
             replyReport.setStatus(ProcessStatus.DISABLED.name());
             replyReportRepository.save(replyReport);
 
-            notificationService.sendNotification(NotificationMessage.WARN_REPLY.name(), NotificationMessage.WARN_REPLY.getMessage() + " " + reason, user, reply.getUser(), reply);
+            List<String> status = Arrays.asList(ProcessStatus.PENDING.name(), ProcessStatus.REVIEWED.name());
+            List<ReplyReport> relatedReplyReports = replyReportRepository.findAllByReplyAndStatus(replyReport, reply, status);
+            relatedReplyReports.forEach(report -> {
+                report.setStatus(ProcessStatus.DISABLED.name());
+                replyReportRepository.save(report);
+            });
+
+            notificationService.sendNotification(NotificationMessage.WARN_REPLY.name(), NotificationMessage.WARN_REPLY.getMessage() + " " + reason, user, reply.getUser(), replyReport);
 
             return true;
         } else {

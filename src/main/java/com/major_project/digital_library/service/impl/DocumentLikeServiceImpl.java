@@ -37,7 +37,7 @@ public class DocumentLikeServiceImpl implements IDocumentLikeService {
 
     @Override
     public void likeDocument(String slug) {
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userService.findLoggedInUser();
         Document document = documentRepository.findBySlug(slug).orElseThrow(() -> new RuntimeException("Document not found"));
 
         Optional<DocumentLike> documentLikeOptional = documentLikeRepository.findByUserAndDocument(user, document);
@@ -53,7 +53,7 @@ public class DocumentLikeServiceImpl implements IDocumentLikeService {
 
     @Override
     public DocumentLikeModel unlikeDocument(String slug) {
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userService.findLoggedInUser();
         Document document = documentRepository.findBySlug(slug).orElseThrow(() -> new RuntimeException("Document not found"));
 
         Optional<DocumentLike> documentLikeOptional = documentLikeRepository.findByUserAndDocument(user, document);
@@ -73,7 +73,7 @@ public class DocumentLikeServiceImpl implements IDocumentLikeService {
 
     @Override
     public void undoUnlike(String slug, DocumentLikeModel documentLikeModel) {
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userService.findLoggedInUser();
         Document document = documentRepository.findBySlug(documentLikeModel.getSlug()).orElseThrow(() -> new RuntimeException("Document not found"));
 
         Optional<DocumentLike> documentLikeOptional = documentLikeRepository.findByUserAndDocument(user, document);
@@ -89,7 +89,7 @@ public class DocumentLikeServiceImpl implements IDocumentLikeService {
 
     @Override
     public Page<DocumentResponseModel> getLikedDocuments(int page, int size, String s) {
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userService.findLoggedInUser();
 
         Pageable pageable = PageRequest.of(page, size);
         Page<Document> documents = Page.empty();

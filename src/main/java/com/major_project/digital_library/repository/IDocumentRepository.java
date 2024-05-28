@@ -72,6 +72,27 @@ public interface IDocumentRepository extends JpaRepository<Document, UUID> {
             Pageable pageable
     );
 
+    @Query("SELECT d FROM Document d " +
+            "LEFT JOIN d.reviews r " +
+            "WHERE d.isDeleted = false " +
+            "AND d.verifiedStatus = 1 " +
+            "AND (d.category = :category OR :category IS NULL) " +
+            "AND (d.field = :field OR :field IS NULL) " +
+            "AND (d.organization = :organization OR :organization IS NULL) " +
+            "AND d.category.isDeleted = false " +
+            "AND d.field.isDeleted = false " +
+            "AND d.organization.isDeleted = false " +
+            "AND (d.isInternal = false OR (d.isInternal = true AND d.organization = :userOrganization))" +
+            "GROUP BY d " +
+            "ORDER BY AVG(r.star) DESC, SIZE(d.documentLikes) DESC")
+    Page<Document> findDocumentsForStudentsOrderByAverageRating(
+            Category category,
+            Field field,
+            Organization organization,
+            Organization userOrganization,
+            Pageable pageable
+    );
+
     @Query("SELECT d FROM Document d WHERE d.isDeleted = false " +
             "AND d.verifiedStatus = 1 " +
             "AND (d.category = :category OR :category IS NULL) " +
@@ -82,6 +103,26 @@ public interface IDocumentRepository extends JpaRepository<Document, UUID> {
             "AND d.organization.isDeleted = false " +
             "AND (d.isInternal = false)")
     Page<Document> findDocumentsForGuests(
+            Category category,
+            Field field,
+            Organization organization,
+            Pageable pageable
+    );
+
+    @Query("SELECT d FROM Document d " +
+            "LEFT JOIN d.reviews r " +
+            "WHERE d.isDeleted = false " +
+            "AND d.verifiedStatus = 1 " +
+            "AND (d.category = :category OR :category IS NULL) " +
+            "AND (d.field = :field OR :field IS NULL) " +
+            "AND (d.organization = :organization OR :organization IS NULL) " +
+            "AND d.category.isDeleted = false " +
+            "AND d.field.isDeleted = false " +
+            "AND d.organization.isDeleted = false " +
+            "AND (d.isInternal = false) " +
+            "GROUP BY d " +
+            "ORDER BY AVG(r.star) DESC, SIZE(d.documentLikes) DESC")
+    Page<Document> findDocumentsForGuestsOrderByAverageRating(
             Category category,
             Field field,
             Organization organization,
@@ -107,6 +148,29 @@ public interface IDocumentRepository extends JpaRepository<Document, UUID> {
             Pageable pageable
     );
 
+    @Query("SELECT d FROM Document d " +
+            "LEFT JOIN d.reviews r " +
+            "WHERE d.isDeleted = false " +
+            "AND d.verifiedStatus = 1 " +
+            "AND (d.category = :category OR :category IS NULL) " +
+            "AND (d.field = :field OR :field IS NULL) " +
+            "AND (d.organization = :organization OR :organization IS NULL) " +
+            "AND d.category.isDeleted = false " +
+            "AND d.field.isDeleted = false " +
+            "AND d.organization.isDeleted = false " +
+            "AND (d.isInternal = false OR (d.isInternal = true AND d.organization = :userOrganization)) " +
+            "AND (LOWER(d.docName) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(d.docIntroduction) LIKE LOWER(CONCAT('%', :query, '%')))" +
+            "GROUP BY d " +
+            "ORDER BY AVG(r.star) DESC")
+    Page<Document> searchDocumentsForStudentsOrderByAverageRating(
+            Category category,
+            Field field,
+            Organization organization,
+            Organization userOrganization,
+            String query,
+            Pageable pageable
+    );
+
     @Query("SELECT d FROM Document d WHERE d.isDeleted = false " +
             "AND d.verifiedStatus = 1 " +
             "AND (d.category = :category OR :category IS NULL) " +
@@ -118,6 +182,28 @@ public interface IDocumentRepository extends JpaRepository<Document, UUID> {
             "AND (d.isInternal = false) " +
             "AND (LOWER(d.docName) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(d.docIntroduction) LIKE LOWER(CONCAT('%', :query, '%')))")
     Page<Document> searchDocumentsForGuests(
+            Category category,
+            Field field,
+            Organization organization,
+            String query,
+            Pageable pageable
+    );
+
+    @Query("SELECT d FROM Document d " +
+            "LEFT JOIN d.reviews r " +
+            "WHERE d.isDeleted = false " +
+            "AND d.verifiedStatus = 1 " +
+            "AND (d.category = :category OR :category IS NULL) " +
+            "AND (d.field = :field OR :field IS NULL) " +
+            "AND (d.organization = :organization OR :organization IS NULL) " +
+            "AND d.category.isDeleted = false " +
+            "AND d.field.isDeleted = false " +
+            "AND d.organization.isDeleted = false " +
+            "AND (d.isInternal = false) " +
+            "AND (LOWER(d.docName) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(d.docIntroduction) LIKE LOWER(CONCAT('%', :query, '%')))" +
+            "GROUP BY d " +
+            "ORDER BY AVG(r.star) DESC")
+    Page<Document> searchDocumentsForGuestsOrderByAverageRating(
             Category category,
             Field field,
             Organization organization,

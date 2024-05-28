@@ -13,5 +13,7 @@ import java.util.UUID;
 public interface INotificationRepository extends JpaRepository<Notification, UUID> {
     Page<Notification> findAllByRecipientOrderBySentAtDesc(User recipient, Pageable pageable);
 
+    Page<Notification> findByRecipientAndIsReadOrderBySentAtDesc(User recipient, Boolean isRead, Pageable pageable);
+
     long countAllByRecipientAndIsRead(User recipient, boolean isRead);
 }

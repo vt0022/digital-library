@@ -64,9 +64,4 @@ public class Reply {
     protected void onCreate() {
         createdAt = new Timestamp(System.currentTimeMillis());
     }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = new Timestamp(System.currentTimeMillis());
-    }
 }

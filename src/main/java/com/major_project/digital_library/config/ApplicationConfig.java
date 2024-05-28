@@ -1,6 +1,6 @@
 package com.major_project.digital_library.config;
 
-import com.major_project.digital_library.repository.IUserRepositoty;
+import com.major_project.digital_library.repository.IUserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,7 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Configuration
 public class ApplicationConfig {
 
-    private final IUserRepositoty userRepositoty;
+    private final IUserRepository userRepositoty;
 
     @Bean
     public UserDetailsService userDetailsService() {

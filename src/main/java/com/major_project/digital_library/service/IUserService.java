@@ -1,76 +1,49 @@
 package com.major_project.digital_library.service;
 
-import com.major_project.digital_library.entity.Organization;
-import com.major_project.digital_library.entity.Role;
 import com.major_project.digital_library.entity.User;
+import com.major_project.digital_library.model.request_model.PasswordRequestModel;
+import com.major_project.digital_library.model.request_model.PasswordResetRequestModel;
+import com.major_project.digital_library.model.request_model.UserProfileRequestModel;
+import com.major_project.digital_library.model.request_model.UserRequestModel;
+import com.major_project.digital_library.model.response_model.UserResponseModel;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Optional;
 import java.util.UUID;
 
 public interface IUserService {
-    Page<User> findAll(Pageable pageable);
-
-    @Query("SELECT u FROM User u " +
-            "WHERE MONTH(u.createdAt) = MONTH(CURRENT_DATE) " +
-            "AND YEAR(u.createdAt) = YEAR(CURRENT_DATE) " +
-            "ORDER BY u.createdAt DESC")
-    Page<User> findLatestUsers(Pageable pageable);
 
     <S extends User> S save(S entity);
 
     <S extends User> S update(S entity);
 
-    void deleteById(UUID uuid);
+    User findLoggedInUser();
 
-    Optional<User> findById(UUID uuid);
+    UserResponseModel changePassword(PasswordRequestModel passwordRequestModel);
 
-    Optional<User> findByEmail(String email);
+    void resetPassword(PasswordResetRequestModel passwordResetRequestModel);
 
-    Optional<User> findByEmailAndIsDeleted(String email, boolean isDeleted);
+    Page<UserResponseModel> getAllUsers(int page, int size, String disabled, String gender, String organization, String role, String s);
 
-    Optional<User> findLoggedInUser();
+    Page<UserResponseModel> getAllUsersByOrganization(String slug, int page, int size, String disabled, String gender, String role, String s);
 
-    @Query("SELECT u FROM User u " +
-            "WHERE MONTH(u.createdAt) = MONTH(CURRENT_DATE) " +
-            "AND YEAR(u.createdAt) = YEAR(CURRENT_DATE) " +
-            "AND u.organization = :organization " +
-            "AND u.role.roleName <> 'ROLE_MANAGER' " +
-            "ORDER BY u.createdAt DESC")
-    Page<User> findLatestUsersByOrganization(Organization organization, Pageable pageable);
+    UserResponseModel getUser(UUID userId);
 
-    @Query("SELECT u FROM User u " +
-            "WHERE u.organization = :organization " +
-            "AND u.role.roleName <> 'ROLE_MANAGER'")
-    Page<User> findByOrganization(Organization organization, Pageable pageable);
+    UserResponseModel createUser(MultipartFile file, UserRequestModel userRequestModel);
 
-    long countByOrganization(Organization organization);
+    UserResponseModel updateUser(UUID userId, MultipartFile file, UserRequestModel userRequestModel);
 
-    long count();
+    void disableUser(UUID userId);
 
-    @Query("SELECT u FROM User u " +
-            "WHERE (u.isDeleted = :isDeleted OR :isDeleted IS NULL) " +
-            "AND (u.gender = :gender OR :gender IS NULL) " +
-            "AND (u.organization = :organization OR :organization IS NULL) " +
-            "AND (u.role = :role OR :role IS NULL) " +
-            "AND u.role.roleName <> :roleName " +
-            "AND (LOWER(u.firstName) LIKE LOWER(CONCAT('%', :query, '%')) " +
-            "OR LOWER(u.lastName) LIKE LOWER(CONCAT('%', :query, '%')) " +
-            "OR LOWER(u.email) LIKE LOWER(CONCAT('%', :query, '%')))")
-    Page<User> searchUsers(Boolean isDeleted, Integer gender, Organization organization, Role role, String roleName, String query, Pageable pageable);
+    void enableUser(UUID userId);
 
-    @Query("SELECT u FROM User u " +
-            "WHERE (u.isDeleted = :isDeleted OR :isDeleted IS NULL) " +
-            "AND (u.gender = :gender OR :gender IS NULL) " +
-            "AND (u.organization = :organization OR :organization IS NULL) " +
-            "AND (u.role = :role OR :role IS NULL) " +
-            "AND u.role.roleName <> :roleName " +
-            "AND (LOWER(u.firstName) LIKE LOWER(CONCAT('%', :query, '%')) " +
-            "OR LOWER(u.lastName) LIKE LOWER(CONCAT('%', :query, '%')) " +
-            "OR LOWER(u.email) LIKE LOWER(CONCAT('%', :query, '%'))) " +
-            "AND MONTH(u.createdAt) = MONTH(CURRENT_DATE) " +
-            "AND YEAR(u.createdAt) = YEAR(CURRENT_DATE)")
-    Page<User> searchLatestUsers(Boolean isDeleted, Integer gender, Organization organization, Role role, String roleName, String query, Pageable pageable);
+    UserResponseModel getProfile();
+
+    UserResponseModel updateProfile(UserProfileRequestModel userProfileRequestModel);
+
+    UserResponseModel updateAvatar(MultipartFile file);
+
+    Page<UserResponseModel> getLatestUsers(int page, int size, String disabled, String gender, String organization, String role, String s);
+
+    Page<UserResponseModel> getLatestUsersByOrganization(String slug, int page, int size, String disabled, String gender, String role, String s);
 }

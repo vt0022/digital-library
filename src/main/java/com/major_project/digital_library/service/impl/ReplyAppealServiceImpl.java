@@ -58,7 +58,7 @@ public class ReplyAppealServiceImpl implements IReplyAppealService {
     @Override
     public ReplyAppealResponseModel appealReply(ReplyAppealRequestModel replyAppealRequestModel) {
         ReplyReport replyReport = replyReportRepository.findById(replyAppealRequestModel.getReportId()).orElseThrow(() -> new RuntimeException("Reply appeal not found"));
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not logged in"));
+        User user = userService.findLoggedInUser();
 
         ReplyAppeal replyAppeal = new ReplyAppeal();
         replyAppeal.setReplyReport(replyReport);
@@ -85,7 +85,7 @@ public class ReplyAppealServiceImpl implements IReplyAppealService {
 
     @Override
     public boolean handleAppeal(UUID appealId, String type) {
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not logged in"));
+        User user = userService.findLoggedInUser();
         ReplyAppeal replyAppeal = replyAppealRepository.findById(appealId).orElseThrow(() -> new RuntimeException("Reply appeal not found"));
         Reply reply = replyAppeal.getReplyReport().getReply();
 

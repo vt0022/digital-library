@@ -7,6 +7,7 @@ import com.major_project.digital_library.entity.User;
 import com.major_project.digital_library.model.request_model.ReviewRequestModel;
 import com.major_project.digital_library.model.response_model.ResponseModel;
 import com.major_project.digital_library.model.response_model.ReviewResponseModel;
+import com.major_project.digital_library.repository.IDocumentRepository;
 import com.major_project.digital_library.service.IDocumentService;
 import com.major_project.digital_library.service.IOrganizationService;
 import com.major_project.digital_library.service.IReviewService;
@@ -30,14 +31,16 @@ import java.util.stream.Collectors;
 public class ReviewController {
     private final IReviewService reviewService;
     private final IDocumentService documentService;
+    private final IDocumentRepository documentRepository;
     private final IOrganizationService organizationService;
     private final IUserService userService;
     private final ModelMapper modelMapper;
 
     @Autowired
-    public ReviewController(IReviewService reviewService, IDocumentService documentService, IOrganizationService organizationService, IUserService userService, ModelMapper modelMapper) {
+    public ReviewController(IReviewService reviewService, IDocumentService documentService, IDocumentRepository documentRepository, IOrganizationService organizationService, IUserService userService, ModelMapper modelMapper) {
         this.reviewService = reviewService;
         this.documentService = documentService;
+        this.documentRepository = documentRepository;
         this.organizationService = organizationService;
         this.userService = userService;
         this.modelMapper = modelMapper;
@@ -49,7 +52,7 @@ public class ReviewController {
     public ResponseEntity<?> getReviewsByDocument(@PathVariable String slug,
                                                   @RequestParam(defaultValue = "0") int rating,
                                                   @RequestParam(defaultValue = "0") int page) {
-        Document document = documentService.findBySlug(slug).orElseThrow(() -> new RuntimeException("Document not found"));
+        Document document = documentRepository.findBySlug(slug).orElseThrow(() -> new RuntimeException("Document not found"));
 
         Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
         Pageable pageable = PageRequest.of(page, 4, sort);
@@ -74,7 +77,7 @@ public class ReviewController {
             description = "Trả về số lượng đánh giá dựa trên số sao của một tài liệu")
     @GetMapping("/documents/{slug}/reviews/count")
     public ResponseEntity<?> countReviewsByStarOfDocument(@PathVariable String slug) {
-        Document document = documentService.findBySlug(slug).orElseThrow(() -> new RuntimeException("Document not found"));
+        Document document = documentRepository.findBySlug(slug).orElseThrow(() -> new RuntimeException("Document not found"));
 
         List<Object[]> reviewCounts = reviewService.countReviewsByStarAndDocument(document);
 
@@ -101,7 +104,7 @@ public class ReviewController {
             description = "Trả về tất cả đánh giá của người dùng hiện tại")
     @GetMapping("/reviews/mine")
     public ResponseEntity<?> getMyReviews(@RequestParam(defaultValue = "10") int status) {
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userService.findLoggedInUser();
 
         Pageable pageable = PageRequest.of(0, 100);
 
@@ -128,7 +131,7 @@ public class ReviewController {
     public ResponseEntity<?> approveReview(@PathVariable UUID reviewId,
                                            @RequestParam boolean isApproved,
                                            @RequestParam(required = false, defaultValue = "") String note) {
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userService.findLoggedInUser();
         Review review = reviewService.findById(reviewId).orElseThrow(() -> new RuntimeException("Review not found"));
 
         review.setVerifiedStatus(isApproved ? 1 : -1);
@@ -183,9 +186,9 @@ public class ReviewController {
             description = "Trả về kết quả người dùng đã đánh giá tài liệu này chưa")
     @GetMapping("/documents/{slug}/reviewed")
     public ResponseEntity<?> checkReviewed(@PathVariable String slug) {
-        Document document = documentService.findBySlug(slug).orElseThrow(() -> new RuntimeException("Document not found"));
+        Document document = documentRepository.findBySlug(slug).orElseThrow(() -> new RuntimeException("Document not found"));
         // Find user info
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userService.findLoggedInUser();
 
         boolean isReviewed = reviewService.existsByUserAndDocument(user, document);
         String message = "Not reviewed";
@@ -202,9 +205,9 @@ public class ReviewController {
             description = "Thực hiện đánh giá một tài liệu và trả về đánh giá vừa tạo")
     @PostMapping("/documents/{docId}/review")
     public ResponseEntity<?> reviewDocument(@PathVariable UUID docId, @RequestBody ReviewRequestModel reviewRequestModel) {
-        Document document = documentService.findById(docId).orElseThrow(() -> new RuntimeException("Document not found"));
+        Document document = documentRepository.findById(docId).orElseThrow(() -> new RuntimeException("Document not found"));
         // Find user info
-        User user = userService.findLoggedInUser().orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userService.findLoggedInUser();
 
         Review review = modelMapper.map(reviewRequestModel, Review.class);
         review.setDocument(document);

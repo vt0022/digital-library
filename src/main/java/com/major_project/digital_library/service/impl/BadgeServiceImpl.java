@@ -7,7 +7,7 @@ import com.major_project.digital_library.model.lean_model.BadgeLeanModel;
 import com.major_project.digital_library.model.response_model.BadgeResponseModel;
 import com.major_project.digital_library.repository.IBadgeRepository;
 import com.major_project.digital_library.repository.IBadgeRewardRepository;
-import com.major_project.digital_library.repository.IUserRepositoty;
+import com.major_project.digital_library.repository.IUserRepository;
 import com.major_project.digital_library.service.IBadgeService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,11 +21,11 @@ import java.util.UUID;
 public class BadgeServiceImpl implements IBadgeService {
     private final IBadgeRepository badgeRepository;
     private final IBadgeRewardRepository badgeRewardRepository;
-    private final IUserRepositoty userRepositoty;
+    private final IUserRepository userRepositoty;
     private final ModelMapper modelMapper;
 
     @Autowired
-    public BadgeServiceImpl(IBadgeRepository badgeRepository, IBadgeRewardRepository badgeRewardRepository, IUserRepositoty userRepositoty, ModelMapper modelMapper) {
+    public BadgeServiceImpl(IBadgeRepository badgeRepository, IBadgeRewardRepository badgeRewardRepository, IUserRepository userRepositoty, ModelMapper modelMapper) {
         this.badgeRepository = badgeRepository;
         this.badgeRewardRepository = badgeRewardRepository;
         this.userRepositoty = userRepositoty;
