@@ -2,13 +2,11 @@ package com.major_project.digital_library.controller;
 
 import com.major_project.digital_library.model.request_model.PostRequestModel;
 import com.major_project.digital_library.model.response_model.*;
+import com.major_project.digital_library.service.IPostAcceptanceService;
 import com.major_project.digital_library.service.IPostHistoryService;
 import com.major_project.digital_library.service.IPostLikeService;
 import com.major_project.digital_library.service.IPostService;
-import com.major_project.digital_library.service.IUserService;
-import com.major_project.digital_library.service.other.GoogleDriveService;
 import io.swagger.v3.oas.annotations.Operation;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
@@ -21,20 +19,16 @@ import java.util.UUID;
 @RequestMapping("/api/v2/posts")
 public class PostController {
     private final IPostService postService;
-    private final IUserService userService;
     private final IPostLikeService postLikeService;
     private final IPostHistoryService postHistoryService;
-    private final ModelMapper modelMapper;
-    private final GoogleDriveService googleDriveService;
+    private final IPostAcceptanceService postAcceptationService;
 
     @Autowired
-    public PostController(IPostService postService, IUserService userService, IPostLikeService postLikeService, IPostHistoryService postHistoryService, ModelMapper modelMapper, GoogleDriveService googleDriveService) {
+    public PostController(IPostService postService, IPostLikeService postLikeService, IPostHistoryService postHistoryService, IPostAcceptanceService postAcceptationService) {
         this.postService = postService;
-        this.userService = userService;
+        this.postAcceptationService = postAcceptationService;
         this.postLikeService = postLikeService;
         this.postHistoryService = postHistoryService;
-        this.modelMapper = modelMapper;
-        this.googleDriveService = googleDriveService;
     }
 
     @Operation(summary = "Hiển thị chi tiết bài viết cho khách")
@@ -216,6 +210,30 @@ public class PostController {
                 .build());
     }
 
+    @Operation(summary = "Chấp nhận bài viết")
+    @PostMapping("/{postId}/accept")
+    public ResponseEntity<?> acceptPost(@PathVariable UUID postId) {
+        postAcceptationService.doAccept(postId);
+
+        return ResponseEntity.ok(ResponseModel.builder()
+                .status(200)
+                .error(false)
+                .message("Accept post successfully")
+                .build());
+    }
+
+    @Operation(summary = "Bỏ chấp nhận bài viết")
+    @PostMapping("/{postId}/undo-accept")
+    public ResponseEntity<?> undoAcceptPost(@PathVariable UUID postId) {
+        postAcceptationService.undoAccept(postId);
+
+        return ResponseEntity.ok(ResponseModel.builder()
+                .status(200)
+                .error(false)
+                .message("Undo accept post successfully")
+                .build());
+    }
+
     @Operation(summary = "Xem lịch sử chỉnh sửa của bài viết")
     @GetMapping("/{postId}/history")
     public ResponseEntity<?> getHistoryOfPost(@PathVariable UUID postId) {
@@ -242,6 +260,21 @@ public class PostController {
                         .status(200)
                         .error(false)
                         .message("Get related posts successfully")
+                        .data(postResponseModels)
+                        .build());
+    }
+
+    @Operation(summary = "Tìm bài viết liên quan cho 1 bài viết")
+    @GetMapping("/related/{postId}")
+    public ResponseEntity<?> getRelatedPostsForAPost(@PathVariable UUID postId) {
+        Page<PostResponseModel> postResponseModels = postService.findRelatedPostsByAPost(postId);
+
+        return ResponseEntity.ok(
+                ResponseModel
+                        .builder()
+                        .status(200)
+                        .error(false)
+                        .message("Get related posts for a post successfully")
                         .data(postResponseModels)
                         .build());
     }

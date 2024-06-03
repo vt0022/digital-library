@@ -4,6 +4,10 @@ REFRESH_TOKEN_LIFE: 86400000
 EMAIL_SENDER: thuanmyhoa7a2@gmail.com
 GOOGLE_RECAPTCHA_SECRET_KEY: 6Le5QeopAAAAAJBC_wz9_3fqYxbM_CTKJkp5DlDD
 
+resttemplate:
+  connection-timeout: 60000
+  read-timeout: 60000
+
 server:
   servlet:
     context-path: /digital.library
@@ -61,6 +65,11 @@ spring:
           starttls:
             enable: true
     username: thuanmyhoa7a2@gmail.com
+  cloud:
+    gateway:
+      httpclient:
+        connect-timeout: 60000
+        response-timeout: 60000
 
 springdoc:
   api-docs:

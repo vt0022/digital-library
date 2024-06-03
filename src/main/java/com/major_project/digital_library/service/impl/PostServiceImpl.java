@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class PostServiceImpl implements IPostService {
@@ -37,6 +38,7 @@ public class PostServiceImpl implements IPostService {
     private final ISubsectionRepository subsectionRepository;
     private final ILabelRepository labelRepository;
     private final ITagRepository tagRepository;
+    private final IPostAcceptanceRepository postAcceptanceRepository;
     private final IUserService userService;
     private final IBadgeService badgeService;
     private final IBadgeRewardService badgeRewardService;
@@ -44,7 +46,7 @@ public class PostServiceImpl implements IPostService {
     private final TagExtractor tagExtractor;
 
     @Autowired
-    public PostServiceImpl(IPostRepository postRepository, IPostLikeRepository postLikeRepository, IPostHistoryRepository postHistoryRepository, IUserRepository userRepository, ISubsectionRepository subsectionRepository, ILabelRepository labelRepository, ITagRepository tagRepository, IUserService userService, IBadgeService badgeService, IBadgeRewardService badgeRewardService, ModelMapper modelMapper, TagExtractor tagExtractor) {
+    public PostServiceImpl(IPostRepository postRepository, IPostLikeRepository postLikeRepository, IPostHistoryRepository postHistoryRepository, IUserRepository userRepository, ISubsectionRepository subsectionRepository, ILabelRepository labelRepository, ITagRepository tagRepository, IPostAcceptanceRepository postAcceptanceRepository, IUserService userService, IBadgeService badgeService, IBadgeRewardService badgeRewardService, ModelMapper modelMapper, TagExtractor tagExtractor) {
         this.postRepository = postRepository;
         this.postLikeRepository = postLikeRepository;
         this.postHistoryRepository = postHistoryRepository;
@@ -52,6 +54,7 @@ public class PostServiceImpl implements IPostService {
         this.subsectionRepository = subsectionRepository;
         this.labelRepository = labelRepository;
         this.tagRepository = tagRepository;
+        this.postAcceptanceRepository = postAcceptanceRepository;
         this.userService = userService;
         this.badgeService = badgeService;
         this.badgeRewardService = badgeRewardService;
@@ -221,37 +224,31 @@ public class PostServiceImpl implements IPostService {
     }
 
     @Override
+    public Page<PostResponseModel> findRelatedPostsByAPost(UUID postId) {
+        Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));
+
+        Pageable pageable = PageRequest.of(0, 10);
+
+        Page<Post> posts = postRepository.findRelatedPostsByTags(post, pageable);
+
+        Page<PostResponseModel> postResponseModels = posts.map(this::convertToPostModel);
+
+        return postResponseModels;
+    }
+
+    @Override
     public PostResponseModel addPost(PostRequestModel postRequestModel) {
         User user = userService.findLoggedInUser();
 
         Subsection subsection = subsectionRepository.findById(postRequestModel.getSubsectionId()).orElseThrow(() -> new RuntimeException("Subsection not found"));
         Label label = postRequestModel.getLabelId() == null ? null : labelRepository.findById(postRequestModel.getLabelId()).orElseThrow(() -> new RuntimeException("Label not found"));
 
-        List<String> keywords = tagExtractor.findKeywords(postRequestModel.getTitle()
-                .concat(". ")
-                .concat(postRequestModel.getContent().replace("<[^>]*>", "")));
-
         Post post = modelMapper.map(postRequestModel, Post.class);
         post.setUserPosted(user);
         post.setSubsection(subsection);
         post.setLabel(label);
 
-        for (String keyword : keywords) {
-            boolean isExisted = tagRepository.existsByTagName(keyword);
-            Tag tag = new Tag();
-            if (isExisted) {
-                tag = tagRepository.findByTagName(keyword).orElseThrow(() -> new RuntimeException("Tag not found"));
-            } else {
-                tag.setTagName(keyword);
-                tag.setSlug(SlugGenerator.generateSlug(keyword, false));
-                tag = tagRepository.save(tag);
-            }
-
-            if (!post.getTags().contains(tag)) {
-                post.getTags().add(tag);
-                postRepository.save(post);
-            }
-        }
+        addTags(post);
 
         postRepository.save(post);
 
@@ -270,6 +267,9 @@ public class PostServiceImpl implements IPostService {
         if (!post.getUserPosted().getUserId().equals(user.getUserId()) && !user.getRole().getRoleName().equals("ROLE_ADMIN"))
             return null;
 
+        boolean titleAndContentNotChanged = post.getTitle().equals(postRequestModel.getTitle())
+                && post.getContent().equals(postRequestModel.getContent());
+
         PostHistory postHistory = modelMapper.map(post, PostHistory.class);
         postHistory.setPost(post);
         postHistoryRepository.save(postHistory);
@@ -277,32 +277,15 @@ public class PostServiceImpl implements IPostService {
         Subsection subsection = subsectionRepository.findById(postRequestModel.getSubsectionId()).orElseThrow(() -> new RuntimeException("Subsection not found"));
         Label label = postRequestModel.getLabelId() == null ? null : labelRepository.findById(postRequestModel.getLabelId()).orElseThrow(() -> new RuntimeException("Label not found"));
 
-        List<String> keywords = tagExtractor.findKeywords(postRequestModel.getTitle()
-                .concat(". ")
-                .concat(postRequestModel.getContent().replace("<[^>]*>", "")));
-
         post.setTitle(postRequestModel.getTitle());
         post.setContent(postRequestModel.getContent());
         post.setSubsection(subsection);
         post.setLabel(label);
         post.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
 
-        post.getTags().clear();
-        for (String keyword : keywords) {
-            boolean isExisted = tagRepository.existsByTagName(keyword);
-            Tag tag = new Tag();
-            if (isExisted) {
-                tag = tagRepository.findByTagName(keyword).orElseThrow(() -> new RuntimeException("Tag not found"));
-            } else {
-                tag.setTagName(keyword);
-                tag.setSlug(SlugGenerator.generateSlug(keyword, false));
-                tag = tagRepository.save(tag);
-            }
-
-            if (!post.getTags().contains(tag)) {
-                post.getTags().add(tag);
-                postRepository.save(post);
-            }
+        if (!titleAndContentNotChanged) {
+            post.getTags().clear();
+            addTags(post);
         }
 
         postRepository.save(post);
@@ -325,6 +308,29 @@ public class PostServiceImpl implements IPostService {
         }
     }
 
+    public void addTags(Post post) {
+        List<String> keywords = tagExtractor.findKeywords(post.getTitle()
+                .concat(". ")
+                .concat(post.getContent().replace("<[^>]*>", "")));
+
+        for (String keyword : keywords) {
+            boolean isExisted = tagRepository.existsByTagName(keyword);
+            Tag tag = new Tag();
+            if (isExisted) {
+                tag = tagRepository.findByTagName(keyword).orElseThrow(() -> new RuntimeException("Tag not found"));
+            } else {
+                tag.setTagName(keyword);
+                tag.setSlug(SlugGenerator.generateSlug(keyword, false));
+                tag = tagRepository.save(tag);
+            }
+
+            if (!post.getTags().contains(tag)) {
+                post.getTags().add(tag);
+                postRepository.save(post);
+            }
+        }
+    }
+
     private PostResponseModel convertToPostModel(Post post) {
         PostResponseModel postResponseModel = modelMapper.map(post, PostResponseModel.class);
 
@@ -335,6 +341,18 @@ public class PostServiceImpl implements IPostService {
         boolean isLabelDisabled = post.getLabel() != null && post.getLabel().isDisabled();
         boolean isSectionDisabled = post.getSubsection() != null && post.getSubsection().getSection() != null && post.getSubsection().getSection().isDisabled();
         boolean isSubsectionDisabled = post.getSubsection() != null && post.getSubsection().isDisabled();
+        List<String> peopleLikedImages = post.getPostLikes().stream()
+                .map(postLike -> {
+                    User userLiked = postLike.getUser();
+                    return userLiked.getImage() != null ? userLiked.getImage() : "";
+                })
+                .collect(Collectors.toList());
+        List<String> peopleAcceptedImages = post.getPostAcceptances().stream()
+                .map(postAcceptance -> {
+                    User userAccepted = postAcceptance.getUser();
+                    return userAccepted.getImage() != null ? userAccepted.getImage() : "";
+                })
+                .collect(Collectors.toList());
 
         postResponseModel.setTotalLikes(post.getPostLikes().size());
         postResponseModel.setTotalReplies(post.getReplies().size());
@@ -345,6 +363,8 @@ public class PostServiceImpl implements IPostService {
         postResponseModel.setLabelDisabled(isLabelDisabled);
         postResponseModel.setSectionDisabled(isSectionDisabled);
         postResponseModel.setSubsectionDisabled(isSubsectionDisabled);
+        postResponseModel.setPeopleLiked(peopleLikedImages);
+        postResponseModel.setPeopleAccepted(peopleAcceptedImages);
 
         return postResponseModel;
     }
@@ -360,15 +380,31 @@ public class PostServiceImpl implements IPostService {
         boolean isLabelDisabled = post.getLabel() != null && post.getLabel().isDisabled();
         boolean isSectionDisabled = post.getSubsection() != null && post.getSubsection().getSection() != null && post.getSubsection().getSection().isDisabled();
         boolean isSubsectionDisabled = post.getSubsection() != null && post.getSubsection().isDisabled();
+        boolean isAccepted = postAcceptanceRepository.findByPostAndUser(post, user).isPresent();
+        List<String> peopleLikedImages = post.getPostLikes().stream()
+                .map(postLike -> {
+                    User userLiked = postLike.getUser();
+                    return userLiked.getImage() != null ? userLiked.getImage() : "";
+                })
+                .collect(Collectors.toList());
+        List<String> peopleAcceptedImages = post.getPostAcceptances().stream()
+                .map(postAcceptance -> {
+                    User userAccepted = postAcceptance.getUser();
+                    return userAccepted.getImage() != null ? userAccepted.getImage() : "";
+                })
+                .collect(Collectors.toList());
 
         detailPostResponseModel.setLiked(isLiked);
         detailPostResponseModel.setMy(isMy);
+        detailPostResponseModel.setAccepted(isAccepted);
         detailPostResponseModel.setTotalLikes(post.getPostLikes().size());
         detailPostResponseModel.setTotalReplies(post.getReplies().size());
         detailPostResponseModel.getUserPosted().setBadge(badge);
         detailPostResponseModel.setLabelDisabled(isLabelDisabled);
         detailPostResponseModel.setSectionDisabled(isSectionDisabled);
         detailPostResponseModel.setSubsectionDisabled(isSubsectionDisabled);
+        detailPostResponseModel.setPeopleLiked(peopleLikedImages);
+        detailPostResponseModel.setPeopleAccepted(peopleAcceptedImages);
 
         return detailPostResponseModel;
     }

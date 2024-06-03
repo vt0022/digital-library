@@ -60,6 +60,9 @@ public class Reply {
     @OneToMany(mappedBy = "reply", cascade = CascadeType.MERGE)
     private List<ReplyReport> replyReports = new ArrayList<>();
 
+    @OneToOne(mappedBy = "reply", cascade = CascadeType.MERGE)
+    private ReplyAcceptance replyAcceptance;
+
     @PrePersist
     protected void onCreate() {
         createdAt = new Timestamp(System.currentTimeMillis());

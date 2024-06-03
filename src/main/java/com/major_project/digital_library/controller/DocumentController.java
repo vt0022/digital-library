@@ -455,6 +455,20 @@ public class DocumentController {
                 .build());
     }
 
+    @Operation(summary = "Xem danh sách tài liệu liên quan của một tài liệu cụ thể công khai",
+            description = "Trả về danh sách tài liệu liên quan khi nhấn xem 1 tài liệu cụ thể công khai")
+    @GetMapping("/related/{slug}/guest")
+    public ResponseEntity<?> getRelatedDocumentForGuest(@PathVariable String slug) {
+        Page<DocumentResponseModel> documentModels = documentService.findRelatedDocumentsForGuest(slug);
+        return ResponseEntity.ok(ResponseModel
+                .builder()
+                .status(200)
+                .error(false)
+                .message("Get related documents for guest successfully")
+                .data(documentModels)
+                .build());
+    }
+
     @Operation(summary = "Thích một tài liệu",
             description = "Thêm một tài liệu vào danh sách đã thích")
     @PostMapping("/{slug}/like")

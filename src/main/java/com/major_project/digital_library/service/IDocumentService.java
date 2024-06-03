@@ -44,4 +44,6 @@ public interface IDocumentService {
     Page<DocumentResponseModel> getLatestDocuments(int page, int size, String order, String category, String field, String organization, String deleted, String internal, String status, String s);
 
     Page<DocumentResponseModel> findRelatedDocuments(String query);
+
+    Page<DocumentResponseModel> findRelatedDocumentsForGuest(String slug);
 }

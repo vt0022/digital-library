@@ -33,6 +33,10 @@ public class Subsection {
 
     private boolean isEditable;
 
+    private boolean isPostAcceptable;
+
+    private boolean isReplyAcceptable;
+
     @ManyToOne
     @JoinColumn(name = "sectionId")
     private Section section;

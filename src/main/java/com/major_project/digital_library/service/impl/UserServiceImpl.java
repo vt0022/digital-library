@@ -12,6 +12,7 @@ import com.major_project.digital_library.model.request_model.PasswordRequestMode
 import com.major_project.digital_library.model.request_model.PasswordResetRequestModel;
 import com.major_project.digital_library.model.request_model.UserProfileRequestModel;
 import com.major_project.digital_library.model.request_model.UserRequestModel;
+import com.major_project.digital_library.model.response_model.UserReputationResponseModel;
 import com.major_project.digital_library.model.response_model.UserResponseModel;
 import com.major_project.digital_library.repository.IOrganizationRepository;
 import com.major_project.digital_library.repository.IRoleRepository;
@@ -32,6 +33,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.IntStream;
@@ -369,6 +371,20 @@ public class UserServiceImpl implements IUserService {
     }
 
 
+    @Override
+    public Page<UserReputationResponseModel> getUserReputation(String s, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<User> users = userRepository.findUsersForReputation(s, pageable);
+
+        List<User> indexUsers = s.equals("") ? users.getContent() : userRepository.findAll();
+
+        Page<UserReputationResponseModel> userReputationResponseModels = users.map(user -> convertToReputationUserModel(user, s, indexUsers, page, size));
+        ;
+        return userReputationResponseModels;
+
+    }
+
     public Organization findOrganization(String organization) {
         return organization.equals("all") ?
                 null : organizationRepository.findBySlug(organization).orElseThrow(() -> new RuntimeException("Organization not found"));
@@ -418,6 +434,43 @@ public class UserServiceImpl implements IUserService {
         userResponseModel.setTotalReplies(totalReplies);
         userResponseModel.setTotalPostLikes(totalPostLikes);
         userResponseModel.setBadge(badge);
+
+        return userResponseModel;
+    }
+
+    private UserReputationResponseModel convertToReputationUserModel(User user, String s, List<User> users, int page, int size) {
+        UserReputationResponseModel userResponseModel = modelMapper.map(user, UserReputationResponseModel.class);
+
+        int totalPostLikes = user.getPosts().stream()
+                .filter(post -> !post.isDisabled())
+                .flatMapToInt(post -> IntStream.of(post.getPostLikes().size()))
+                .sum();
+        int totalReplyLikes = user.getReplies().stream()
+                .filter(reply -> !reply.isDisabled())
+                .flatMapToInt(reply -> IntStream.of(reply.getReplyLikes().size()))
+                .sum();
+        int totalPostAcceptances = user.getPosts().stream()
+                .filter(post -> !post.isDisabled())
+                .flatMapToInt(post -> IntStream.of(post.getPostAcceptances().size()))
+                .sum();
+        int totalReplyAcceptances = (int) user.getReplies().stream()
+                .filter(reply -> !reply.isDisabled() && reply.getReplyAcceptance() != null)
+                .count();
+        int totalScores = totalPostAcceptances * 10 + totalReplyAcceptances * 10 + totalPostLikes * 2 + totalReplyLikes * 2;
+
+        userResponseModel.setTotalPostAcceptances(totalPostAcceptances);
+        userResponseModel.setTotalReplyAcceptances(totalReplyAcceptances);
+        userResponseModel.setTotalPostLikes(totalPostLikes);
+        userResponseModel.setTotalReplyLikes(totalReplyLikes);
+        userResponseModel.setTotalScores(totalScores);
+
+        if (!s.equals("")) {
+            int rank = users.indexOf(user);
+            userResponseModel.setRank(rank + 1);
+        } else {
+            int rank = users.indexOf(user) + page * size;
+            userResponseModel.setRank(rank + 1);
+        }
 
         return userResponseModel;
     }

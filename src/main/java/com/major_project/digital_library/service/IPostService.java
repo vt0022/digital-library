@@ -23,6 +23,8 @@ public interface IPostService {
 
     Page<PostResponseModel> findRelatedPosts(String query);
 
+    Page<PostResponseModel> findRelatedPostsByAPost(UUID postId);
+
     PostResponseModel addPost(PostRequestModel postRequestModel);
 
     PostResponseModel editPost(UUID postId, PostRequestModel postRequestModel);

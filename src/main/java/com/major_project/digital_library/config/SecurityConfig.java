@@ -135,9 +135,10 @@ public class SecurityConfig {
 
                         .requestMatchers(
                                 "/api/v2/documents/public/search",
-                                "/api/v2/documents/related/*",
+                                "/api/v2/documents/related/*/guest",
                                 "/api/v2/documents/public").permitAll()
                         .requestMatchers(
+                                "/api/v2/documents/related/*",
                                 "/api/v2/documents/*/like",
                                 "/api/v2/documents/*/unlike",
                                 "/api/v2/documents/*/relike",
@@ -201,6 +202,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/v2/user/*/enable",
                                 "/api/v2/user/*/disable",
                                 "/api/v2/user/latest").hasAnyAuthority("ROLE_ADMIN", "ROLE_MANAGER")
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v2/users/ranking").permitAll()
                         .requestMatchers(HttpMethod.POST,
                                 "/api/v2/users/*").hasAnyAuthority("ROLE_ADMIN", "ROLE_MANAGER")
                         .requestMatchers(HttpMethod.DELETE,
@@ -231,6 +234,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/v2/posts/*/replies/all").authenticated()
                         .requestMatchers(
+                                "/api/v2/posts/related/*",
                                 "/api/v2/posts/user/*",
                                 "/api/v2/posts/*/replies/guest",
                                 "/api/v2/posts/*/guest",
@@ -238,7 +242,9 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/v2/posts/*/replies",
                                 "/api/v2/posts/*/reply",
-                                "/api/v2/posts/*/like").authenticated()
+                                "/api/v2/posts/*/like",
+                                "/api/v2/posts/*/accept",
+                                "/api/v2/posts/*/undo-accept").authenticated()
                         .requestMatchers(
                                 "/api/v2/posts/all").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(
@@ -254,6 +260,10 @@ public class SecurityConfig {
                                 "/api/v2/replies/all/user/*").hasAnyAuthority("ROLE_ADMIN", "ROLE_STUDENT")
                         .requestMatchers(
                                 "/api/v2/replies/user/likes").hasAuthority("ROLE_STUDENT")
+                        .requestMatchers(
+                                "/api/v2/replies/*/like",
+                                "/api/v2/replies/*/accept",
+                                "/api/v2/replies/*/undo-accept").authenticated()
                         .requestMatchers(
                                 "/api/v2/replies/image",
                                 "/api/v2/replies/user/*",

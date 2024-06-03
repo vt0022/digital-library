@@ -26,4 +26,6 @@ public class DocumentLeanModel implements Serializable {
     private String downloadUrl;
 
     private String slug;
+
+    private String note;
 }

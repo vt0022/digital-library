@@ -22,4 +22,8 @@ public class SubsectionLeanModel implements Serializable {
     private String slug;
 
     private boolean isDisabled;
+
+    private boolean isPostAcceptable;
+
+    private boolean isReplyAcceptable;
 }

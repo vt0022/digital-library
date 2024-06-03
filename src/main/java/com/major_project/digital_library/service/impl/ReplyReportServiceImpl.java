@@ -119,7 +119,7 @@ public class ReplyReportServiceImpl implements IReplyReportService {
                 replyReportRepository.save(report);
             });
 
-            notificationService.sendNotification(NotificationMessage.WARN_REPLY.name(), NotificationMessage.WARN_REPLY.getMessage() + " " + reason, user, reply.getUser(), replyReport);
+            notificationService.sendNotification(NotificationMessage.WARN_REPLY.name(), NotificationMessage.WARN_REPLY.getMessage(), user, reply.getUser(), replyReport);
 
             return true;
         } else {

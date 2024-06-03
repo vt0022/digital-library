@@ -26,6 +26,10 @@ public class SubsectionResponseModel implements Serializable {
     private boolean isDisabled;
 
     private boolean isEditable;
+    
+    private boolean isPostAcceptable;
+
+    private boolean isReplyAcceptable;
 
     private Timestamp createdAt;
 

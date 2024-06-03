@@ -65,4 +65,24 @@ public interface IUserRepository extends JpaRepository<User, UUID> {
             "AND YEAR(u.createdAt) = :year " +
             "GROUP BY MONTH(u.createdAt)")
     List<Object[]> countUsersByMonth(int year, Organization organization);
+
+    @Query("SELECT u FROM User u " +
+            "WHERE u.isDisabled = FALSE " +
+            "AND u.isAuthenticated = TRUE " +
+            "AND u.role.roleName = 'ROLE_STUDENT' " +
+            "AND (LOWER(u.firstName) LIKE LOWER(CONCAT('%', :query, '%')) " +
+            "OR LOWER(u.lastName) LIKE LOWER(CONCAT('%', :query, '%'))) " +
+            "ORDER BY " +
+            "( " +
+            "  ((SELECT COUNT(pa) FROM PostAcceptance pa WHERE pa.post.isDisabled = FALSE AND pa.post.userPosted = u)) * 10 + " +
+            "  ((SELECT COUNT(ra) FROM ReplyAcceptance ra WHERE ra.reply.isDisabled = FALSE AND ra.reply.user = u)) * 10 + " +
+            "  ((SELECT COUNT(pl) FROM PostLike pl WHERE pl.post.isDisabled = FALSE AND pl.post.userPosted = u)) * 2 + " +
+            "  ((SELECT COUNT(rl) FROM ReplyLike rl WHERE rl.reply.isDisabled = FALSE AND rl.reply.user = u)) * 2 " +
+            ") DESC, " +
+            "(SELECT COUNT(pa) FROM PostAcceptance pa WHERE pa.post.isDisabled = FALSE AND pa.post.userPosted = u ) DESC, " +
+            "(SELECT COUNT(ra) FROM ReplyAcceptance ra WHERE ra.reply.isDisabled = FALSE AND ra.reply.user = u) DESC, " +
+            "(SELECT COUNT(pl) FROM PostLike pl WHERE pl.post.isDisabled = FALSE AND pl.post.userPosted = u) DESC, " +
+            "(SELECT COUNT(rl) FROM ReplyLike rl WHERE rl.reply.isDisabled = FALSE AND rl.reply.user = u) DESC")
+    Page<User> findUsersForReputation(String query, Pageable pageable);
+
 }

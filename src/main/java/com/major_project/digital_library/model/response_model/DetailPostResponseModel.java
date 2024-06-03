@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 import java.io.Serial;
 import java.io.Serializable;
 import java.sql.Timestamp;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -43,6 +44,8 @@ public class DetailPostResponseModel implements Serializable {
 
     private boolean isDisabled;
 
+    private boolean isAccepted;
+
     private boolean isLabelDisabled;
 
     private boolean isSectionDisabled;
@@ -52,4 +55,8 @@ public class DetailPostResponseModel implements Serializable {
     private SubsectionLeanModel subsection;
 
     private LabelLeanModel label;
+
+    private List<String> peopleLiked;
+
+    private List<String> peopleAccepted;
 }

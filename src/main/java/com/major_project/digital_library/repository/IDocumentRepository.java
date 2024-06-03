@@ -382,12 +382,37 @@ public interface IDocumentRepository extends JpaRepository<Document, UUID> {
             "GROUP BY d.organization")
     List<Object[]> countDocumentsByOrganizationAndDateRange(Timestamp startDate, Timestamp endDate);
 
-    @Query("SELECT d FROM Document d JOIN d.tags t " +
-            "WHERE t IN :tags " +
-            "AND d <> :document " +
+    @Query("SELECT d FROM Document d " +
+            "JOIN d.tags t " +
+            "WHERE d <> :document " +
+            "AND (d.isInternal = false OR d.organization = :organization) " +
+            "AND d.category.isDeleted = false " +
+            "AND d.field.isDeleted = false " +
+            "AND d.organization.isDeleted = false " +
+            "AND d.verifiedStatus = 1 " +
+            "AND EXISTS (SELECT 1 FROM Document dx " +
+            "JOIN dx.tags tx " +
+            "WHERE dx = :document " +
+            "AND LOWER(t.tagName) LIKE LOWER(CONCAT('%', tx.tagName, '%'))) " +
             "GROUP BY d.docId " +
             "ORDER BY COUNT(t) DESC")
-    Page<Document> findRelatedDocumentsByTags(Document document, List<Tag> tags, Pageable pageable);
+    Page<Document> findRelatedDocumentsByTags(Document document, Organization organization, Pageable pageable);
+
+    @Query("SELECT d FROM Document d " +
+            "JOIN d.tags t " +
+            "WHERE d <> :document " +
+            "AND d.isInternal = false " +
+            "AND d.category.isDeleted = false " +
+            "AND d.field.isDeleted = false " +
+            "AND d.organization.isDeleted = false " +
+            "AND d.verifiedStatus = 1 " +
+            "AND EXISTS (SELECT 1 FROM Document dx " +
+            "JOIN dx.tags tx " +
+            "WHERE dx = :document " +
+            "AND LOWER(t.tagName) LIKE LOWER(CONCAT('%', tx.tagName, '%'))) " +
+            "GROUP BY d.docId " +
+            "ORDER BY COUNT(t) DESC")
+    Page<Document> findRelatedDocumentsByTagsForGuest(Document document, Pageable pageable);
 
     @Query("SELECT d FROM Document d " +
             "JOIN d.collectionDocuments c " +

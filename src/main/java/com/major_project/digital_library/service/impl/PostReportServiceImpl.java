@@ -116,7 +116,7 @@ public class PostReportServiceImpl implements IPostReportService {
             postReport.setStatus(ProcessStatus.DELETED.name());
             postReportRepository.save(postReport);
 
-            notificationService.sendNotification(NotificationMessage.DELETE_POST.name(), NotificationMessage.DELETE_POST.getMessage() + " " + reason, user, post.getUserPosted(), postReport);
+            notificationService.sendNotification(NotificationMessage.DELETE_POST.name(), NotificationMessage.DELETE_POST.getMessage(), user, post.getUserPosted(), postReport);
 
             return false;
         }

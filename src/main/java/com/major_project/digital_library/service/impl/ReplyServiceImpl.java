@@ -21,9 +21,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class ReplyServiceImpl implements IReplyService {
@@ -32,19 +34,21 @@ public class ReplyServiceImpl implements IReplyService {
     private final IPostRepository postRepository;
     private final IReplyHistoryRepository replyHistoryRepository;
     private final IUserRepository userRepository;
+    private final IReplyAcceptanceRepository replyAcceptanceRepository;
     private final IUserService userService;
     private final IBadgeService badgeService;
     private final INotificationService notificationService;
     private final ModelMapper modelMapper;
 
     @Autowired
-    public ReplyServiceImpl(IReplyRepository replyRepository, IUserService userService, IReplyLikeRepository replyLikeRepository, IPostRepository postRepository, IReplyHistoryRepository replyHistoryRepository, IUserRepository userRepository, IBadgeService badgeService, INotificationService notificationService, ModelMapper modelMapper) {
+    public ReplyServiceImpl(IReplyRepository replyRepository, IUserService userService, IReplyLikeRepository replyLikeRepository, IPostRepository postRepository, IReplyHistoryRepository replyHistoryRepository, IUserRepository userRepository, IReplyAcceptanceRepository replyAcceptanceRepository, IBadgeService badgeService, INotificationService notificationService, ModelMapper modelMapper) {
         this.replyRepository = replyRepository;
         this.userService = userService;
         this.replyLikeRepository = replyLikeRepository;
         this.postRepository = postRepository;
         this.replyHistoryRepository = replyHistoryRepository;
         this.userRepository = userRepository;
+        this.replyAcceptanceRepository = replyAcceptanceRepository;
         this.badgeService = badgeService;
         this.notificationService = notificationService;
         this.modelMapper = modelMapper;
@@ -194,10 +198,17 @@ public class ReplyServiceImpl implements IReplyService {
 
         BadgeLeanModel badge = badgeService.findBestBadge(reply.getUser().getUserId());
         boolean isPostDisabled = checkPostDisabled(reply);
+        List<String> peopleLikedImages = reply.getReplyLikes().stream()
+                .map(replyLike -> {
+                    User userLiked = replyLike.getUser();
+                    return userLiked.getImage() != null ? userLiked.getImage() : "";
+                })
+                .collect(Collectors.toList());
 
         replyResponseModel.setTotalLikes(reply.getReplyLikes().size());
         replyResponseModel.getUser().setBadge(badge);
         replyResponseModel.setPostDisabled(isPostDisabled);
+        replyResponseModel.setPeopleLiked(peopleLikedImages);
 
         return replyResponseModel;
     }
@@ -208,13 +219,22 @@ public class ReplyServiceImpl implements IReplyService {
         boolean isMy = reply.getUser().getUserId().equals(user.getUserId());
         BadgeLeanModel badge = badgeService.findBestBadge(reply.getUser().getUserId());
         boolean isPostDisabled = checkPostDisabled(reply);
+        boolean isAccepted = replyAcceptanceRepository.findByReplyAndUser(reply, user).isPresent();
+        List<String> peopleLikedImages = reply.getReplyLikes().stream()
+                .map(replyLike -> {
+                    User userLiked = replyLike.getUser();
+                    return userLiked.getImage() != null ? userLiked.getImage() : "";
+                })
+                .collect(Collectors.toList());
 
         ReplyResponseModel replyResponseModel = modelMapper.map(reply, ReplyResponseModel.class);
         replyResponseModel.setLiked(isLiked);
         replyResponseModel.setMy(isMy);
+        replyResponseModel.setAccepted(isAccepted);
         replyResponseModel.setTotalLikes(reply.getReplyLikes().size());
         replyResponseModel.getUser().setBadge(badge);
         replyResponseModel.setPostDisabled(isPostDisabled);
+        replyResponseModel.setPeopleLiked(peopleLikedImages);
 
         return replyResponseModel;
     }

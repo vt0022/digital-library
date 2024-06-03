@@ -63,7 +63,7 @@ public class BadgeRewardServiceImpl implements IBadgeRewardService {
                 badgeReward.setUser(user);
                 badgeRewardRepository.save(badgeReward);
 
-                notificationService.sendNotification(NotificationMessage.REWARD_BADGE.name(), NotificationMessage.REWARD_BADGE.getMessage(), user, user, badge);
+                notificationService.sendNotification(NotificationMessage.REWARD_BADGE.name(), NotificationMessage.REWARD_BADGE.getMessage(), user, user, badge.get());
             }
         }
     }

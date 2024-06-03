@@ -39,7 +39,7 @@ public class User implements Serializable, UserDetails {
     private String lastName;
 
     private Timestamp dateOfBirth;
-    
+
     private int gender;
 
     private String image;
@@ -116,6 +116,12 @@ public class User implements Serializable, UserDetails {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PostReport> postReports = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PostAcceptance> postAcceptances = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ReplyAcceptance> replyAcceptances = new ArrayList<>();
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

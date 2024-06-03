@@ -5,6 +5,7 @@ import com.major_project.digital_library.model.response_model.ReplyHistoryRespon
 import com.major_project.digital_library.model.response_model.ReplyLikeResponseModel;
 import com.major_project.digital_library.model.response_model.ReplyResponseModel;
 import com.major_project.digital_library.model.response_model.ResponseModel;
+import com.major_project.digital_library.service.IReplyAcceptanceService;
 import com.major_project.digital_library.service.IReplyHistoryService;
 import com.major_project.digital_library.service.IReplyLikeService;
 import com.major_project.digital_library.service.IReplyService;
@@ -24,12 +25,14 @@ public class ReplyController {
     private final IReplyService replyService;
     private final IReplyHistoryService replyHistoryService;
     private final IReplyLikeService replyLikeService;
+    private final IReplyAcceptanceService replyAcceptationService;
 
     @Autowired
-    public ReplyController(IReplyService replyService, IReplyHistoryService replyHistoryService, IReplyLikeService replyLikeService) {
+    public ReplyController(IReplyService replyService, IReplyHistoryService replyHistoryService, IReplyLikeService replyLikeService, IReplyAcceptanceService replyAcceptationService) {
         this.replyService = replyService;
         this.replyHistoryService = replyHistoryService;
         this.replyLikeService = replyLikeService;
+        this.replyAcceptationService = replyAcceptationService;
     }
 
     @Operation(summary = "Xem phản hồi của một bài viết (khách)")
@@ -189,6 +192,30 @@ public class ReplyController {
                 .status(200)
                 .error(false)
                 .message((isLiked ? "Unlike " : "Like ") + "reply successfully")
+                .build());
+    }
+
+    @Operation(summary = "Chấp nhận một bình luận")
+    @PostMapping("/replies/{replyId}/accept")
+    public ResponseEntity<?> acceptReply(@PathVariable UUID replyId) {
+        replyAcceptationService.doAccept(replyId);
+
+        return ResponseEntity.ok(ResponseModel.builder()
+                .status(200)
+                .error(false)
+                .message("Accept reply successfully")
+                .build());
+    }
+
+    @Operation(summary = "Bỏ chấp nhận một bình luận")
+    @PostMapping("/replies/{replyId}/undo-accept")
+    public ResponseEntity<?> undoAcceptReply(@PathVariable UUID replyId) {
+        replyAcceptationService.undoAccept(replyId);
+
+        return ResponseEntity.ok(ResponseModel.builder()
+                .status(200)
+                .error(false)
+                .message("Undo accept reply successfully")
                 .build());
     }
 

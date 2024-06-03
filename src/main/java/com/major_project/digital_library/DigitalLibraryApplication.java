@@ -15,6 +15,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.scheduling.annotation.EnableAsync;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,8 +24,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 @OpenAPIDefinition(servers = {@Server(url = "${server.servlet.context-path}", description = "Default Server URL")})
-
 @SpringBootApplication
+@EnableAsync
 public class DigitalLibraryApplication {
     private final GoogleCredential googleCredential;
 

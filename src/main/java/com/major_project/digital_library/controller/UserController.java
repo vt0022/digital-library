@@ -5,6 +5,7 @@ import com.major_project.digital_library.model.request_model.PasswordResetReques
 import com.major_project.digital_library.model.request_model.UserProfileRequestModel;
 import com.major_project.digital_library.model.request_model.UserRequestModel;
 import com.major_project.digital_library.model.response_model.ResponseModel;
+import com.major_project.digital_library.model.response_model.UserReputationResponseModel;
 import com.major_project.digital_library.model.response_model.UserResponseModel;
 import com.major_project.digital_library.service.IBadgeService;
 import com.major_project.digital_library.service.IOrganizationService;
@@ -254,6 +255,22 @@ public class UserController {
                 .status(200)
                 .error(false)
                 .message("Get all users successfully")
+                .data(userModels)
+                .build());
+
+    }
+
+    @Operation(summary = "Lấy danh sách người dùng kèm chỉ số danh tiếng")
+    @GetMapping("/ranking")
+    public ResponseEntity<?> getUserReputation(@RequestParam(defaultValue = "0") int page,
+                                               @RequestParam(defaultValue = "10") int size,
+                                               @RequestParam(defaultValue = "") String s) {
+        Page<UserReputationResponseModel> userModels = userService.getUserReputation(s, page, size);
+        ;
+        return ResponseEntity.ok(ResponseModel.builder()
+                .status(200)
+                .error(false)
+                .message("Get user reputation successfully")
                 .data(userModels)
                 .build());
 

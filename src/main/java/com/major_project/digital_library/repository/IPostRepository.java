@@ -198,6 +198,22 @@ public interface IPostRepository extends JpaRepository<Post, UUID> {
             "ORDER BY COUNT(t) DESC")
     Page<Post> findAllByTags(List<String> tags, Pageable pageable);
 
+    @Query("SELECT p FROM Post p " +
+            "JOIN p.tags t " +
+            "LEFT JOIN p.label l " +
+            "WHERE p <> :post " +
+            "AND p.isDisabled = FALSE " +
+            "AND (l = NULL OR l.isDisabled = FALSE) " +
+            "AND p.subsection.isDisabled = FALSE " +
+            "AND p.subsection.section.isDisabled = FALSE " +
+            "AND EXISTS (SELECT 1 FROM Post px " +
+            "JOIN px.tags tx " +
+            "WHERE px = :post " +
+            "AND LOWER(t.tagName) LIKE LOWER(CONCAT('%', tx.tagName, '%'))) " +
+            "GROUP BY p.postId " +
+            "ORDER BY COUNT(t) DESC")
+    Page<Post> findRelatedPostsByTags(Post post, Pageable pageable);
+
     long countByCreatedAtBetween(Timestamp startDate, Timestamp endDate);
 
     @Query("SELECT MONTH(p.createdAt) as month, COUNT(p) as count " +

@@ -64,6 +64,9 @@ public class Post {
     @OneToMany(mappedBy = "post", cascade = CascadeType.MERGE)
     private List<PostReport> postReports = new ArrayList<>();
 
+    @OneToMany(mappedBy = "post", cascade = CascadeType.MERGE)
+    private List<PostAcceptance> postAcceptances = new ArrayList<>();
+
     @ManyToMany()
     @JoinTable(
             name = "post_tag",

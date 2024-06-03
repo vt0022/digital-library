@@ -18,4 +18,6 @@ public class ReviewLeanModel implements Serializable {
     private int star;
 
     private String content;
+
+    private String note;
 }

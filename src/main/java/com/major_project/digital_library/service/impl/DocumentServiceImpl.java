@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.sql.Timestamp;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -35,6 +36,7 @@ public class DocumentServiceImpl implements IDocumentService {
     private final IDocumentLikeRepository documentLikeRepository;
     private final ISaveRepository saveRepository;
     private final IReviewRepository reviewRepository;
+    private final ITagRepository tagRepository;
     private final ICollectionRepository collectionRepository;
     private final ICollectionDocumentService collectionDocumentService;
     private final IUserService userService;
@@ -47,7 +49,7 @@ public class DocumentServiceImpl implements IDocumentService {
     private final StringHandler stringHandler;
 
     @Autowired
-    public DocumentServiceImpl(IDocumentRepository documentRepository, ICategoryRepository categoryRepository, IFieldRepository fieldRepository, IOrganizationRepository organizationRepository, IUserRepository userRepositoty, IDocumentLikeRepository documentLikeRepository, ISaveRepository saveRepository, IReviewRepository reviewRepository, ICollectionRepository collectionRepository, ICollectionDocumentService collectionDocumentService, IUserService userService, IRecencyService recencyService, INotificationService notificationService, ModelMapper modelMapper, SlugGenerator slugGenerator, TagExtractor tagExtractor, GoogleDriveService googleDriveService, StringHandler stringHandler) {
+    public DocumentServiceImpl(IDocumentRepository documentRepository, ICategoryRepository categoryRepository, IFieldRepository fieldRepository, IOrganizationRepository organizationRepository, IUserRepository userRepositoty, IDocumentLikeRepository documentLikeRepository, ISaveRepository saveRepository, IReviewRepository reviewRepository, ITagRepository tagRepository, ICollectionRepository collectionRepository, ICollectionDocumentService collectionDocumentService, IUserService userService, IRecencyService recencyService, INotificationService notificationService, ModelMapper modelMapper, SlugGenerator slugGenerator, TagExtractor tagExtractor, GoogleDriveService googleDriveService, StringHandler stringHandler) {
         this.documentRepository = documentRepository;
         this.categoryRepository = categoryRepository;
         this.fieldRepository = fieldRepository;
@@ -56,6 +58,7 @@ public class DocumentServiceImpl implements IDocumentService {
         this.documentLikeRepository = documentLikeRepository;
         this.saveRepository = saveRepository;
         this.reviewRepository = reviewRepository;
+        this.tagRepository = tagRepository;
         this.collectionRepository = collectionRepository;
         this.collectionDocumentService = collectionDocumentService;
         this.userService = userService;
@@ -423,6 +426,8 @@ public class DocumentServiceImpl implements IDocumentService {
             document.setUserVerified(user);
         }
 
+        addTags(document);
+
         documentRepository.save(document);
 
         DocumentResponseModel savedDocument = modelMapper.map(document, DocumentResponseModel.class);
@@ -436,6 +441,10 @@ public class DocumentServiceImpl implements IDocumentService {
         User user = userService.findLoggedInUser();
 
         Document document = documentRepository.findBySlug(slug).orElseThrow(() -> new RuntimeException("Document not found!"));
+
+        boolean nameAndIntroductionNotChanged = document.getDocName().equals(documentRequestModel.getDocName())
+                && document.getDocIntroduction().equals(documentRequestModel.getDocIntroduction());
+
         if (!document.getDocName().equals(documentRequestModel.getDocName()))
             document.setSlug(slugGenerator.generateSlug(document.getDocName().replace(".pdf", ""), true));
         document.setDocName(documentRequestModel.getDocName());
@@ -468,6 +477,11 @@ public class DocumentServiceImpl implements IDocumentService {
         } else {
             document.setVerifiedStatus(1);
             document.setUserVerified(user);
+        }
+
+        if (!nameAndIntroductionNotChanged) {
+            document.getTags().clear();
+            addTags(document);
         }
 
         document = documentRepository.save(document);
@@ -557,11 +571,24 @@ public class DocumentServiceImpl implements IDocumentService {
 
     @Override
     public Page<DocumentResponseModel> findRelatedDocuments(String slug) {
+        User user = userService.findLoggedInUser();
         Document document = documentRepository.findBySlug(slug).orElseThrow(() -> new RuntimeException("Document not found"));
 
         Pageable pageable = PageRequest.of(0, 10);
 
-        Page<Document> documents = documentRepository.findRelatedDocumentsByTags(document, document.getTags(), pageable);
+        Page<Document> documents = documentRepository.findRelatedDocumentsByTags(document, user.getOrganization(), pageable);
+        Page<DocumentResponseModel> documentResponseModels = documents.map(this::convertToDocumentModel);
+
+        return documentResponseModels;
+    }
+
+    @Override
+    public Page<DocumentResponseModel> findRelatedDocumentsForGuest(String slug) {
+        Document document = documentRepository.findBySlug(slug).orElseThrow(() -> new RuntimeException("Document not found"));
+
+        Pageable pageable = PageRequest.of(0, 10);
+
+        Page<Document> documents = documentRepository.findRelatedDocumentsByTagsForGuest(document, pageable);
         Page<DocumentResponseModel> documentResponseModels = documents.map(this::convertToDocumentModel);
 
         return documentResponseModels;
@@ -598,6 +625,28 @@ public class DocumentServiceImpl implements IDocumentService {
 
     public Boolean parseContributed(String contributed) {
         return contributed.equals("all") ? null : Boolean.valueOf(contributed);
+    }
+
+    public void addTags(Document document) {
+        try {
+            List<String> keywords = tagExtractor.findKeywords(document.getDocName().concat(". ").concat(document.getDocIntroduction()));
+            for (String keyword : keywords) {
+                boolean isExisted = tagRepository.existsByTagName(keyword);
+                Tag tag = new Tag();
+                if (isExisted) {
+                    tag = tagRepository.findByTagName(keyword).orElseThrow(() -> new RuntimeException("Tag not found"));
+                } else {
+                    tag.setTagName(keyword);
+                    tag.setSlug(SlugGenerator.generateSlug(keyword, false));
+                    tag = tagRepository.save(tag);
+                }
+
+                document.getTags().add(tag);
+                documentRepository.save(document);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private DocumentResponseModel convertToDocumentModel(Document document) {

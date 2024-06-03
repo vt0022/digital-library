@@ -5,6 +5,7 @@ import com.major_project.digital_library.model.request_model.PasswordRequestMode
 import com.major_project.digital_library.model.request_model.PasswordResetRequestModel;
 import com.major_project.digital_library.model.request_model.UserProfileRequestModel;
 import com.major_project.digital_library.model.request_model.UserRequestModel;
+import com.major_project.digital_library.model.response_model.UserReputationResponseModel;
 import com.major_project.digital_library.model.response_model.UserResponseModel;
 import org.springframework.data.domain.Page;
 import org.springframework.web.multipart.MultipartFile;
@@ -46,4 +47,6 @@ public interface IUserService {
     Page<UserResponseModel> getLatestUsers(int page, int size, String disabled, String gender, String organization, String role, String s);
 
     Page<UserResponseModel> getLatestUsersByOrganization(String slug, int page, int size, String disabled, String gender, String role, String s);
+
+    Page<UserReputationResponseModel> getUserReputation(String s, int page, int size);
 }
