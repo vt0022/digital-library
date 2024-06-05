@@ -16,8 +16,7 @@ public interface ISubsectionService {
 
     SubsectionResponseModel createSubsection(SubsectionRequestModel subsectionRequestModel);
 
-    SubsectionResponseModel updateSubsection(UUID subId,
-                                             SubsectionRequestModel subsectionRequestModel);
+    SubsectionResponseModel updateSubsection(UUID subId, SubsectionRequestModel subsectionRequestModel);
 
     boolean deleteSubsection(UUID subId);
 

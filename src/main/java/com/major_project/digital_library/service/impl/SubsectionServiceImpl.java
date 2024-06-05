@@ -102,6 +102,8 @@ public class SubsectionServiceImpl implements ISubsectionService {
         subsection.setSubName(subsectionRequestModel.getSubName());
         subsection.setSlug(slugGenerator.generateSlug(subsection.getSubName(), false));
         subsection.setEditable(subsectionRequestModel.isEditable());
+        subsection.setPostAcceptable(subsectionRequestModel.isPostAcceptable());
+        subsection.setReplyAcceptable(subsectionRequestModel.isReplyAcceptable());
         subsection.setSection(section);
         subsection = subsectionRepository.save(subsection);
 

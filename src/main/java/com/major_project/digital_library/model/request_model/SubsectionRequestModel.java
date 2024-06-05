@@ -19,5 +19,9 @@ public class SubsectionRequestModel implements Serializable {
 
     private boolean isEditable;
 
+    private boolean isPostAcceptable;
+
+    private boolean isReplyAcceptable;
+
     private UUID sectionId;
 }

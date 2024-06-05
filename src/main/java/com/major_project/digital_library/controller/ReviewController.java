@@ -1,49 +1,26 @@
 package com.major_project.digital_library.controller;
 
-import com.major_project.digital_library.entity.Document;
-import com.major_project.digital_library.entity.Organization;
-import com.major_project.digital_library.entity.Review;
-import com.major_project.digital_library.entity.User;
 import com.major_project.digital_library.model.request_model.ReviewRequestModel;
 import com.major_project.digital_library.model.response_model.ResponseModel;
 import com.major_project.digital_library.model.response_model.ReviewResponseModel;
-import com.major_project.digital_library.repository.IDocumentRepository;
-import com.major_project.digital_library.service.IDocumentService;
-import com.major_project.digital_library.service.IOrganizationService;
 import com.major_project.digital_library.service.IReviewService;
-import com.major_project.digital_library.service.IUserService;
 import io.swagger.v3.oas.annotations.Operation;
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.sql.Timestamp;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v2")
 public class ReviewController {
     private final IReviewService reviewService;
-    private final IDocumentService documentService;
-    private final IDocumentRepository documentRepository;
-    private final IOrganizationService organizationService;
-    private final IUserService userService;
-    private final ModelMapper modelMapper;
 
     @Autowired
-    public ReviewController(IReviewService reviewService, IDocumentService documentService, IDocumentRepository documentRepository, IOrganizationService organizationService, IUserService userService, ModelMapper modelMapper) {
+    public ReviewController(IReviewService reviewService) {
         this.reviewService = reviewService;
-        this.documentService = documentService;
-        this.documentRepository = documentRepository;
-        this.organizationService = organizationService;
-        this.userService = userService;
-        this.modelMapper = modelMapper;
     }
 
     @Operation(summary = "Lấy đánh giá của một tài liệu",
@@ -52,18 +29,7 @@ public class ReviewController {
     public ResponseEntity<?> getReviewsByDocument(@PathVariable String slug,
                                                   @RequestParam(defaultValue = "0") int rating,
                                                   @RequestParam(defaultValue = "0") int page) {
-        Document document = documentRepository.findBySlug(slug).orElseThrow(() -> new RuntimeException("Document not found"));
-
-        Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
-        Pageable pageable = PageRequest.of(page, 4, sort);
-        Page<Review> reviews = Page.empty();
-
-        if (rating >= 1 && rating <= 5)
-            reviews = reviewService.findByDocumentAndStarAndVerifiedStatusOrderByCreatedAt(document, rating, 1, pageable);
-        else
-            reviews = reviewService.findByDocumentAndVerifiedStatusOrderByCreatedAt(document, 1, pageable);
-
-        Page<ReviewResponseModel> reviewResponseModels = reviews.map(this::convertToReviewModel);
+        Page<ReviewResponseModel> reviewResponseModels = reviewService.getReviewsByDocument(slug, rating, page);
 
         return ResponseEntity.ok(ResponseModel.builder()
                 .status(200)
@@ -77,20 +43,7 @@ public class ReviewController {
             description = "Trả về số lượng đánh giá dựa trên số sao của một tài liệu")
     @GetMapping("/documents/{slug}/reviews/count")
     public ResponseEntity<?> countReviewsByStarOfDocument(@PathVariable String slug) {
-        Document document = documentRepository.findBySlug(slug).orElseThrow(() -> new RuntimeException("Document not found"));
-
-        List<Object[]> reviewCounts = reviewService.countReviewsByStarAndDocument(document);
-
-        Set<Integer> existingStars = new HashSet<>();
-        for (Object[] review : reviewCounts) {
-            existingStars.add((Integer) review[0]);
-        }
-
-        for (int i = 1; i <= 5; i++) {
-            if (!existingStars.contains(i)) {
-                reviewCounts.add(new Object[]{i, 0});
-            }
-        }
+        List<Object[]> reviewCounts = reviewService.countReviewsByStarOfDocument(slug);
 
         return ResponseEntity.ok(ResponseModel.builder()
                 .status(200)
@@ -103,19 +56,10 @@ public class ReviewController {
     @Operation(summary = "Lấy đánh giá của người dùng hiện tại",
             description = "Trả về tất cả đánh giá của người dùng hiện tại")
     @GetMapping("/reviews/mine")
-    public ResponseEntity<?> getMyReviews(@RequestParam(defaultValue = "10") int status) {
-        User user = userService.findLoggedInUser();
-
-        Pageable pageable = PageRequest.of(0, 100);
-
-        List<Review> reviews = new ArrayList<>();
-
-        if (status >= -1 && status <= 1)
-            reviews = reviewService.findByUserAndVerifiedStatusOrderByCreatedAt(user, status, pageable).getContent();
-        else
-            reviews = reviewService.findByUserOrderByCreatedAt(user, pageable).getContent();
-
-        List<ReviewResponseModel> reviewResponseModels = reviews.stream().map(this::convertToReviewModel).collect(Collectors.toList());
+    public ResponseEntity<?> getMyReviews(@RequestParam(defaultValue = "10") int status,
+                                          @RequestParam(defaultValue = "0") int page,
+                                          @RequestParam(defaultValue = "10") int size) {
+        Page<ReviewResponseModel> reviewResponseModels = reviewService.getMyReviews(status, page, size);
 
         return ResponseEntity.ok(ResponseModel.builder()
                 .status(200)
@@ -131,20 +75,7 @@ public class ReviewController {
     public ResponseEntity<?> approveReview(@PathVariable UUID reviewId,
                                            @RequestParam boolean isApproved,
                                            @RequestParam(required = false, defaultValue = "") String note) {
-        User user = userService.findLoggedInUser();
-        Review review = reviewService.findById(reviewId).orElseThrow(() -> new RuntimeException("Review not found"));
-
-        review.setVerifiedStatus(isApproved ? 1 : -1);
-        if (!isApproved)
-            review.setNote(note);
-        else
-            review.setNote("");
-        review.setTimesLeft(review.getTimesLeft() - 1);
-        review.setUserVerified(user);
-        review.setVerifiedAt(new Timestamp(System.currentTimeMillis()));
-        review = reviewService.save(review);
-
-        ReviewResponseModel reviewResponseModel = modelMapper.map(review, ReviewResponseModel.class);
+        ReviewResponseModel reviewResponseModel = reviewService.approveReview(reviewId, isApproved, note);
 
         return ResponseEntity.ok(ResponseModel.builder()
                 .status(200)
@@ -161,18 +92,7 @@ public class ReviewController {
                                                       @RequestParam(defaultValue = "10", required = false) int verifiedStatus,
                                                       @RequestParam(defaultValue = "0") int page,
                                                       @RequestParam(defaultValue = "15") int size) {
-        Sort sort = Sort.by(Sort.Direction.DESC, "updatedAt");
-        Pageable pageable = PageRequest.of(page, size, sort);
-
-        Organization organization = organizationService.findById(orgId).orElseThrow(() -> new RuntimeException("Organization not found"));
-
-        Page<Review> reviews = Page.empty();
-        if (verifiedStatus >= -1 && verifiedStatus <= 1)
-            reviews = reviewService.findByVerifiedStatusAndDocumentOrganization(verifiedStatus, organization, pageable);
-        else
-            reviews = reviewService.findByDocumentOrganization(organization, pageable);
-
-        Page<ReviewResponseModel> reviewResponseModels = reviews.map(this::convertToReviewModel);
+        Page<ReviewResponseModel> reviewResponseModels = reviewService.getReviewsByOrganization(orgId, verifiedStatus, page, size);
 
         return ResponseEntity.ok(ResponseModel.builder()
                 .status(200)
@@ -186,18 +106,12 @@ public class ReviewController {
             description = "Trả về kết quả người dùng đã đánh giá tài liệu này chưa")
     @GetMapping("/documents/{slug}/reviewed")
     public ResponseEntity<?> checkReviewed(@PathVariable String slug) {
-        Document document = documentRepository.findBySlug(slug).orElseThrow(() -> new RuntimeException("Document not found"));
-        // Find user info
-        User user = userService.findLoggedInUser();
-
-        boolean isReviewed = reviewService.existsByUserAndDocument(user, document);
-        String message = "Not reviewed";
-        if (isReviewed) message = "Reviewed";
+        boolean isReviewed = reviewService.checkReviewed(slug);
 
         return ResponseEntity.ok(ResponseModel.builder()
                 .status(200)
                 .error(false)
-                .message(message)
+                .message(isReviewed ? "Reviewed" : "Not reviewed")
                 .build());
     }
 
@@ -205,17 +119,7 @@ public class ReviewController {
             description = "Thực hiện đánh giá một tài liệu và trả về đánh giá vừa tạo")
     @PostMapping("/documents/{docId}/review")
     public ResponseEntity<?> reviewDocument(@PathVariable UUID docId, @RequestBody ReviewRequestModel reviewRequestModel) {
-        Document document = documentRepository.findById(docId).orElseThrow(() -> new RuntimeException("Document not found"));
-        // Find user info
-        User user = userService.findLoggedInUser();
-
-        Review review = modelMapper.map(reviewRequestModel, Review.class);
-        review.setDocument(document);
-        review.setUser(user);
-        review.setVerifiedStatus(0);
-        review = reviewService.save(review);
-
-        ReviewResponseModel reviewResponseModel = modelMapper.map(review, ReviewResponseModel.class);
+        ReviewResponseModel reviewResponseModel = reviewService.reviewDocument(docId, reviewRequestModel);
 
         return ResponseEntity.ok(ResponseModel.builder()
                 .status(200)
@@ -229,14 +133,7 @@ public class ReviewController {
             description = "Thực hiện chỉnh sửa đánh giá của một tài liệu và trả về đánh giá vừa sửa")
     @PutMapping("/reviews/{reviewId}")
     public ResponseEntity<?> editReview(@PathVariable UUID reviewId, @RequestBody ReviewRequestModel reviewRequestModel) {
-        Review review = reviewService.findById(reviewId).orElseThrow(() -> new RuntimeException("Review not found"));
-
-        review.setVerifiedStatus(0);
-        review.setStar(reviewRequestModel.getStar());
-        review.setContent(reviewRequestModel.getContent());
-        review = reviewService.save(review);
-
-        ReviewResponseModel reviewResponseModel = modelMapper.map(review, ReviewResponseModel.class);
+        ReviewResponseModel reviewResponseModel = reviewService.editReview(reviewId, reviewRequestModel);
 
         return ResponseEntity.ok(ResponseModel.builder()
                 .status(200)
@@ -250,9 +147,7 @@ public class ReviewController {
             description = "Xoá một đánh giá khỏi hệ thống")
     @DeleteMapping("/reviews/{reviewId}")
     public ResponseEntity<?> deleteReview(@PathVariable UUID reviewId) {
-        Review review = reviewService.findById(reviewId).orElseThrow(() -> new RuntimeException("Review not found"));
-
-        reviewService.deleteById(reviewId);
+        reviewService.deleteReview(reviewId);
 
         return ResponseEntity.ok(ResponseModel.builder()
                 .status(200)
@@ -260,10 +155,4 @@ public class ReviewController {
                 .message("Delete review successfully")
                 .build());
     }
-
-    private ReviewResponseModel convertToReviewModel(Object o) {
-        ReviewResponseModel reviewResponseModel = modelMapper.map(o, ReviewResponseModel.class);
-        return reviewResponseModel;
-    }
-
 }

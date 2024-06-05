@@ -437,7 +437,7 @@ public class InitController {
                     review.setStar(star);
                     review.setContent(content);
 
-                    reviewService.save(review);
+                    reviewRepository.save(review);
                 } catch (Exception e) {
                     System.out.println(e);
                 }

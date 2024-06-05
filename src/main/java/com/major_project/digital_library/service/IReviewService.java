@@ -1,41 +1,34 @@
 package com.major_project.digital_library.service;
 
-import com.major_project.digital_library.entity.Document;
-import com.major_project.digital_library.entity.Organization;
-import com.major_project.digital_library.entity.Review;
-import com.major_project.digital_library.entity.User;
+import com.major_project.digital_library.model.request_model.ReviewRequestModel;
+import com.major_project.digital_library.model.response_model.ReviewResponseModel;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 public interface IReviewService {
-    <S extends Review> S save(S entity);
 
-    Page<Review> findByDocumentOrganization(Organization organization, Pageable pageable);
+    Page<ReviewResponseModel> getReviewsByDocument(String slug, int rating, int page);
 
-    Page<Review> findByVerifiedStatusAndDocumentOrganization(int verifiedStatus, Organization organization, Pageable pageable);
+    List<Object[]> countReviewsByStarOfDocument(String slug);
 
-    Optional<Review> findById(UUID uuid);
+    Page<ReviewResponseModel> getMyReviews(int status, int page, int size);
 
-    void deleteById(UUID uuid);
+    ReviewResponseModel approveReview(UUID reviewId, boolean isApproved, String note);
 
-    boolean existsByUserAndDocument(User user, Document document);
+    Page<ReviewResponseModel> getReviewsByOrganization(UUID orgId,
+                                                       int verifiedStatus,
+                                                       int page,
+                                                       int size);
 
-    Page<Review> findByDocumentAndVerifiedStatusOrderByCreatedAt(Document document, int verifiedStatus, Pageable pageable);
+    boolean checkReviewed(String slug);
 
-    Page<Review> findByDocumentAndStarAndVerifiedStatusOrderByCreatedAt(Document document, Integer star, int verifiedStatus, Pageable pageable);
+    ReviewResponseModel reviewDocument(@PathVariable UUID docId, @RequestBody ReviewRequestModel reviewRequestModel);
 
-    Page<Review> findByUserOrderByCreatedAt(User user, Pageable pageable);
+    ReviewResponseModel editReview(UUID reviewId, ReviewRequestModel reviewRequestModel);
 
-    Page<Review> findByUserAndVerifiedStatusOrderByCreatedAt(User user, int verifiedStatus, Pageable pageable);
-
-    @Query("SELECT r.star, COUNT(r) FROM Review r " +
-            "WHERE r.verifiedStatus = 1 " +
-            "AND r.document = :document " +
-            "GROUP BY r.star")
-    List<Object[]> countReviewsByStarAndDocument(Document document);
+    void deleteReview(UUID reviewId);
 }

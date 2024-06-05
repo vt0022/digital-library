@@ -17,8 +17,7 @@ public interface ISectionService {
 
     SectionResponseModel createSection(SectionRequestModel sectionRequestModel);
 
-    SectionResponseModel updateSection(UUID subId,
-                                       SectionRequestModel sectionRequestModel);
+    SectionResponseModel updateSection(UUID subId, SectionRequestModel sectionRequestModel);
 
     boolean deleteSection(UUID subId);
 
