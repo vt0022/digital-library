@@ -17,9 +17,12 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     #    password: eBE1a1e26g6c62A1D-ge2EcF3b6Dca-e
     #    url: jdbc:mysql://viaduct.proxy.rlwy.net:25888/digital_library
-    password: 01669871043
     url: jdbc:mysql://localhost:3306/digital_library
     username: root
+    password: 01669871043
+  #    url: jdbc:mysql://mysql:3306/digital_library
+  #    username: root
+  #    password: root-password
   devtools:
     restart:
       log-condition-evaluation-delta: false

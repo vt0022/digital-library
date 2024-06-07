@@ -33,6 +33,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -370,16 +371,49 @@ public class UserServiceImpl implements IUserService {
 
     }
 
-
     @Override
-    public Page<UserReputationResponseModel> getUserReputation(String s, int page, int size) {
+    public Page<UserReputationResponseModel> getUserReputation(String s, int month, int year, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
 
-        Page<User> users = userRepository.findUsersForReputation(s, pageable);
+        Page<User> users = Page.empty();
+        List<User> indexUsers = new ArrayList<>();
 
-        List<User> indexUsers = s.equals("") ? users.getContent() : userRepository.findAll();
+        if (month == 0) {
+            if (year == 0) {
+                users = userRepository.findUsersForReputation(s, pageable);
+                if (!s.equals("")) {
+                    pageable = PageRequest.of(0, Integer.MAX_VALUE);
+                    indexUsers = userRepository.findUsersForReputation("", pageable).getContent();
+                }
+            } else {
+                users = userRepository.findUsersForReputationByYear(s, year, pageable);
+                if (!s.equals("")) {
+                    pageable = PageRequest.of(0, Integer.MAX_VALUE);
+                    indexUsers = userRepository.findUsersForReputationByYear("", year, pageable).getContent();
+                }
+            }
+        } else {
+            if (year == 0) {
+                users = userRepository.findUsersForReputation(s, pageable); // Exception
+                if (!s.equals("")) {
+                    pageable = PageRequest.of(0, Integer.MAX_VALUE);
+                    indexUsers = userRepository.findUsersForReputation("", pageable).getContent();
+                }
+            } else {
+                users = userRepository.findUsersForReputationByMonthAndYear(s, month, year, pageable);
+                pageable = PageRequest.of(0, Integer.MAX_VALUE);
+                if (!s.equals("")) {
+                    indexUsers = userRepository.findUsersForReputationByMonthAndYear("", month, year, pageable).getContent();
+                }
+            }
+        }
 
-        Page<UserReputationResponseModel> userReputationResponseModels = users.map(user -> convertToReputationUserModel(user, s, indexUsers, page, size));
+        if (s.equals("")) {
+            indexUsers = users.getContent();
+        }
+
+        List<User> finalIndexUsers = indexUsers;
+        Page<UserReputationResponseModel> userReputationResponseModels = users.map(user -> convertToReputationUserModel(user, s, finalIndexUsers, page, size));
         ;
         return userReputationResponseModels;
 
@@ -464,11 +498,11 @@ public class UserServiceImpl implements IUserService {
         userResponseModel.setTotalReplyLikes(totalReplyLikes);
         userResponseModel.setTotalScores(totalScores);
 
-        if (!s.equals("")) {
-            int rank = users.indexOf(user);
+        if (s.equals("")) {
+            int rank = users.indexOf(user) + page * size;
             userResponseModel.setRank(rank + 1);
         } else {
-            int rank = users.indexOf(user) + page * size;
+            int rank = users.indexOf(user);
             userResponseModel.setRank(rank + 1);
         }
 

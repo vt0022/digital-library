@@ -82,7 +82,54 @@ public interface IUserRepository extends JpaRepository<User, UUID> {
             "(SELECT COUNT(pa) FROM PostAcceptance pa WHERE pa.post.isDisabled = FALSE AND pa.post.userPosted = u ) DESC, " +
             "(SELECT COUNT(ra) FROM ReplyAcceptance ra WHERE ra.reply.isDisabled = FALSE AND ra.reply.user = u) DESC, " +
             "(SELECT COUNT(pl) FROM PostLike pl WHERE pl.post.isDisabled = FALSE AND pl.post.userPosted = u) DESC, " +
-            "(SELECT COUNT(rl) FROM ReplyLike rl WHERE rl.reply.isDisabled = FALSE AND rl.reply.user = u) DESC")
+            "(SELECT COUNT(rl) FROM ReplyLike rl WHERE rl.reply.isDisabled = FALSE AND rl.reply.user = u) DESC, " +
+            "u.createdAt DESC")
     Page<User> findUsersForReputation(String query, Pageable pageable);
+
+    @Query("SELECT u FROM User u " +
+            "WHERE u.isDisabled = FALSE " +
+            "AND u.isAuthenticated = TRUE " +
+            "AND u.role.roleName = 'ROLE_STUDENT' " +
+            "AND (LOWER(u.firstName) LIKE LOWER(CONCAT('%', :query, '%')) " +
+            "OR LOWER(u.lastName) LIKE LOWER(CONCAT('%', :query, '%'))) " +
+            "ORDER BY " +
+            "( " +
+            "  ((SELECT COUNT(pa) FROM PostAcceptance pa WHERE pa.post.isDisabled = FALSE AND pa.post.userPosted = u AND MONTH(pa.acceptedAt) = :month AND YEAR(pa.acceptedAt) = :year)) * 10 + " +
+            "  ((SELECT COUNT(ra) FROM ReplyAcceptance ra WHERE ra.reply.isDisabled = FALSE AND ra.reply.user = u AND MONTH(ra.acceptedAt) = :month AND YEAR(ra.acceptedAt) = :year)) * 10 + " +
+            "  ((SELECT COUNT(pl) FROM PostLike pl WHERE pl.post.isDisabled = FALSE AND pl.post.userPosted = u AND MONTH(pl.likedAt) = :month AND YEAR(pl.likedAt) = :year)) * 2 + " +
+            "  ((SELECT COUNT(rl) FROM ReplyLike rl WHERE rl.reply.isDisabled = FALSE AND rl.reply.user = u AND MONTH(rl.likedAt) = :month AND YEAR(rl.likedAt) = :year)) * 2 " +
+            ") DESC, " +
+            "(SELECT COUNT(pa) FROM PostAcceptance pa WHERE pa.post.isDisabled = FALSE AND pa.post.userPosted = u  AND MONTH(pa.acceptedAt) = :month AND YEAR(pa.acceptedAt) = :year) DESC, " +
+            "(SELECT COUNT(ra) FROM ReplyAcceptance ra WHERE ra.reply.isDisabled = FALSE AND ra.reply.user = u AND MONTH(ra.acceptedAt) = :month AND YEAR(ra.acceptedAt) = :year) DESC, " +
+            "(SELECT COUNT(pl) FROM PostLike pl WHERE pl.post.isDisabled = FALSE AND pl.post.userPosted = u AND MONTH(pl.likedAt) = :month AND YEAR(pl.likedAt) = :year) DESC, " +
+            "(SELECT COUNT(rl) FROM ReplyLike rl WHERE rl.reply.isDisabled = FALSE AND rl.reply.user = u AND MONTH(rl.likedAt) = :month AND YEAR(rl.likedAt) = :year) DESC, " +
+            "u.createdAt DESC")
+    Page<User> findUsersForReputationByMonthAndYear(String query, int month, int year, Pageable pageable);
+
+    @Query("SELECT u FROM User u " +
+            "WHERE u.isDisabled = FALSE " +
+            "AND u.isAuthenticated = TRUE " +
+            "AND u.role.roleName = 'ROLE_STUDENT' " +
+            "AND (LOWER(u.firstName) LIKE LOWER(CONCAT('%', :query, '%')) " +
+            "OR LOWER(u.lastName) LIKE LOWER(CONCAT('%', :query, '%'))) " +
+            "ORDER BY " +
+            "( " +
+            "  ((SELECT COUNT(pa) FROM PostAcceptance pa WHERE pa.post.isDisabled = FALSE AND pa.post.userPosted = u AND YEAR(pa.acceptedAt) = :year)) * 10 + " +
+            "  ((SELECT COUNT(ra) FROM ReplyAcceptance ra WHERE ra.reply.isDisabled = FALSE AND ra.reply.user = u AND YEAR(ra.acceptedAt) = :year)) * 10 + " +
+            "  ((SELECT COUNT(pl) FROM PostLike pl WHERE pl.post.isDisabled = FALSE AND pl.post.userPosted = u AND YEAR(pl.likedAt) = :year)) * 2 + " +
+            "  ((SELECT COUNT(rl) FROM ReplyLike rl WHERE rl.reply.isDisabled = FALSE AND rl.reply.user = u AND YEAR(rl.likedAt) = :year)) * 2 " +
+            ") DESC, " +
+            "(SELECT COUNT(pa) FROM PostAcceptance pa WHERE pa.post.isDisabled = FALSE AND pa.post.userPosted = u AND YEAR(pa.acceptedAt) = :year) DESC, " +
+            "(SELECT COUNT(ra) FROM ReplyAcceptance ra WHERE ra.reply.isDisabled = FALSE AND ra.reply.user = u AND YEAR(ra.acceptedAt) = :year) DESC, " +
+            "(SELECT COUNT(pl) FROM PostLike pl WHERE pl.post.isDisabled = FALSE AND pl.post.userPosted = u AND YEAR(pl.likedAt) = :year) DESC, " +
+            "(SELECT COUNT(rl) FROM ReplyLike rl WHERE rl.reply.isDisabled = FALSE AND rl.reply.user = u AND YEAR(rl.likedAt) = :year) DESC, " +
+            "u.createdAt DESC")
+    Page<User> findUsersForReputationByYear(String query, int year, Pageable pageable);
+
+    @Query("SELECT u FROM User u " +
+            "WHERE u.isDisabled = FALSE " +
+            "AND u.isAuthenticated = TRUE " +
+            "AND u.role.roleName = 'ROLE_STUDENT'")
+    List<User> findActiveStudent();
 
 }

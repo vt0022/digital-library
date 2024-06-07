@@ -47,6 +47,8 @@ public class PostResponseModel implements Serializable {
 
     private int totalViews;
 
+    private int totalAcceptances;
+
     private ReplyLeanModel latestReply;
 
     private LabelLeanModel label;
@@ -54,6 +56,4 @@ public class PostResponseModel implements Serializable {
     private SubsectionLeanModel subsection;
 
     private List<String> peopleLiked;
-
-    private List<String> peopleAccepted;
 }

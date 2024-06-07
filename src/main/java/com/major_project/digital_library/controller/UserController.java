@@ -262,10 +262,12 @@ public class UserController {
 
     @Operation(summary = "Lấy danh sách người dùng kèm chỉ số danh tiếng")
     @GetMapping("/ranking")
-    public ResponseEntity<?> getUserReputation(@RequestParam(defaultValue = "0") int page,
-                                               @RequestParam(defaultValue = "10") int size,
-                                               @RequestParam(defaultValue = "") String s) {
-        Page<UserReputationResponseModel> userModels = userService.getUserReputation(s, page, size);
+    public ResponseEntity<?> getUserReputation(@RequestParam(defaultValue = "0") int month,
+                                               @RequestParam(defaultValue = "0") int year,
+                                               @RequestParam(defaultValue = "") String s,
+                                               @RequestParam(defaultValue = "0") int page,
+                                               @RequestParam(defaultValue = "10") int size) {
+        Page<UserReputationResponseModel> userModels = userService.getUserReputation(s, month, year, page, size);
         ;
         return ResponseEntity.ok(ResponseModel.builder()
                 .status(200)
@@ -273,6 +275,5 @@ public class UserController {
                 .message("Get user reputation successfully")
                 .data(userModels)
                 .build());
-
     }
 }

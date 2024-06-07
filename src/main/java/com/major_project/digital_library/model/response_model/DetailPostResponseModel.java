@@ -40,6 +40,8 @@ public class DetailPostResponseModel implements Serializable {
 
     private int totalViews;
 
+    private int totalAcceptances;
+
     private boolean isMy;
 
     private boolean isDisabled;
@@ -57,6 +59,4 @@ public class DetailPostResponseModel implements Serializable {
     private LabelLeanModel label;
 
     private List<String> peopleLiked;
-
-    private List<String> peopleAccepted;
 }

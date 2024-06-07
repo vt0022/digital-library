@@ -69,6 +69,4 @@ public class DigitalLibraryApplication {
                 .setServiceAccountPrivateKeyFromP12File(new File("src/main/resources/keys/uploadfiles.p12"))
                 .build();
     }
-
-
 }

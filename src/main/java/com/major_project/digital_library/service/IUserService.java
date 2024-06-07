@@ -48,5 +48,5 @@ public interface IUserService {
 
     Page<UserResponseModel> getLatestUsersByOrganization(String slug, int page, int size, String disabled, String gender, String role, String s);
 
-    Page<UserReputationResponseModel> getUserReputation(String s, int page, int size);
+    Page<UserReputationResponseModel> getUserReputation(String s, int month, int year, int page, int size);
 }

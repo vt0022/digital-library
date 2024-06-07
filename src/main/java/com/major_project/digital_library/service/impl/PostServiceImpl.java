@@ -39,6 +39,7 @@ public class PostServiceImpl implements IPostService {
     private final ILabelRepository labelRepository;
     private final ITagRepository tagRepository;
     private final IPostAcceptanceRepository postAcceptanceRepository;
+    private final IReplyAcceptanceRepository replyAcceptanceRepository;
     private final IUserService userService;
     private final IBadgeService badgeService;
     private final IBadgeRewardService badgeRewardService;
@@ -46,7 +47,7 @@ public class PostServiceImpl implements IPostService {
     private final TagExtractor tagExtractor;
 
     @Autowired
-    public PostServiceImpl(IPostRepository postRepository, IPostLikeRepository postLikeRepository, IPostHistoryRepository postHistoryRepository, IUserRepository userRepository, ISubsectionRepository subsectionRepository, ILabelRepository labelRepository, ITagRepository tagRepository, IPostAcceptanceRepository postAcceptanceRepository, IUserService userService, IBadgeService badgeService, IBadgeRewardService badgeRewardService, ModelMapper modelMapper, TagExtractor tagExtractor) {
+    public PostServiceImpl(IPostRepository postRepository, IPostLikeRepository postLikeRepository, IPostHistoryRepository postHistoryRepository, IUserRepository userRepository, ISubsectionRepository subsectionRepository, ILabelRepository labelRepository, ITagRepository tagRepository, IPostAcceptanceRepository postAcceptanceRepository, IReplyAcceptanceRepository replyAcceptanceRepository, IUserService userService, IBadgeService badgeService, IBadgeRewardService badgeRewardService, ModelMapper modelMapper, TagExtractor tagExtractor) {
         this.postRepository = postRepository;
         this.postLikeRepository = postLikeRepository;
         this.postHistoryRepository = postHistoryRepository;
@@ -55,6 +56,7 @@ public class PostServiceImpl implements IPostService {
         this.labelRepository = labelRepository;
         this.tagRepository = tagRepository;
         this.postAcceptanceRepository = postAcceptanceRepository;
+        this.replyAcceptanceRepository = replyAcceptanceRepository;
         this.userService = userService;
         this.badgeService = badgeService;
         this.badgeRewardService = badgeRewardService;
@@ -347,15 +349,10 @@ public class PostServiceImpl implements IPostService {
                     return userLiked.getImage() != null ? userLiked.getImage() : "";
                 })
                 .collect(Collectors.toList());
-        List<String> peopleAcceptedImages = post.getPostAcceptances().stream()
-                .map(postAcceptance -> {
-                    User userAccepted = postAcceptance.getUser();
-                    return userAccepted.getImage() != null ? userAccepted.getImage() : "";
-                })
-                .collect(Collectors.toList());
 
         postResponseModel.setTotalLikes(post.getPostLikes().size());
         postResponseModel.setTotalReplies(post.getReplies().size());
+        postResponseModel.setTotalAcceptances(post.getPostAcceptances().size());
         postResponseModel.setLatestReply(
                 latestReply == null ? null :
                         modelMapper.map(latestReply, ReplyLeanModel.class));
@@ -364,7 +361,6 @@ public class PostServiceImpl implements IPostService {
         postResponseModel.setSectionDisabled(isSectionDisabled);
         postResponseModel.setSubsectionDisabled(isSubsectionDisabled);
         postResponseModel.setPeopleLiked(peopleLikedImages);
-        postResponseModel.setPeopleAccepted(peopleAcceptedImages);
 
         return postResponseModel;
     }
@@ -387,24 +383,18 @@ public class PostServiceImpl implements IPostService {
                     return userLiked.getImage() != null ? userLiked.getImage() : "";
                 })
                 .collect(Collectors.toList());
-        List<String> peopleAcceptedImages = post.getPostAcceptances().stream()
-                .map(postAcceptance -> {
-                    User userAccepted = postAcceptance.getUser();
-                    return userAccepted.getImage() != null ? userAccepted.getImage() : "";
-                })
-                .collect(Collectors.toList());
 
         detailPostResponseModel.setLiked(isLiked);
         detailPostResponseModel.setMy(isMy);
         detailPostResponseModel.setAccepted(isAccepted);
         detailPostResponseModel.setTotalLikes(post.getPostLikes().size());
         detailPostResponseModel.setTotalReplies(post.getReplies().size());
+        detailPostResponseModel.setTotalAcceptances(post.getPostAcceptances().size());
         detailPostResponseModel.getUserPosted().setBadge(badge);
         detailPostResponseModel.setLabelDisabled(isLabelDisabled);
         detailPostResponseModel.setSectionDisabled(isSectionDisabled);
         detailPostResponseModel.setSubsectionDisabled(isSubsectionDisabled);
         detailPostResponseModel.setPeopleLiked(peopleLikedImages);
-        detailPostResponseModel.setPeopleAccepted(peopleAcceptedImages);
 
         return detailPostResponseModel;
     }
