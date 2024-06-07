@@ -21,6 +21,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 3s
+        max_attempts: 2
+        window: 60s
     ports:
       - "8080:8080"
     depends_on:
