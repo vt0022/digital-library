@@ -24,12 +24,12 @@ public interface IUserRepository extends JpaRepository<User, UUID> {
 
     long countByOrganizationAndCreatedAtBetween(Organization organization, Timestamp startDate, Timestamp endDate);
 
-    @Query("SELECT u.organization.orgName as organization, COUNT(u) as count " +
+    @Query("SELECT u.organization.orgName AS organization, COUNT(u) AS count " +
             "FROM User u " +
             "GROUP BY u.organization")
     List<Object[]> countUsersByOrganization();
 
-    @Query("SELECT u.organization.orgName as organization, COUNT(u) as count " +
+    @Query("SELECT u.organization.orgName AS organization, COUNT(u) AS count " +
             "FROM User u " +
             "WHERE DATE(u.createdAt) BETWEEN DATE(:startDate) AND DATE(:endDate) " +
             "GROUP BY u.organization")
@@ -59,77 +59,106 @@ public interface IUserRepository extends JpaRepository<User, UUID> {
             "AND YEAR(u.createdAt) = YEAR(CURRENT_DATE)")
     Page<User> findLatestUsers(Boolean isDisabled, Integer gender, Organization organization, Role role, String roleName, String query, Pageable pageable);
 
-    @Query("SELECT MONTH(u.createdAt) as month, COUNT(u) as count " +
+    @Query("SELECT MONTH(u.createdAt) AS month, COUNT(u) AS count " +
             "FROM User u " +
             "WHERE (u.organization = :organization OR :organization IS NULL) " +
             "AND YEAR(u.createdAt) = :year " +
             "GROUP BY MONTH(u.createdAt)")
     List<Object[]> countUsersByMonth(int year, Organization organization);
 
-    @Query("SELECT u FROM User u " +
-            "WHERE u.isDisabled = FALSE " +
-            "AND u.isAuthenticated = TRUE " +
-            "AND u.role.roleName = 'ROLE_STUDENT' " +
-            "AND (LOWER(u.firstName) LIKE LOWER(CONCAT('%', :query, '%')) " +
-            "OR LOWER(u.lastName) LIKE LOWER(CONCAT('%', :query, '%'))) " +
+    @Query(value = "SELECT BIN_TO_UUID(u.user_id) userId, u.first_name firstName, u.last_name lastName, u.image, u.email, u.created_at createdAt, " +
+            "COALESCE(pa.totalPostAcceptances, 0) totalPostAcceptances, COALESCE(ra.totalReplyAcceptances, 0) totalReplyAcceptances, COALESCE(pl.totalPostLikes, 0) totalPostLikes, COALESCE(rl.totalReplyLikes, 0) totalReplyLikes, " +
+            "(COALESCE(pa.totalPostAcceptances, 0) * 10 + COALESCE(ra.totalReplyAcceptances, 0) * 10 + COALESCE(pl.totalPostLikes, 0) * 2 + COALESCE(rl.totalReplyLikes, 0) * 2) totalScores " +
+            "FROM User u " +
+            "LEFT JOIN (SELECT Post.posted_by, COUNT(*) totalPostAcceptances FROM Post JOIN Post_Acceptance ON Post_Acceptance.post_id = Post.post_id WHERE Post.is_disabled = FALSE GROUP BY Post.posted_by) pa ON u.user_id = pa.posted_by " +
+            "LEFT JOIN (SELECT Reply.replied_by, COUNT(*) totalReplyAcceptances FROM Reply JOIN Reply_Acceptance ON Reply_Acceptance.reply_id = Reply.reply_id WHERE Reply.is_disabled = FALSE GROUP BY Reply.replied_by) ra ON u.user_id = ra.replied_by " +
+            "LEFT JOIN (SELECT Post.posted_by, COUNT(*) totalPostLikes FROM Post JOIN Post_Like ON Post_Like.post_id = Post.post_id WHERE Post.is_disabled = FALSE GROUP BY Post.posted_by) pl ON u.user_id = pl.posted_by " +
+            "LEFT JOIN (SELECT Reply.replied_by, COUNT(*) totalReplyLikes FROM Reply JOIN Reply_Like ON Reply_Like.reply_id = Reply.reply_id WHERE Reply.is_disabled = FALSE GROUP BY Reply.replied_by) rl ON u.user_id = rl.replied_by " +
+            "WHERE u.is_disabled = FALSE " +
+            "AND u.is_authenticated = TRUE " +
+            "AND (LOWER(u.first_name) LIKE LOWER(CONCAT('%', :query, '%')) " +
+            "OR LOWER(u.last_name) LIKE LOWER(CONCAT('%', :query, '%'))) " +
+            "GROUP BY u.user_id " +
             "ORDER BY " +
-            "( " +
-            "  ((SELECT COUNT(pa) FROM PostAcceptance pa WHERE pa.post.isDisabled = FALSE AND pa.post.userPosted = u)) * 10 + " +
-            "  ((SELECT COUNT(ra) FROM ReplyAcceptance ra WHERE ra.reply.isDisabled = FALSE AND ra.reply.user = u)) * 10 + " +
-            "  ((SELECT COUNT(pl) FROM PostLike pl WHERE pl.post.isDisabled = FALSE AND pl.post.userPosted = u)) * 2 + " +
-            "  ((SELECT COUNT(rl) FROM ReplyLike rl WHERE rl.reply.isDisabled = FALSE AND rl.reply.user = u)) * 2 " +
-            ") DESC, " +
-            "(SELECT COUNT(pa) FROM PostAcceptance pa WHERE pa.post.isDisabled = FALSE AND pa.post.userPosted = u ) DESC, " +
-            "(SELECT COUNT(ra) FROM ReplyAcceptance ra WHERE ra.reply.isDisabled = FALSE AND ra.reply.user = u) DESC, " +
-            "(SELECT COUNT(pl) FROM PostLike pl WHERE pl.post.isDisabled = FALSE AND pl.post.userPosted = u) DESC, " +
-            "(SELECT COUNT(rl) FROM ReplyLike rl WHERE rl.reply.isDisabled = FALSE AND rl.reply.user = u) DESC, " +
-            "u.createdAt DESC")
-    Page<User> findUsersForReputation(String query, Pageable pageable);
+            "(COALESCE(pa.totalPostAcceptances, 0) * 10 + " +
+            "COALESCE(ra.totalReplyAcceptances, 0) * 10 + " +
+            "COALESCE(pl.totalPostLikes, 0) * 2 + " +
+            "COALESCE(rl.totalReplyLikes, 0) * 2) DESC, " +
+            "COALESCE(pa.totalPostAcceptances, 0) DESC, " +
+            "COALESCE(ra.totalReplyAcceptances, 0) DESC, " +
+            "COALESCE(pl.totalPostLikes, 0) DESC, " +
+            "COALESCE(rl.totalReplyLikes, 0) DESC, " +
+            "u.created_at",
+            countQuery = "SELECT COUNT(*) FROM User " +
+                    "WHERE is_disabled = FALSE " +
+                    "AND is_authenticated = TRUE " +
+                    "AND (LOWER(first_name) LIKE LOWER(CONCAT('%', :query, '%')) " +
+                    "OR LOWER(last_name) LIKE LOWER(CONCAT('%', :query, '%')))",
+            nativeQuery = true)
+    Page<Object[]> findUsersForReputation(String query, Pageable pageable);
 
-    @Query("SELECT u FROM User u " +
-            "WHERE u.isDisabled = FALSE " +
-            "AND u.isAuthenticated = TRUE " +
-            "AND u.role.roleName = 'ROLE_STUDENT' " +
-            "AND (LOWER(u.firstName) LIKE LOWER(CONCAT('%', :query, '%')) " +
-            "OR LOWER(u.lastName) LIKE LOWER(CONCAT('%', :query, '%'))) " +
+    @Query(value = "SELECT BIN_TO_UUID(u.user_id) userId, u.first_name firstName, u.last_name lastName, u.image, u.email, u.created_at createdAt, " +
+            "COALESCE(pa.totalPostAcceptances, 0) totalPostAcceptances, COALESCE(ra.totalReplyAcceptances, 0) totalReplyAcceptances, COALESCE(pl.totalPostLikes, 0) totalPostLikes, COALESCE(rl.totalReplyLikes, 0) totalReplyLikes, " +
+            "(COALESCE(pa.totalPostAcceptances, 0) * 10 + COALESCE(ra.totalReplyAcceptances, 0) * 10 + COALESCE(pl.totalPostLikes, 0) * 2 + COALESCE(rl.totalReplyLikes, 0) * 2) totalScores " +
+            "FROM User u " +
+            "LEFT JOIN (SELECT Post.posted_by, COUNT(*) totalPostAcceptances FROM Post JOIN Post_Acceptance ON Post_Acceptance.post_id = Post.post_id WHERE Post.is_disabled = FALSE AND MONTH(Post_Acceptance.accepted_at) = :month AND YEAR(Post_Acceptance.accepted_at) = :year GROUP BY Post.posted_by) pa ON u.user_id = pa.posted_by " +
+            "LEFT JOIN (SELECT Reply.replied_by, COUNT(*) totalReplyAcceptances FROM Reply JOIN Reply_Acceptance ON Reply_Acceptance.reply_id = Reply.reply_id WHERE Reply.is_disabled = FALSE AND MONTH(Reply_Acceptance.accepted_at) = :month AND YEAR(Reply_Acceptance.accepted_at) = :year GROUP BY Reply.replied_by) ra ON u.user_id = ra.replied_by " +
+            "LEFT JOIN (SELECT Post.posted_by, COUNT(*) totalPostLikes FROM Post JOIN Post_Like ON Post_Like.post_id = Post.post_id WHERE Post.is_disabled = FALSE AND MONTH(Post_Like.liked_at) = :month AND YEAR(Post_Like.liked_at) = :year GROUP BY Post.posted_by) pl ON u.user_id = pl.posted_by " +
+            "LEFT JOIN (SELECT Reply.replied_by, COUNT(*) totalReplyLikes FROM Reply JOIN Reply_Like ON Reply_Like.reply_id = Reply.reply_id WHERE Reply.is_disabled = FALSE AND MONTH(Reply_Like.liked_at) = :month AND YEAR(Reply_Like.liked_at) = :year GROUP BY Reply.replied_by) rl ON u.user_id = rl.replied_by " +
+            "WHERE u.is_disabled = FALSE " +
+            "AND u.is_authenticated = TRUE " +
+            "AND (LOWER(u.first_name) LIKE LOWER(CONCAT('%', :query, '%')) " +
+            "OR LOWER(u.last_name) LIKE LOWER(CONCAT('%', :query, '%'))) " +
+            "GROUP BY u.user_id " +
             "ORDER BY " +
-            "( " +
-            "  ((SELECT COUNT(pa) FROM PostAcceptance pa WHERE pa.post.isDisabled = FALSE AND pa.post.userPosted = u AND MONTH(pa.acceptedAt) = :month AND YEAR(pa.acceptedAt) = :year)) * 10 + " +
-            "  ((SELECT COUNT(ra) FROM ReplyAcceptance ra WHERE ra.reply.isDisabled = FALSE AND ra.reply.user = u AND MONTH(ra.acceptedAt) = :month AND YEAR(ra.acceptedAt) = :year)) * 10 + " +
-            "  ((SELECT COUNT(pl) FROM PostLike pl WHERE pl.post.isDisabled = FALSE AND pl.post.userPosted = u AND MONTH(pl.likedAt) = :month AND YEAR(pl.likedAt) = :year)) * 2 + " +
-            "  ((SELECT COUNT(rl) FROM ReplyLike rl WHERE rl.reply.isDisabled = FALSE AND rl.reply.user = u AND MONTH(rl.likedAt) = :month AND YEAR(rl.likedAt) = :year)) * 2 " +
-            ") DESC, " +
-            "(SELECT COUNT(pa) FROM PostAcceptance pa WHERE pa.post.isDisabled = FALSE AND pa.post.userPosted = u  AND MONTH(pa.acceptedAt) = :month AND YEAR(pa.acceptedAt) = :year) DESC, " +
-            "(SELECT COUNT(ra) FROM ReplyAcceptance ra WHERE ra.reply.isDisabled = FALSE AND ra.reply.user = u AND MONTH(ra.acceptedAt) = :month AND YEAR(ra.acceptedAt) = :year) DESC, " +
-            "(SELECT COUNT(pl) FROM PostLike pl WHERE pl.post.isDisabled = FALSE AND pl.post.userPosted = u AND MONTH(pl.likedAt) = :month AND YEAR(pl.likedAt) = :year) DESC, " +
-            "(SELECT COUNT(rl) FROM ReplyLike rl WHERE rl.reply.isDisabled = FALSE AND rl.reply.user = u AND MONTH(rl.likedAt) = :month AND YEAR(rl.likedAt) = :year) DESC, " +
-            "u.createdAt DESC")
-    Page<User> findUsersForReputationByMonthAndYear(String query, int month, int year, Pageable pageable);
+            "(COALESCE(pa.totalPostAcceptances, 0) * 10 + " +
+            "COALESCE(ra.totalReplyAcceptances, 0) * 10 + " +
+            "COALESCE(pl.totalPostLikes, 0) * 2 + " +
+            "COALESCE(rl.totalReplyLikes, 0) * 2) DESC, " +
+            "COALESCE(pa.totalPostAcceptances, 0) DESC, " +
+            "COALESCE(ra.totalReplyAcceptances, 0) DESC, " +
+            "COALESCE(pl.totalPostLikes, 0) DESC, " +
+            "COALESCE(rl.totalReplyLikes, 0) DESC, " +
+            "u.created_at",
+            countQuery = "SELECT COUNT(*) FROM User " +
+                    "WHERE is_disabled = FALSE " +
+                    "AND is_authenticated = TRUE " +
+                    "AND (LOWER(first_name) LIKE LOWER(CONCAT('%', :query, '%')) " +
+                    "OR LOWER(last_name) LIKE LOWER(CONCAT('%', :query, '%'))) " +
+                    "AND :month = :month " +
+                    "AND :year = :year",
+            nativeQuery = true)
+    Page<Object[]> findUsersForReputationByMonthAndYear(String query, int month, int year, Pageable pageable);
 
-    @Query("SELECT u FROM User u " +
-            "WHERE u.isDisabled = FALSE " +
-            "AND u.isAuthenticated = TRUE " +
-            "AND u.role.roleName = 'ROLE_STUDENT' " +
-            "AND (LOWER(u.firstName) LIKE LOWER(CONCAT('%', :query, '%')) " +
-            "OR LOWER(u.lastName) LIKE LOWER(CONCAT('%', :query, '%'))) " +
+    @Query(value = "SELECT BIN_TO_UUID(u.user_id) userId, u.first_name firstName, u.last_name lastName, u.image, u.email, u.created_at createdAt, " +
+            "COALESCE(pa.totalPostAcceptances, 0) totalPostAcceptances, COALESCE(ra.totalReplyAcceptances, 0) totalReplyAcceptances, COALESCE(pl.totalPostLikes, 0) totalPostLikes, COALESCE(rl.totalReplyLikes, 0) totalReplyLikes, " +
+            "(COALESCE(pa.totalPostAcceptances, 0) * 10 + COALESCE(ra.totalReplyAcceptances, 0) * 10 + COALESCE(pl.totalPostLikes, 0) * 2 + COALESCE(rl.totalReplyLikes, 0) * 2) totalScores " +
+            "FROM User u " +
+            "LEFT JOIN (SELECT Post.posted_by, COUNT(*) totalPostAcceptances FROM Post JOIN Post_Acceptance ON Post_Acceptance.post_id = Post.post_id WHERE Post.is_disabled = FALSE AND YEAR(Post_Acceptance.accepted_at) = :year GROUP BY Post.posted_by) pa ON u.user_id = pa.posted_by " +
+            "LEFT JOIN (SELECT Reply.replied_by, COUNT(*) totalReplyAcceptances FROM Reply JOIN Reply_Acceptance ON Reply_Acceptance.reply_id = Reply.reply_id WHERE Reply.is_disabled = FALSE AND YEAR(Reply_Acceptance.accepted_at) = :year GROUP BY Reply.replied_by) ra ON u.user_id = ra.replied_by " +
+            "LEFT JOIN (SELECT Post.posted_by, COUNT(*) totalPostLikes FROM Post JOIN Post_Like ON Post_Like.post_id = Post.post_id WHERE Post.is_disabled = FALSE AND YEAR(Post_Like.liked_at) = :year GROUP BY Post.posted_by) pl ON u.user_id = pl.posted_by " +
+            "LEFT JOIN (SELECT Reply.replied_by, COUNT(*) totalReplyLikes FROM Reply JOIN Reply_Like ON Reply_Like.reply_id = Reply.reply_id WHERE Reply.is_disabled = FALSE AND YEAR(Reply_Like.liked_at) = :year GROUP BY Reply.replied_by) rl ON u.user_id = rl.replied_by " +
+            "WHERE u.is_disabled = FALSE " +
+            "AND u.is_authenticated = TRUE " +
+            "AND (LOWER(u.first_name) LIKE LOWER(CONCAT('%', :query, '%')) " +
+            "OR LOWER(u.last_name) LIKE LOWER(CONCAT('%', :query, '%'))) " +
+            "GROUP BY u.user_id " +
             "ORDER BY " +
-            "( " +
-            "  ((SELECT COUNT(pa) FROM PostAcceptance pa WHERE pa.post.isDisabled = FALSE AND pa.post.userPosted = u AND YEAR(pa.acceptedAt) = :year)) * 10 + " +
-            "  ((SELECT COUNT(ra) FROM ReplyAcceptance ra WHERE ra.reply.isDisabled = FALSE AND ra.reply.user = u AND YEAR(ra.acceptedAt) = :year)) * 10 + " +
-            "  ((SELECT COUNT(pl) FROM PostLike pl WHERE pl.post.isDisabled = FALSE AND pl.post.userPosted = u AND YEAR(pl.likedAt) = :year)) * 2 + " +
-            "  ((SELECT COUNT(rl) FROM ReplyLike rl WHERE rl.reply.isDisabled = FALSE AND rl.reply.user = u AND YEAR(rl.likedAt) = :year)) * 2 " +
-            ") DESC, " +
-            "(SELECT COUNT(pa) FROM PostAcceptance pa WHERE pa.post.isDisabled = FALSE AND pa.post.userPosted = u AND YEAR(pa.acceptedAt) = :year) DESC, " +
-            "(SELECT COUNT(ra) FROM ReplyAcceptance ra WHERE ra.reply.isDisabled = FALSE AND ra.reply.user = u AND YEAR(ra.acceptedAt) = :year) DESC, " +
-            "(SELECT COUNT(pl) FROM PostLike pl WHERE pl.post.isDisabled = FALSE AND pl.post.userPosted = u AND YEAR(pl.likedAt) = :year) DESC, " +
-            "(SELECT COUNT(rl) FROM ReplyLike rl WHERE rl.reply.isDisabled = FALSE AND rl.reply.user = u AND YEAR(rl.likedAt) = :year) DESC, " +
-            "u.createdAt DESC")
-    Page<User> findUsersForReputationByYear(String query, int year, Pageable pageable);
-
-    @Query("SELECT u FROM User u " +
-            "WHERE u.isDisabled = FALSE " +
-            "AND u.isAuthenticated = TRUE " +
-            "AND u.role.roleName = 'ROLE_STUDENT'")
-    List<User> findActiveStudent();
-
+            "(COALESCE(pa.totalPostAcceptances, 0) * 10 + " +
+            "COALESCE(ra.totalReplyAcceptances, 0) * 10 + " +
+            "COALESCE(pl.totalPostLikes, 0) * 2 + " +
+            "COALESCE(rl.totalReplyLikes, 0) * 2) DESC, " +
+            "COALESCE(pa.totalPostAcceptances, 0) DESC, " +
+            "COALESCE(ra.totalReplyAcceptances, 0) DESC, " +
+            "COALESCE(pl.totalPostLikes, 0) DESC, " +
+            "COALESCE(rl.totalReplyLikes, 0) DESC, " +
+            "u.created_at",
+            countQuery = "SELECT COUNT(*) FROM User " +
+                    "WHERE is_disabled = FALSE " +
+                    "AND is_authenticated = TRUE " +
+                    "AND (LOWER(first_name) LIKE LOWER(CONCAT('%', :query, '%')) " +
+                    "OR LOWER(last_name) LIKE LOWER(CONCAT('%', :query, '%'))) " +
+                    "AND :year = :year",
+            nativeQuery = true)
+    Page<Object[]> findUsersForReputationByYear(String query, int year, Pageable pageable);
 }

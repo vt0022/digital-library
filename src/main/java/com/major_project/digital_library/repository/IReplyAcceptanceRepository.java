@@ -16,6 +16,10 @@ public interface IReplyAcceptanceRepository extends JpaRepository<ReplyAcceptanc
     Optional<ReplyAcceptance> findByReplyAndUser(Reply reply, User user);
 
     @Query("SELECT ra FROM ReplyAcceptance ra " +
+            "WHERE ra.reply.post = :post")
+    Optional<ReplyAcceptance> findByPost(Post post);
+
+    @Query("SELECT ra FROM ReplyAcceptance ra " +
             "WHERE ra.reply.post = :post " +
             "AND ra.user = :user")
     Optional<ReplyAcceptance> findByPostAndUser(Post post, User user);

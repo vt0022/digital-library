@@ -28,10 +28,6 @@ public class UserReputationResponseModel implements Serializable {
 
     private Timestamp createdAt;
 
-    private Timestamp updatedAt;
-
-    private int rank;
-
     private int totalPostAcceptances;
 
     private int totalReplyAcceptances;
@@ -41,4 +37,6 @@ public class UserReputationResponseModel implements Serializable {
     private int totalReplyLikes;
 
     private int totalScores;
+
+    private int rank;
 }

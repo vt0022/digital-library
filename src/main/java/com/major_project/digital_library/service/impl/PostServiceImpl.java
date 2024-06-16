@@ -7,11 +7,9 @@ import com.major_project.digital_library.model.lean_model.ReplyLeanModel;
 import com.major_project.digital_library.model.request_model.PostRequestModel;
 import com.major_project.digital_library.model.response_model.DetailPostResponseModel;
 import com.major_project.digital_library.model.response_model.PostResponseModel;
+import com.major_project.digital_library.model.response_model.ReplyResponseModel;
 import com.major_project.digital_library.repository.*;
-import com.major_project.digital_library.service.IBadgeRewardService;
-import com.major_project.digital_library.service.IBadgeService;
-import com.major_project.digital_library.service.IPostService;
-import com.major_project.digital_library.service.IUserService;
+import com.major_project.digital_library.service.*;
 import com.major_project.digital_library.util.SlugGenerator;
 import com.major_project.digital_library.yake.TagExtractor;
 import org.modelmapper.ModelMapper;
@@ -23,11 +21,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
+import java.util.*;
 
 @Service
 public class PostServiceImpl implements IPostService {
@@ -40,6 +34,7 @@ public class PostServiceImpl implements IPostService {
     private final ITagRepository tagRepository;
     private final IPostAcceptanceRepository postAcceptanceRepository;
     private final IReplyAcceptanceRepository replyAcceptanceRepository;
+    private final IReplyService replyService;
     private final IUserService userService;
     private final IBadgeService badgeService;
     private final IBadgeRewardService badgeRewardService;
@@ -47,7 +42,7 @@ public class PostServiceImpl implements IPostService {
     private final TagExtractor tagExtractor;
 
     @Autowired
-    public PostServiceImpl(IPostRepository postRepository, IPostLikeRepository postLikeRepository, IPostHistoryRepository postHistoryRepository, IUserRepository userRepository, ISubsectionRepository subsectionRepository, ILabelRepository labelRepository, ITagRepository tagRepository, IPostAcceptanceRepository postAcceptanceRepository, IReplyAcceptanceRepository replyAcceptanceRepository, IUserService userService, IBadgeService badgeService, IBadgeRewardService badgeRewardService, ModelMapper modelMapper, TagExtractor tagExtractor) {
+    public PostServiceImpl(IPostRepository postRepository, IPostLikeRepository postLikeRepository, IPostHistoryRepository postHistoryRepository, IUserRepository userRepository, ISubsectionRepository subsectionRepository, ILabelRepository labelRepository, ITagRepository tagRepository, IPostAcceptanceRepository postAcceptanceRepository, IReplyAcceptanceRepository replyAcceptanceRepository, IReplyService replyService, IUserService userService, IBadgeService badgeService, IBadgeRewardService badgeRewardService, ModelMapper modelMapper, TagExtractor tagExtractor) {
         this.postRepository = postRepository;
         this.postLikeRepository = postLikeRepository;
         this.postHistoryRepository = postHistoryRepository;
@@ -57,6 +52,7 @@ public class PostServiceImpl implements IPostService {
         this.tagRepository = tagRepository;
         this.postAcceptanceRepository = postAcceptanceRepository;
         this.replyAcceptanceRepository = replyAcceptanceRepository;
+        this.replyService = replyService;
         this.userService = userService;
         this.badgeService = badgeService;
         this.badgeRewardService = badgeRewardService;
@@ -343,12 +339,7 @@ public class PostServiceImpl implements IPostService {
         boolean isLabelDisabled = post.getLabel() != null && post.getLabel().isDisabled();
         boolean isSectionDisabled = post.getSubsection() != null && post.getSubsection().getSection() != null && post.getSubsection().getSection().isDisabled();
         boolean isSubsectionDisabled = post.getSubsection() != null && post.getSubsection().isDisabled();
-        List<String> peopleLikedImages = post.getPostLikes().stream()
-                .map(postLike -> {
-                    User userLiked = postLike.getUser();
-                    return userLiked.getImage() != null ? userLiked.getImage() : "";
-                })
-                .collect(Collectors.toList());
+        Optional<ReplyAcceptance> replyAcceptance = replyAcceptanceRepository.findByPost(post);
 
         postResponseModel.setTotalLikes(post.getPostLikes().size());
         postResponseModel.setTotalReplies(post.getReplies().size());
@@ -360,7 +351,12 @@ public class PostServiceImpl implements IPostService {
         postResponseModel.setLabelDisabled(isLabelDisabled);
         postResponseModel.setSectionDisabled(isSectionDisabled);
         postResponseModel.setSubsectionDisabled(isSubsectionDisabled);
-        postResponseModel.setPeopleLiked(peopleLikedImages);
+        if (replyAcceptance.isPresent()) {
+            if (replyAcceptance.get().getReply() != null) {
+                ReplyResponseModel bestReply = replyService.convertToReplyModelForGuest(replyAcceptance.get().getReply());
+                postResponseModel.setBestReply(bestReply);
+            }
+        }
 
         return postResponseModel;
     }
@@ -377,12 +373,7 @@ public class PostServiceImpl implements IPostService {
         boolean isSectionDisabled = post.getSubsection() != null && post.getSubsection().getSection() != null && post.getSubsection().getSection().isDisabled();
         boolean isSubsectionDisabled = post.getSubsection() != null && post.getSubsection().isDisabled();
         boolean isAccepted = postAcceptanceRepository.findByPostAndUser(post, user).isPresent();
-        List<String> peopleLikedImages = post.getPostLikes().stream()
-                .map(postLike -> {
-                    User userLiked = postLike.getUser();
-                    return userLiked.getImage() != null ? userLiked.getImage() : "";
-                })
-                .collect(Collectors.toList());
+        Optional<ReplyAcceptance> replyAcceptance = replyAcceptanceRepository.findByPost(post);
 
         detailPostResponseModel.setLiked(isLiked);
         detailPostResponseModel.setMy(isMy);
@@ -394,7 +385,12 @@ public class PostServiceImpl implements IPostService {
         detailPostResponseModel.setLabelDisabled(isLabelDisabled);
         detailPostResponseModel.setSectionDisabled(isSectionDisabled);
         detailPostResponseModel.setSubsectionDisabled(isSubsectionDisabled);
-        detailPostResponseModel.setPeopleLiked(peopleLikedImages);
+        if (replyAcceptance.isPresent()) {
+            if (replyAcceptance.get().getReply() != null) {
+                ReplyResponseModel bestReply = replyService.convertToReplyModel(replyAcceptance.get().getReply());
+                detailPostResponseModel.setBestReply(bestReply);
+            }
+        }
 
         return detailPostResponseModel;
     }

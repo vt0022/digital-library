@@ -33,10 +33,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.sql.Timestamp;
+import java.util.*;
 import java.util.stream.IntStream;
 
 @Service
@@ -375,8 +373,8 @@ public class UserServiceImpl implements IUserService {
     public Page<UserReputationResponseModel> getUserReputation(String s, int month, int year, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
 
-        Page<User> users = Page.empty();
-        List<User> indexUsers = new ArrayList<>();
+        Page<Object[]> users = Page.empty();
+        List<Object[]> indexUsers = new ArrayList<>();
 
         if (month == 0) {
             if (year == 0) {
@@ -412,7 +410,7 @@ public class UserServiceImpl implements IUserService {
             indexUsers = users.getContent();
         }
 
-        List<User> finalIndexUsers = indexUsers;
+        List<Object[]> finalIndexUsers = indexUsers;
         Page<UserReputationResponseModel> userReputationResponseModels = users.map(user -> convertToReputationUserModel(user, s, finalIndexUsers, page, size));
         ;
         return userReputationResponseModels;
@@ -472,37 +470,29 @@ public class UserServiceImpl implements IUserService {
         return userResponseModel;
     }
 
-    private UserReputationResponseModel convertToReputationUserModel(User user, String s, List<User> users, int page, int size) {
-        UserReputationResponseModel userResponseModel = modelMapper.map(user, UserReputationResponseModel.class);
+    private UserReputationResponseModel convertToReputationUserModel(Object[] user, String s, List<Object[]> users, int page, int size) {
+        UserReputationResponseModel userResponseModel = new UserReputationResponseModel();
 
-        int totalPostLikes = user.getPosts().stream()
-                .filter(post -> !post.isDisabled())
-                .flatMapToInt(post -> IntStream.of(post.getPostLikes().size()))
-                .sum();
-        int totalReplyLikes = user.getReplies().stream()
-                .filter(reply -> !reply.isDisabled())
-                .flatMapToInt(reply -> IntStream.of(reply.getReplyLikes().size()))
-                .sum();
-        int totalPostAcceptances = user.getPosts().stream()
-                .filter(post -> !post.isDisabled())
-                .flatMapToInt(post -> IntStream.of(post.getPostAcceptances().size()))
-                .sum();
-        int totalReplyAcceptances = (int) user.getReplies().stream()
-                .filter(reply -> !reply.isDisabled() && reply.getReplyAcceptance() != null)
-                .count();
-        int totalScores = totalPostAcceptances * 10 + totalReplyAcceptances * 10 + totalPostLikes * 2 + totalReplyLikes * 2;
-
-        userResponseModel.setTotalPostAcceptances(totalPostAcceptances);
-        userResponseModel.setTotalReplyAcceptances(totalReplyAcceptances);
-        userResponseModel.setTotalPostLikes(totalPostLikes);
-        userResponseModel.setTotalReplyLikes(totalReplyLikes);
-        userResponseModel.setTotalScores(totalScores);
+        userResponseModel.setUserId(UUID.fromString(user[0].toString()));
+        userResponseModel.setFirstName(user[1].toString());
+        userResponseModel.setLastName(user[2] != null ? user[2].toString() : null);
+        userResponseModel.setImage(user[3] != null ? user[3].toString() : null);
+        userResponseModel.setEmail(user[4].toString());
+        userResponseModel.setCreatedAt(user[5] != null ? Timestamp.valueOf(user[5].toString()) : null);
+        userResponseModel.setTotalPostAcceptances(((Long) user[6]).intValue());
+        userResponseModel.setTotalReplyAcceptances(((Long) user[7]).intValue());
+        userResponseModel.setTotalPostLikes(((Long) user[8]).intValue());
+        userResponseModel.setTotalReplyLikes(((Long) user[9]).intValue());
+        userResponseModel.setTotalScores(((Long) user[10]).intValue());
 
         if (s.equals("")) {
             int rank = users.indexOf(user) + page * size;
             userResponseModel.setRank(rank + 1);
         } else {
-            int rank = users.indexOf(user);
+            int rank = IntStream.range(0, users.size())
+                    .filter(i -> Arrays.equals(users.get(i), user))
+                    .findFirst()
+                    .orElse(-1);
             userResponseModel.setRank(rank + 1);
         }
 

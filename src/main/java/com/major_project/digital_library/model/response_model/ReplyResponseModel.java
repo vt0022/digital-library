@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 import java.io.Serial;
 import java.io.Serializable;
 import java.sql.Timestamp;
-import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -44,6 +43,4 @@ public class ReplyResponseModel implements Serializable {
     private boolean isPostDisabled;
 
     private PostLeanModel post;
-
-    private List<String> peopleLiked;
 }

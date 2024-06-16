@@ -4,30 +4,18 @@ REFRESH_TOKEN_LIFE: 86400000
 EMAIL_SENDER: thuanmyhoa7a2@gmail.com
 GOOGLE_RECAPTCHA_SECRET_KEY: 6Le5QeopAAAAAJBC_wz9_3fqYxbM_CTKJkp5DlDD
 
-resttemplate:
-  connection-timeout: 60000
-  read-timeout: 60000
-
 server:
   servlet:
     context-path: /digital.library
   forward-headers-strategy: framework
+
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    #    password: eBE1a1e26g6c62A1D-ge2EcF3b6Dca-e
-    #    url: jdbc:mysql://viaduct.proxy.rlwy.net:25888/digital_library
-    url: jdbc:mysql://monorail.proxy.rlwy.net:42876/digital_library
-    password: WqEftDlFJURlvMIrLGcHkvAgxngsnSKr
-  #    url: jdbc:mysql://localhost:3306/digital_library
-  #    username: root
-  #    password: 01669871043
-  #    url: jdbc:mysql://mysql:3306/digital_library
-  #    username: root
-  #    password: root-password
   devtools:
     restart:
       log-condition-evaluation-delta: false
+      exclude: logs/**
   jackson:
     time-zone: Asia/Bangkok
   jpa:
@@ -37,24 +25,10 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
         format_sql: true
+        #        enable_lazy_load_no_trans: true
         globally_quoted_identifiers: true
         globally_quoted_identifiers_skip_column_definitions: true
-  #        show_sql: true
-  #  security:
-  #    oauth2:
-  #      client:
-  #        registration:
-  #          google:
-  #            client-id: 355480575905-okvgom422abg0ecf8u9mfi4p35sp867n.apps.googleusercontent.com
-  #            client-secret: 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
-  #            scope: openid,profile,email
-  #            redirect-uri: { baseUrl }/login/oauth2/code/{registrationId}
-  #        provider:
-  #          google:
-  #            authorization-uri: https://accounts.google.com/o/oauth2/auth
-  #            token-uri: https://accounts.google.com/o/oauth2/token
-  #            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
-  #            user-name-attribute: name
+  #    open-in-view: false
   servlet:
     multipart:
       max-file-size: 100MB
@@ -75,6 +49,8 @@ spring:
       httpclient:
         connect-timeout: 60000
         response-timeout: 60000
+  profiles:
+    active: @activatedProperties@
 
 springdoc:
   api-docs:

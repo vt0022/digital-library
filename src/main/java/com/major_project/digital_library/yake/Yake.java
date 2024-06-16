@@ -60,7 +60,7 @@ public class Yake {
 
         public KeywordExtractor(String lan, int n, double dedupLim, DedupAlg dedupFunc, int windowsSize, int top, String[] features) {//def __init__(self, lan="en", n=3, dedupLim=0.9, dedupFunc='seqm', windowsSize=1, top=20, features=None):
             this.lan = lan;
-            String resource = String.format("src/main/resources/StopwordsList/stopwords_%s.txt", this.lan.substring(0, 2).toLowerCase());
+            String resource = String.format("src/main/resources/stopwords/stopwords_%s.txt", this.lan.substring(0, 2).toLowerCase());
             try {
                 this.stopword_set = loadFromResource(resource, StandardCharsets.UTF_8);
             } catch (Exception ex) {

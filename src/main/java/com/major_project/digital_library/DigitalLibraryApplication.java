@@ -52,6 +52,7 @@ public class DigitalLibraryApplication {
         final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
         return new Drive.Builder(HTTP_TRANSPORT,
                 JacksonFactory.getDefaultInstance(), googleCredential)
+                .setApplicationName("Digital Library")
                 .build();
     }
 
@@ -66,7 +67,7 @@ public class DigitalLibraryApplication {
                 .setJsonFactory(jacksonFactory)
                 .setServiceAccountId("drive-upload-file@uploadfiles-399604.iam.gserviceaccount.com")
                 .setServiceAccountScopes(elenco)
-                .setServiceAccountPrivateKeyFromP12File(new File("src/main/resources/keys/uploadfiles.p12"))
+                .setServiceAccountPrivateKeyFromP12File(new File("./src/main/resources/keys/uploadfiles.p12"))
                 .build();
     }
 }

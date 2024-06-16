@@ -1,9 +1,6 @@
 package com.major_project.digital_library.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -25,9 +22,11 @@ public class PostAcceptance {
     private Timestamp acceptedAt;
 
     @ManyToOne
+    @JoinColumn(name = "postId")
     private Post post;
 
     @ManyToOne
+    @JoinColumn(name = "userId")
     private User user;
 
     @PrePersist

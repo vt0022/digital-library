@@ -22,9 +22,11 @@ public class ReplyAcceptance {
     private Timestamp acceptedAt;
 
     @OneToOne
+    @JoinColumn(name = "replyId")
     private Reply reply;
 
     @ManyToOne
+    @JoinColumn(name = "userId")
     private User user;
 
     @PrePersist

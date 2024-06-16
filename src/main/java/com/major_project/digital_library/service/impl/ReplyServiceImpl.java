@@ -21,11 +21,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 public class ReplyServiceImpl implements IReplyService {
@@ -193,39 +191,28 @@ public class ReplyServiceImpl implements IReplyService {
         return replyResponseModels;
     }
 
-    private ReplyResponseModel convertToReplyModelForGuest(Reply reply) {
+    @Override
+    public ReplyResponseModel convertToReplyModelForGuest(Reply reply) {
         ReplyResponseModel replyResponseModel = modelMapper.map(reply, ReplyResponseModel.class);
 
         BadgeLeanModel badge = badgeService.findBestBadge(reply.getUser().getUserId());
         boolean isPostDisabled = checkPostDisabled(reply);
-        List<String> peopleLikedImages = reply.getReplyLikes().stream()
-                .map(replyLike -> {
-                    User userLiked = replyLike.getUser();
-                    return userLiked.getImage() != null ? userLiked.getImage() : "";
-                })
-                .collect(Collectors.toList());
 
         replyResponseModel.setTotalLikes(reply.getReplyLikes().size());
         replyResponseModel.getUser().setBadge(badge);
         replyResponseModel.setPostDisabled(isPostDisabled);
-        replyResponseModel.setPeopleLiked(peopleLikedImages);
 
         return replyResponseModel;
     }
 
-    private ReplyResponseModel convertToReplyModel(Reply reply) {
+    @Override
+    public ReplyResponseModel convertToReplyModel(Reply reply) {
         User user = userService.findLoggedInUser();
         boolean isLiked = replyLikeRepository.existsByUserAndReply(user, reply);
         boolean isMy = reply.getUser().getUserId().equals(user.getUserId());
         BadgeLeanModel badge = badgeService.findBestBadge(reply.getUser().getUserId());
         boolean isPostDisabled = checkPostDisabled(reply);
         boolean isAccepted = replyAcceptanceRepository.findByReplyAndUser(reply, user).isPresent();
-        List<String> peopleLikedImages = reply.getReplyLikes().stream()
-                .map(replyLike -> {
-                    User userLiked = replyLike.getUser();
-                    return userLiked.getImage() != null ? userLiked.getImage() : "";
-                })
-                .collect(Collectors.toList());
 
         ReplyResponseModel replyResponseModel = modelMapper.map(reply, ReplyResponseModel.class);
         replyResponseModel.setLiked(isLiked);
@@ -234,7 +221,6 @@ public class ReplyServiceImpl implements IReplyService {
         replyResponseModel.setTotalLikes(reply.getReplyLikes().size());
         replyResponseModel.getUser().setBadge(badge);
         replyResponseModel.setPostDisabled(isPostDisabled);
-        replyResponseModel.setPeopleLiked(peopleLikedImages);
 
         return replyResponseModel;
     }

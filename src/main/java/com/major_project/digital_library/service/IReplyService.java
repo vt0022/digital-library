@@ -38,4 +38,8 @@ public interface IReplyService {
     Page<ReplyResponseModel> getViewableRepliesOfUser(UUID userId, int page, int size);
 
     Page<ReplyResponseModel> getAllRepliesOfUser(UUID userId, int page, int size);
+
+    ReplyResponseModel convertToReplyModelForGuest(Reply reply);
+
+    ReplyResponseModel convertToReplyModel(Reply reply);
 }
