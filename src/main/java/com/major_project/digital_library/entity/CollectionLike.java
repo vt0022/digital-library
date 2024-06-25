@@ -14,8 +14,8 @@ import java.sql.Timestamp;
 @AllArgsConstructor
 
 @Entity
-@IdClass(UserDocumentKey.class)
-public class Recency implements Serializable {
+@IdClass(UserCollectionKey.class)
+public class CollectionLike implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
@@ -26,15 +26,8 @@ public class Recency implements Serializable {
 
     @Id
     @ManyToOne
-    @JoinColumn(name = "docId")
-    private Document document;
+    @JoinColumn(name = "collectionId")
+    private Collection collection;
 
-    private int currentPage;
-
-    private Timestamp accessedAt;
-
-    @PrePersist
-    protected void onCreate() {
-        accessedAt = new Timestamp(System.currentTimeMillis());
-    }
+    private Timestamp likedAt;
 }

@@ -9,6 +9,7 @@ import com.major_project.digital_library.model.response_model.CollectionResponse
 import com.major_project.digital_library.model.response_model.DetailCollectionResponseModel;
 import com.major_project.digital_library.model.response_model.DocumentResponseModel;
 import com.major_project.digital_library.repository.ICollectionDocumentRepository;
+import com.major_project.digital_library.repository.ICollectionLikeRepository;
 import com.major_project.digital_library.repository.ICollectionRepository;
 import com.major_project.digital_library.repository.IDocumentRepository;
 import com.major_project.digital_library.service.ICollectionService;
@@ -32,20 +33,22 @@ public class CollectionServiceImpl implements ICollectionService {
     private final ICollectionRepository collectionRepository;
     private final IDocumentRepository documentRepository;
     private final ICollectionDocumentRepository collectionDocumentRepository;
+    private final ICollectionLikeRepository collectionLikeRepository;
     private final IUserService userService;
     private final ModelMapper modelMapper;
 
     @Autowired
-    public CollectionServiceImpl(ICollectionRepository collectionRepository, IDocumentRepository documentRepository, ICollectionDocumentRepository collectionDocumentRepository, IUserService userService, ModelMapper modelMapper) {
+    public CollectionServiceImpl(ICollectionRepository collectionRepository, IDocumentRepository documentRepository, ICollectionDocumentRepository collectionDocumentRepository, ICollectionLikeRepository collectionLikeRepository, IUserService userService, ModelMapper modelMapper) {
         this.collectionRepository = collectionRepository;
         this.documentRepository = documentRepository;
         this.collectionDocumentRepository = collectionDocumentRepository;
+        this.collectionLikeRepository = collectionLikeRepository;
         this.userService = userService;
         this.modelMapper = modelMapper;
     }
 
     @Override
-    public DetailCollectionResponseModel getDetailCollection(String slug) {
+    public DetailCollectionResponseModel getDetailCollection(String slug, String s) {
         Collection collection = collectionRepository.findBySlug(slug).orElseThrow(() -> new RuntimeException("Collection not found"));
 
         User user = userService.findLoggedInUser();
@@ -53,53 +56,40 @@ public class CollectionServiceImpl implements ICollectionService {
         if (collection.isPrivate() && !collection.getUser().getUserId().equals(user.getUserId()))
             return null;
 
-        DetailCollectionResponseModel detailCollectionResponseModel = convertToDetailCollectionModel(collection);
+        DetailCollectionResponseModel detailCollectionResponseModel = convertToDetailCollectionModel(collection, s);
 
         return detailCollectionResponseModel;
     }
 
     @Override
-    public DetailCollectionResponseModel getDetailCollectionForGuest(String slug) {
+    public DetailCollectionResponseModel getDetailCollectionForGuest(String slug, String s) {
         Collection collection = collectionRepository.findBySlug(slug).orElseThrow(() -> new RuntimeException("Collection not found"));
 
         if (collection.isPrivate())
             return null;
 
-        DetailCollectionResponseModel detailCollectionResponseModel = convertToDetailCollectionModelForGuest(collection);
+        DetailCollectionResponseModel detailCollectionResponseModel = convertToDetailCollectionModelForGuest(collection, s);
 
         return detailCollectionResponseModel;
     }
 
     @Override
-    public Page<CollectionResponseModel> getPublicCollections(int page, int size) {
+    public Page<CollectionResponseModel> getPublicCollections(int page, int size, String s) {
         Pageable pageable = PageRequest.of(page, size);
 
-        Page<Collection> collections = collectionRepository.findAllByIsPrivate(false, pageable);
+        Page<Collection> collections = collectionRepository.findPublicCollections(s, pageable);
         Page<CollectionResponseModel> collectionResponseModels = collections.map(this::convertToCollectionModel);
 
         return collectionResponseModels;
     }
 
     @Override
-    public Page<CollectionResponseModel> getCollectionsForUser(int page, int size) {
+    public Page<CollectionResponseModel> getCollectionsForUser(int page, int size, String s) {
         User user = userService.findLoggedInUser();
 
         Pageable pageable = PageRequest.of(page, size);
 
-        Page<Collection> collections = collectionRepository.findForUser(user, pageable);
-        Page<CollectionResponseModel> collectionResponseModels = collections.map(this::convertToCollectionModel);
-
-        return collectionResponseModels;
-
-    }
-
-    @Override
-    public Page<CollectionResponseModel> getCollectionsOfUser(int page, int size) {
-        User user = userService.findLoggedInUser();
-
-        Pageable pageable = PageRequest.of(page, size);
-
-        Page<Collection> collections = collectionRepository.findByUser(user, pageable);
+        Page<Collection> collections = collectionRepository.findForUser(user, s, pageable);
         Page<CollectionResponseModel> collectionResponseModels = collections.map(this::convertToCollectionModel);
 
         return collectionResponseModels;
@@ -107,12 +97,12 @@ public class CollectionServiceImpl implements ICollectionService {
     }
 
     @Override
-    public Page<CollectionResponseModel> getCollectionsOfCurrentUser(int page, int size) {
+    public Page<CollectionResponseModel> getCollectionsOfUser(int page, int size, String s) {
         User user = userService.findLoggedInUser();
 
         Pageable pageable = PageRequest.of(page, size);
 
-        Page<Collection> collections = collectionRepository.findByUser(user, pageable);
+        Page<Collection> collections = collectionRepository.findByUser(user, s, pageable);
         Page<CollectionResponseModel> collectionResponseModels = collections.map(this::convertToCollectionModel);
 
         return collectionResponseModels;
@@ -176,36 +166,42 @@ public class CollectionServiceImpl implements ICollectionService {
         return collectionResponseModel;
     }
 
-    public DetailCollectionResponseModel convertToDetailCollectionModel(Collection collection) {
+    public DetailCollectionResponseModel convertToDetailCollectionModel(Collection collection, String s) {
         User user = userService.findLoggedInUser();
 
         DetailCollectionResponseModel detailCollectionResponseModel = modelMapper.map(collection, DetailCollectionResponseModel.class);
 
         Pageable pageable = PageRequest.of(0, 100);
-        List<Document> documents = documentRepository.findByCollectionForUser(collection, user.getOrganization(), pageable).getContent();
+        List<Document> documents = documentRepository.findByCollectionForUser(collection, user.getOrganization(), s, pageable).getContent();
         List<DocumentResponseModel> documentResponseModels = modelMapper.map(documents, new TypeToken<List<DocumentResponseModel>>() {
         }.getType());
         int totalDocuments = documents.size();
         boolean isMine = user.getUserId().equals(collection.getUser().getUserId());
+        boolean isLiked = collectionLikeRepository.findByUserAndCollection(user, collection).isPresent();
+        int totalLikes = collection.getCollectionLikes().size();
 
         detailCollectionResponseModel.setTotalDocuments(totalDocuments);
         detailCollectionResponseModel.setDocuments(documentResponseModels);
         detailCollectionResponseModel.setMine(isMine);
+        detailCollectionResponseModel.setLiked(isLiked);
+        detailCollectionResponseModel.setTotalLikes(totalLikes);
 
         return detailCollectionResponseModel;
     }
 
-    public DetailCollectionResponseModel convertToDetailCollectionModelForGuest(Collection collection) {
+    public DetailCollectionResponseModel convertToDetailCollectionModelForGuest(Collection collection, String s) {
         DetailCollectionResponseModel detailCollectionResponseModel = modelMapper.map(collection, DetailCollectionResponseModel.class);
 
         Pageable pageable = PageRequest.of(0, 100);
-        List<Document> documents = documentRepository.findByCollectionForGuest(collection, pageable).getContent();
+        List<Document> documents = documentRepository.findByCollectionForGuest(collection, s, pageable).getContent();
         List<DocumentResponseModel> documentResponseModels = modelMapper.map(documents, new TypeToken<List<DocumentResponseModel>>() {
         }.getType());
         int totalDocuments = documents.size();
+        int totalLikes = collection.getCollectionLikes().size();
 
         detailCollectionResponseModel.setTotalDocuments(totalDocuments);
         detailCollectionResponseModel.setDocuments(documentResponseModels);
+        detailCollectionResponseModel.setTotalLikes(totalLikes);
 
         return detailCollectionResponseModel;
     }

@@ -73,7 +73,23 @@ public class RecencyServiceImpl implements IRecencyService {
         }
     }
 
+    @Override
+    public void saveCurrentPage(String slug, int page) {
+        User user = userService.findLoggedInUser();
+        Document document = documentRepository.findBySlug(slug).orElseThrow(() -> new RuntimeException("Document not found"));
+
+        Optional<Recency> recencyOptional = recencyRepository.findByUserAndDocument(user, document);
+
+        if (recencyOptional.isPresent()) {
+            Recency recency = recencyOptional.get();
+            recency.setCurrentPage(page);
+            recencyRepository.save(recency);
+            ;
+        }
+    }
+
     private DocumentResponseModel convertToDocumentModel(Document document) {
+        User user = userService.findLoggedInUser();
         DocumentResponseModel documentResponseModel = modelMapper.map(document, DocumentResponseModel.class);
 
         int totalLikes = document.getDocumentLikes().size();
@@ -84,9 +100,15 @@ public class RecencyServiceImpl implements IRecencyService {
                 .mapToInt(Review::getStar)
                 .sum();
         double averageRating = (double) totalRating / totalReviews;
+        Optional<Recency> recency = recencyRepository.findByUserAndDocument(user, document);
 
         documentResponseModel.setTotalFavorite(totalLikes);
         documentResponseModel.setAverageRating(averageRating);
+        if (recency.isPresent()) {
+            documentResponseModel.setCurrentPage(recency.get().getCurrentPage());
+        } else {
+            documentResponseModel.setCurrentPage(0);
+        }
 
         return documentResponseModel;
     }

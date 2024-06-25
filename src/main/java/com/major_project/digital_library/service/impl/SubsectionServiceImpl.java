@@ -67,7 +67,7 @@ public class SubsectionServiceImpl implements ISubsectionService {
     public SubsectionResponseModel findSubsection(UUID subId) {
         Subsection subsection = subsectionRepository.findById(subId).orElseThrow(() -> new RuntimeException("Subsection not found"));
 
-        SubsectionResponseModel subsectionResponseModels = modelMapper.map(subsection, SubsectionResponseModel.class);
+        SubsectionResponseModel subsectionResponseModels = convertToSubsectionResponseModel(subsection);
 
         return subsectionResponseModels;
     }

@@ -42,31 +42,6 @@ public class PostLikeServiceImpl implements IPostLikeService {
     }
 
     @Override
-    public boolean existsByUserAndPost(User user, Post post) {
-        return postLikeRepository.existsByUserAndPost(user, post);
-    }
-
-    @Override
-    public <S extends PostLike> S save(S entity) {
-        return postLikeRepository.save(entity);
-    }
-
-    @Override
-    public void deleteByUserAndPost(User user, Post post) {
-        postLikeRepository.deleteByUserAndPost(user, post);
-    }
-
-    @Override
-    public void delete(PostLike entity) {
-        postLikeRepository.delete(entity);
-    }
-
-    @Override
-    public Optional<PostLike> findByUserAndPost(User user, Post post) {
-        return postLikeRepository.findByUserAndPost(user, post);
-    }
-
-    @Override
     public boolean likePost(UUID postId) {
         User user = userService.findLoggedInUser();
         Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post not found"));

@@ -58,6 +58,10 @@ public class Document {
 
     private String thumbnail;
 
+    private int totalPages;
+
+    private String fileId;
+
     @ManyToOne
     @JoinColumn(name = "uploadedBy")
     private User userUploaded;
@@ -90,7 +94,7 @@ public class Document {
     @OneToMany(mappedBy = "document", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Recency> recencies = new ArrayList<>();
 
-    @ManyToMany()
+    @ManyToMany
     @JoinTable(
             name = "document_tag",
             joinColumns = {@JoinColumn(name = "doc_id")},
@@ -100,6 +104,9 @@ public class Document {
 
     @OneToMany(mappedBy = "document", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CollectionDocument> collectionDocuments = new ArrayList<>();
+
+    @OneToMany(mappedBy = "document", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DocumentNote> documentNotes = new ArrayList<>();
 
     @OneToMany(mappedBy = "document", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Notification> notifications = new ArrayList<>();

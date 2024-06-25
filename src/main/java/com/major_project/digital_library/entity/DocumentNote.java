@@ -14,8 +14,8 @@ import java.sql.Timestamp;
 @AllArgsConstructor
 
 @Entity
-@IdClass(UserDocumentKey.class)
-public class Recency implements Serializable {
+@IdClass(UserDocumentPageKey.class)
+public class DocumentNote implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
@@ -29,12 +29,21 @@ public class Recency implements Serializable {
     @JoinColumn(name = "docId")
     private Document document;
 
-    private int currentPage;
+    @Id
+    private int page;
 
-    private Timestamp accessedAt;
+    @Column(columnDefinition = "JSON")
+    private String content;
+
+    private Timestamp notedAt;
 
     @PrePersist
     protected void onCreate() {
-        accessedAt = new Timestamp(System.currentTimeMillis());
+        notedAt = new Timestamp(System.currentTimeMillis());
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        notedAt = new Timestamp(System.currentTimeMillis());
     }
 }

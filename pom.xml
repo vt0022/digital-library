@@ -283,6 +283,13 @@
                     <include>models/**</include>
                 </includes>
             </resource>
+            <resource>
+                <directory>${project.basedir}</directory>
+                <includes>
+                    <include>jdf.jar</include>
+                    <include>VnCoreNLP-1.2.jar</include>
+                </includes>
+            </resource>
         </resources>
     </build>
 

@@ -1,10 +1,12 @@
 package com.major_project.digital_library.controller;
 
+import com.major_project.digital_library.model.CollectionLikeModel;
 import com.major_project.digital_library.model.request_model.CollectionRequestModel;
 import com.major_project.digital_library.model.response_model.CollectionResponseModel;
 import com.major_project.digital_library.model.response_model.DetailCollectionResponseModel;
 import com.major_project.digital_library.model.response_model.ResponseModel;
 import com.major_project.digital_library.service.ICollectionDocumentService;
+import com.major_project.digital_library.service.ICollectionLikeService;
 import com.major_project.digital_library.service.ICollectionService;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,18 +21,21 @@ import java.util.UUID;
 public class CollectionController {
     private final ICollectionService collectionService;
     private final ICollectionDocumentService collectionDocumentService;
+    private final ICollectionLikeService collectionLikeService;
 
     @Autowired
-    public CollectionController(ICollectionService collectionService, ICollectionDocumentService collectionDocumentService) {
+    public CollectionController(ICollectionService collectionService, ICollectionDocumentService collectionDocumentService, ICollectionLikeService collectionLikeService) {
         this.collectionService = collectionService;
         this.collectionDocumentService = collectionDocumentService;
+        this.collectionLikeService = collectionLikeService;
     }
 
     @Operation(summary = "Lấy danh sách bộ sưu tập cho tất cả mọi người")
     @GetMapping("/public")
     public ResponseEntity<?> getPublicCollections(@RequestParam(defaultValue = "0") int page,
-                                                  @RequestParam(defaultValue = "10") int size) {
-        Page<CollectionResponseModel> collectionResponseModels = collectionService.getPublicCollections(page, size);
+                                                  @RequestParam(defaultValue = "10") int size,
+                                                  @RequestParam(defaultValue = "") String s) {
+        Page<CollectionResponseModel> collectionResponseModels = collectionService.getPublicCollections(page, size, s);
 
         return ResponseEntity.ok(ResponseModel
                 .builder()
@@ -44,8 +49,9 @@ public class CollectionController {
     @Operation(summary = "Lấy danh sách bộ sưu tập cho người dùng đã đăng nhập")
     @GetMapping
     public ResponseEntity<?> getCollectionsForUser(@RequestParam(defaultValue = "0") int page,
-                                                   @RequestParam(defaultValue = "10") int size) {
-        Page<CollectionResponseModel> collectionResponseModels = collectionService.getCollectionsForUser(page, size);
+                                                   @RequestParam(defaultValue = "10") int size,
+                                                   @RequestParam(defaultValue = "") String s) {
+        Page<CollectionResponseModel> collectionResponseModels = collectionService.getCollectionsForUser(page, size, s);
 
         return ResponseEntity.ok(ResponseModel
                 .builder()
@@ -59,8 +65,9 @@ public class CollectionController {
     @Operation(summary = "Lấy danh sách bộ sưu tập người dùng hiện tại")
     @GetMapping("/mine")
     public ResponseEntity<?> getCollectionsOfUser(@RequestParam(defaultValue = "0") int page,
-                                                  @RequestParam(defaultValue = "8") int size) {
-        Page<CollectionResponseModel> collectionResponseModels = collectionService.getCollectionsOfUser(page, size);
+                                                  @RequestParam(defaultValue = "8") int size,
+                                                  @RequestParam(defaultValue = "") String s) {
+        Page<CollectionResponseModel> collectionResponseModels = collectionService.getCollectionsOfUser(page, size, s);
 
         return ResponseEntity.ok(ResponseModel
                 .builder()
@@ -73,8 +80,9 @@ public class CollectionController {
 
     @Operation(summary = "Xem chi tiết bộ sưu tập")
     @GetMapping("/{slug}")
-    public ResponseEntity<?> getDetailCollection(@PathVariable String slug) {
-        DetailCollectionResponseModel collectionResponseModel = collectionService.getDetailCollection(slug);
+    public ResponseEntity<?> getDetailCollection(@PathVariable String slug,
+                                                 @RequestParam(defaultValue = "") String s) {
+        DetailCollectionResponseModel collectionResponseModel = collectionService.getDetailCollection(slug, s);
 
         if (collectionResponseModel == null)
             return ResponseEntity.ok(ResponseModel
@@ -95,8 +103,9 @@ public class CollectionController {
 
     @Operation(summary = "Xem chi tiết bộ sưu tập cho khách")
     @GetMapping("/{slug}/public")
-    public ResponseEntity<?> getDetailCollectionForGuest(@PathVariable String slug) {
-        DetailCollectionResponseModel collectionResponseModel = collectionService.getDetailCollectionForGuest(slug);
+    public ResponseEntity<?> getDetailCollectionForGuest(@PathVariable String slug,
+                                                         @RequestParam(defaultValue = "") String s) {
+        DetailCollectionResponseModel collectionResponseModel = collectionService.getDetailCollectionForGuest(slug, s);
 
         if (collectionResponseModel == null)
             return ResponseEntity.ok(ResponseModel
@@ -184,6 +193,65 @@ public class CollectionController {
                 .error(false)
                 .message("Remove document from collection successfully")
                 .data(collectionResponseModel)
+                .build());
+    }
+
+    @Operation(summary = "Thích một bộ sưu tập",
+            description = "Thêm một bộ sưu tập vào danh sách đã thích")
+    @PostMapping("/{collectionId}/like")
+    public ResponseEntity<?> likeCollection(@PathVariable UUID collectionId) {
+        collectionLikeService.likeCollection(collectionId);
+
+        return ResponseEntity.ok(ResponseModel
+                .builder()
+                .status(200)
+                .error(false)
+                .message("Like collection successfully")
+                .build());
+    }
+
+    @Operation(summary = "Bỏ thích một bộ sưu tập",
+            description = "Xoá một bộ sưu tập khỏi danh sách đã thích")
+    @PostMapping("/{collectionId}/unlike")
+    public ResponseEntity<?> unlikeCollection(@PathVariable UUID collectionId) {
+        CollectionLikeModel collectionLikeModel = collectionLikeService.unlikeCollection(collectionId);
+
+        return ResponseEntity.ok(ResponseModel
+                .builder()
+                .status(200)
+                .error(false)
+                .message("Unlike collection successfully")
+                .data(collectionLikeModel)
+                .build());
+    }
+
+    @Operation(summary = "Hoàn tác bỏ thích một bộ sưu tập",
+            description = "Thêm bộ sưu tập vào lại danh sách đã thích")
+    @PostMapping("/{collectionId}/relike")
+    public ResponseEntity<?> undoUnlikeCollection(@PathVariable UUID collectionId, @RequestBody CollectionLikeModel collectionLikeModel) {
+        collectionLikeService.undoUnlike(collectionId, collectionLikeModel);
+
+        return ResponseEntity.ok(ResponseModel
+                .builder()
+                .status(200)
+                .error(false)
+                .message("Relike collection successfully")
+                .build());
+    }
+
+    @Operation(summary = "Xem danh sách đã thích",
+            description = "Trả về danh sách bộ sưu tập đã thích")
+    @GetMapping("/liked")
+    public ResponseEntity<?> getFavoriteCollections(@RequestParam(defaultValue = "0") int page,
+                                                    @RequestParam(defaultValue = "12") int size,
+                                                    @RequestParam String s) {
+        Page<CollectionResponseModel> collectionModels = collectionLikeService.getLikedCollections(page, size, s);
+
+        return ResponseEntity.ok(ResponseModel.builder()
+                .error(false)
+                .status(200)
+                .message("Get liked collections successfully")
+                .data(collectionModels)
                 .build());
     }
 }

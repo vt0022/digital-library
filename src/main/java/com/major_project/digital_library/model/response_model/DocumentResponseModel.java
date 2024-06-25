@@ -53,6 +53,10 @@ public class DocumentResponseModel implements Serializable {
 
     private String thumbnail;
 
+    private int currentPage;
+
+    private int totalPages;
+
     private UserLeanModel userVerified;
 
     private UserLeanModel userUploaded;

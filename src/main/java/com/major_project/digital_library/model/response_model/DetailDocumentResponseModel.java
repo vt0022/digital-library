@@ -52,6 +52,12 @@ public class DetailDocumentResponseModel implements Serializable {
 
     private String thumbnail;
 
+    private int currentPage;
+
+    private int totalPages;
+
+    private String fileId;
+
     private boolean isLiked;
 
     private boolean isSaved;

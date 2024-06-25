@@ -15,12 +15,18 @@ import java.util.UUID;
 public interface ICollectionRepository extends JpaRepository<Collection, UUID> {
     Optional<Collection> findBySlug(String slug);
 
-    Page<Collection> findAllByIsPrivate(boolean isPrivate, Pageable pageable);
-
-    Page<Collection> findByUser(User user, Pageable pageable);
-
     @Query("SELECT c FROM Collection c " +
             "WHERE c.isPrivate = FALSE " +
-            "OR c.user = :user")
-    Page<Collection> findForUser(User user, Pageable pageable);
+            "AND LOWER(c.collectionName) LIKE LOWER(CONCAT('%', :query, '%'))")
+    Page<Collection> findPublicCollections(String query, Pageable pageable);
+
+    @Query("SELECT c FROM Collection c " +
+            "WHERE c.user = :user " +
+            "AND LOWER(c.collectionName) LIKE LOWER(CONCAT('%', :query, '%'))")
+    Page<Collection> findByUser(User user, String query, Pageable pageable);
+
+    @Query("SELECT c FROM Collection c " +
+            "WHERE (c.isPrivate = FALSE OR c.user = :user) " +
+            "AND LOWER(c.collectionName) LIKE LOWER(CONCAT('%', :query, '%'))")
+    Page<Collection> findForUser(User user, String query, Pageable pageable);
 }

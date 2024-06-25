@@ -38,5 +38,9 @@ public class DetailCollectionResponseModel implements Serializable {
 
     private boolean isMine;
 
+    private boolean isLiked;
+
+    private int totalLikes;
+
     private List<DocumentResponseModel> documents;
 }

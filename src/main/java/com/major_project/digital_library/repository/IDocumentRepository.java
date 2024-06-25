@@ -24,8 +24,6 @@ public interface IDocumentRepository extends JpaRepository<Document, UUID> {
 
     Page<Document> findByUserUploaded(User user, Pageable pageable);
 
-    Page<Document> findByUserUploadedAndIsDeleted(User user, boolean isDeleted, Pageable pageable);
-
     @Query("SELECT d FROM Document d WHERE d.isDeleted = false " +
             "AND (d.verifiedStatus = :verifiedStatus OR :verifiedStatus IS NULL) " +
             "AND (d.organization = :organization OR :organization IS NULL) " +
@@ -422,9 +420,10 @@ public interface IDocumentRepository extends JpaRepository<Document, UUID> {
             "AND d.field.isDeleted = false " +
             "AND d.organization.isDeleted = false " +
             "AND d.verifiedStatus = 1 " +
+            "AND (LOWER(d.docName) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(d.docIntroduction) LIKE LOWER(CONCAT('%', :query, '%'))) " +
             "ORDER BY c.addedAt DESC"
     )
-    Page<Document> findByCollectionForGuest(Collection collection, Pageable pageable);
+    Page<Document> findByCollectionForGuest(Collection collection, String query, Pageable pageable);
 
     @Query("SELECT d FROM Document d " +
             "JOIN d.collectionDocuments c " +
@@ -434,7 +433,8 @@ public interface IDocumentRepository extends JpaRepository<Document, UUID> {
             "AND d.field.isDeleted = false " +
             "AND d.organization.isDeleted = false " +
             "AND d.verifiedStatus = 1 " +
+            "AND (LOWER(d.docName) LIKE LOWER(CONCAT('%', :query, '%')) OR LOWER(d.docIntroduction) LIKE LOWER(CONCAT('%', :query, '%'))) " +
             "ORDER BY c.addedAt DESC"
     )
-    Page<Document> findByCollectionForUser(Collection collection, Organization organization, Pageable pageable);
+    Page<Document> findByCollectionForUser(Collection collection, Organization organization, String query, Pageable pageable);
 }

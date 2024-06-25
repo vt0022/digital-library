@@ -11,7 +11,7 @@ import java.io.File;
 import java.io.IOException;
 
 @Component
-public class ThumbnailGeneratorService {
+public class ThumbnailService {
     public BufferedImage generateThumbnail(File pdfFile) {
         try {
             // Load the PDF and render a page as an image

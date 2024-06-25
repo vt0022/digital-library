@@ -2,14 +2,13 @@ package com.major_project.digital_library.controller;
 
 import com.major_project.digital_library.model.DocumentLikeModel;
 import com.major_project.digital_library.model.SaveModel;
+import com.major_project.digital_library.model.request_model.DocumentNoteRequestModel;
 import com.major_project.digital_library.model.request_model.DocumentRequestModel;
 import com.major_project.digital_library.model.response_model.DetailDocumentResponseModel;
+import com.major_project.digital_library.model.response_model.DocumentNoteResponseModel;
 import com.major_project.digital_library.model.response_model.DocumentResponseModel;
 import com.major_project.digital_library.model.response_model.ResponseModel;
-import com.major_project.digital_library.service.IDocumentLikeService;
-import com.major_project.digital_library.service.IDocumentService;
-import com.major_project.digital_library.service.IRecencyService;
-import com.major_project.digital_library.service.ISaveService;
+import com.major_project.digital_library.service.*;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -28,13 +27,15 @@ public class DocumentController {
     private final IDocumentLikeService documentLikeService;
     private final ISaveService saveService;
     private final IRecencyService recencyService;
+    private final IDocumentNoteService documentNoteService;
 
     @Autowired
-    public DocumentController(IDocumentService documentService, IDocumentLikeService documentLikeService, ISaveService saveService, IRecencyService recencyService) {
+    public DocumentController(IDocumentService documentService, IDocumentLikeService documentLikeService, ISaveService saveService, IRecencyService recencyService, IDocumentNoteService documentNoteService) {
         this.documentService = documentService;
         this.documentLikeService = documentLikeService;
         this.saveService = saveService;
         this.recencyService = recencyService;
+        this.documentNoteService = documentNoteService;
     }
 
     @Operation(summary = "Xem chi tiết một tài liệu cho sinh viên, quản lý, admin")
@@ -597,6 +598,87 @@ public class DocumentController {
                 .error(false)
                 .message("Get recent documents successfully")
                 .data(documentResponseModels)
+                .build());
+    }
+
+    @Operation(summary = "Lưu lại vị trí đọc")
+    @PutMapping("/{slug}/current")
+    public ResponseEntity<?> saveCurrentPage(@PathVariable String slug, @RequestParam int page) {
+        recencyService.saveCurrentPage(slug, page);
+
+        return ResponseEntity.ok(ResponseModel
+                .builder()
+                .status(200)
+                .error(false)
+                .message("Save current page successfully")
+                .build());
+    }
+
+    @Operation(summary = "Lưu ghi chú",
+            description = "Lưu ghi chú cho một tài liệu")
+    @PostMapping("/{slug}/note")
+    public ResponseEntity<?> saveNote(@PathVariable String slug, @RequestBody DocumentNoteRequestModel documentNoteRequestModel) {
+        DocumentNoteResponseModel documentNoteResponseModel = documentNoteService.saveNote(slug, documentNoteRequestModel);
+
+        return ResponseEntity.ok(ResponseModel
+                .builder()
+                .status(200)
+                .error(false)
+                .message("Save note successfully")
+                .data(documentNoteResponseModel)
+                .build());
+    }
+
+    @Operation(summary = "Xoá ghi chú",
+            description = "Xoá ghi chú cho một tài liệu")
+    @DeleteMapping("/{slug}/note")
+    public ResponseEntity<?> deleteNote(@PathVariable String slug, @RequestParam int page) {
+        documentNoteService.deleteNote(slug, page);
+
+        return ResponseEntity.ok(ResponseModel
+                .builder()
+                .status(200)
+                .error(false)
+                .message("Delete note successfully")
+                .build());
+    }
+
+    @Operation(summary = "Lấy ghi chú của một trang",
+            description = "Lấy ghi chú cho một tài liệu tại 1 trang")
+    @GetMapping("/{slug}/note")
+    public ResponseEntity<?> getNote(@PathVariable String slug, @RequestParam int page) {
+        DocumentNoteResponseModel documentNoteResponseModel = documentNoteService.getNote(slug, page);
+
+        if (documentNoteResponseModel == null) {
+            return ResponseEntity.ok(ResponseModel
+                    .builder()
+                    .status(404)
+                    .error(false)
+                    .message("Note unavailable")
+                    .build());
+        } else {
+            return ResponseEntity.ok(ResponseModel
+                    .builder()
+                    .status(200)
+                    .error(false)
+                    .message("Get note successfully")
+                    .data(documentNoteResponseModel)
+                    .build());
+        }
+    }
+
+    @Operation(summary = "Lấy ghi chú của một tài liệu",
+            description = "Lấy tất cả ghi chú cho một tài liệu")
+    @GetMapping("/{slug}/note/all")
+    public ResponseEntity<?> getAllNotesOfDocument(@PathVariable String slug) {
+        Page<DocumentNoteResponseModel> documentNoteResponseModels = documentNoteService.getAllNotesOfDocument(slug);
+
+        return ResponseEntity.ok(ResponseModel
+                .builder()
+                .status(200)
+                .error(false)
+                .message("Get notes successfully")
+                .data(documentNoteResponseModels)
                 .build());
     }
 }

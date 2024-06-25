@@ -24,6 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -37,11 +38,13 @@ public class DocumentServiceImpl implements IDocumentService {
     private final ISaveRepository saveRepository;
     private final IReviewRepository reviewRepository;
     private final ITagRepository tagRepository;
+    private final IRecencyRepository recencyRepository;
     private final ICollectionRepository collectionRepository;
     private final ICollectionDocumentService collectionDocumentService;
     private final IUserService userService;
     private final IRecencyService recencyService;
     private final INotificationService notificationService;
+    private final IDocumentNoteService documentNoteService;
     private final ModelMapper modelMapper;
     private final SlugGenerator slugGenerator;
     private final TagExtractor tagExtractor;
@@ -49,7 +52,7 @@ public class DocumentServiceImpl implements IDocumentService {
     private final StringHandler stringHandler;
 
     @Autowired
-    public DocumentServiceImpl(IDocumentRepository documentRepository, ICategoryRepository categoryRepository, IFieldRepository fieldRepository, IOrganizationRepository organizationRepository, IUserRepository userRepositoty, IDocumentLikeRepository documentLikeRepository, ISaveRepository saveRepository, IReviewRepository reviewRepository, ITagRepository tagRepository, ICollectionRepository collectionRepository, ICollectionDocumentService collectionDocumentService, IUserService userService, IRecencyService recencyService, INotificationService notificationService, ModelMapper modelMapper, SlugGenerator slugGenerator, TagExtractor tagExtractor, GoogleDriveService googleDriveService, StringHandler stringHandler) {
+    public DocumentServiceImpl(IDocumentRepository documentRepository, ICategoryRepository categoryRepository, IFieldRepository fieldRepository, IOrganizationRepository organizationRepository, IUserRepository userRepositoty, IDocumentLikeRepository documentLikeRepository, ISaveRepository saveRepository, IReviewRepository reviewRepository, ITagRepository tagRepository, IRecencyRepository recencyRepository, ICollectionRepository collectionRepository, ICollectionDocumentService collectionDocumentService, IUserService userService, IRecencyService recencyService, INotificationService notificationService, IDocumentNoteService documentNoteService, ModelMapper modelMapper, SlugGenerator slugGenerator, TagExtractor tagExtractor, GoogleDriveService googleDriveService, StringHandler stringHandler) {
         this.documentRepository = documentRepository;
         this.categoryRepository = categoryRepository;
         this.fieldRepository = fieldRepository;
@@ -59,11 +62,13 @@ public class DocumentServiceImpl implements IDocumentService {
         this.saveRepository = saveRepository;
         this.reviewRepository = reviewRepository;
         this.tagRepository = tagRepository;
+        this.recencyRepository = recencyRepository;
         this.collectionRepository = collectionRepository;
         this.collectionDocumentService = collectionDocumentService;
         this.userService = userService;
         this.recencyService = recencyService;
         this.notificationService = notificationService;
+        this.documentNoteService = documentNoteService;
         this.modelMapper = modelMapper;
         this.slugGenerator = slugGenerator;
         this.tagExtractor = tagExtractor;
@@ -461,6 +466,8 @@ public class DocumentServiceImpl implements IDocumentService {
             document.setThumbnail(gd.getThumbnail());
             document.setViewUrl(gd.getViewUrl());
             document.setDownloadUrl(gd.getDownloadUrl());
+            document.setFileId(gd.getFileId());
+            document.setTotalPages(gd.getTotalPages());
         }
 
         // Find category, field and organization
@@ -539,35 +546,6 @@ public class DocumentServiceImpl implements IDocumentService {
 
         return documentModels;
     }
-
-//    public Page<DocumentResponseModel> getLatestDocumentsByOrganization(String organization, int page, int size, String order, String category, String field, String deleted, String internal, String status, String s) {
-//
-//        Sort sort = Sort.by(Sort.Direction.DESC, order);
-//        Pageable pageable = PageRequest.of(page, size, sort);
-//
-//        Organization foundOrganization = organizationRepository.findBySlug(organization).orElseThrow(() -> new RuntimeException("Organization not found"));
-//
-//        Category foundCategory = category.equals("all") ?
-//                null : categoryRepository.findBySlug(category).orElseThrow(() -> new RuntimeException("Category not found"));
-//
-//        Field foundField = field.equals("all") ?
-//                null : fieldRepository.findBySlug(field).orElseThrow(() -> new RuntimeException("Field not found"));
-//
-//        Boolean isDeleted = deleted.equals("all") ?
-//                null : Boolean.valueOf(deleted);
-//
-//        Boolean isInternal = internal.equals("all") ?
-//                null : Boolean.valueOf(internal);
-//
-//        Integer verifiedStatus = status.equals("all") ?
-//                null : Integer.valueOf(status);
-//
-//        Page<Document> documents = documentRepository.searchLatestDocuments(isDeleted, isInternal, verifiedStatus, foundCategory, foundField, foundOrganization, s, pageable);
-//
-//        Page<DocumentResponseModel> documentModels = documents.map(this::convertToDocumentModel);
-//
-//        return documentModels;
-//    }
 
     @Override
     public Page<DocumentResponseModel> findRelatedDocuments(String slug) {
@@ -669,7 +647,6 @@ public class DocumentServiceImpl implements IDocumentService {
 
     private DetailDocumentResponseModel convertToDetailDocumentModel(Document document) {
         User user = userService.findLoggedInUser();
-
         DetailDocumentResponseModel documentResponseModel = modelMapper.map(document, DetailDocumentResponseModel.class);
 
         int totalLikes = document.getDocumentLikes().size();
@@ -683,10 +660,10 @@ public class DocumentServiceImpl implements IDocumentService {
                 .mapToInt(Review::getStar)
                 .sum();
         double averageRating = totalReviews == 0 ? 0 : (double) totalRating / totalReviews;
-
         boolean isLiked = documentLikeRepository.existsByUserAndDocument(user, document);
         boolean isSaved = saveRepository.existsByUserAndDocument(user, document);
         boolean isReviewed = reviewRepository.existsByUserAndDocument(user, document);
+        Optional<Recency> recency = recencyRepository.findByUserAndDocument(user, document);
 
         documentResponseModel.setTotalFavorite(totalLikes);
         documentResponseModel.setTotalReviews(totalReviews);
@@ -694,6 +671,11 @@ public class DocumentServiceImpl implements IDocumentService {
         documentResponseModel.setLiked(isLiked);
         documentResponseModel.setSaved(isSaved);
         documentResponseModel.setReviewed(isReviewed);
+        if (recency.isPresent()) {
+            documentResponseModel.setCurrentPage(recency.get().getCurrentPage());
+        } else {
+            documentResponseModel.setCurrentPage(0);
+        }
 
         return documentResponseModel;
     }

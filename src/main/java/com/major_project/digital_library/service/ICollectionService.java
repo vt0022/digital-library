@@ -8,17 +8,15 @@ import org.springframework.data.domain.Page;
 import java.util.UUID;
 
 public interface ICollectionService {
-    DetailCollectionResponseModel getDetailCollection(String slug);
+    DetailCollectionResponseModel getDetailCollection(String slug, String s);
 
-    DetailCollectionResponseModel getDetailCollectionForGuest(String slug);
+    DetailCollectionResponseModel getDetailCollectionForGuest(String slug, String s);
 
-    Page<CollectionResponseModel> getPublicCollections(int page, int size);
+    Page<CollectionResponseModel> getPublicCollections(int page, int size, String s);
 
-    Page<CollectionResponseModel> getCollectionsForUser(int page, int size);
+    Page<CollectionResponseModel> getCollectionsForUser(int page, int size, String s);
 
-    Page<CollectionResponseModel> getCollectionsOfUser(int page, int size);
-
-    Page<CollectionResponseModel> getCollectionsOfCurrentUser(int page, int size);
+    Page<CollectionResponseModel> getCollectionsOfUser(int page, int size, String s);
 
     CollectionResponseModel addCollection(CollectionRequestModel collectionRequestModel);
 

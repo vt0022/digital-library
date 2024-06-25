@@ -9,4 +9,6 @@ public interface IRecencyService {
     List<DocumentResponseModel> getRecentDocuments();
 
     void addToRecentDocuments(String slug);
+
+    void saveCurrentPage(String slug, int page);
 }

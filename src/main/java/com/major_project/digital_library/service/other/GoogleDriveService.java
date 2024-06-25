@@ -4,6 +4,7 @@ import com.google.api.client.http.FileContent;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.File;
 import com.major_project.digital_library.model.FileModel;
+import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -17,12 +18,12 @@ import java.util.List;
 @Service
 public class GoogleDriveService {
     private final Drive googleDrive;
-    private final ThumbnailGeneratorService thumbnailGeneratorService;
+    private final ThumbnailService thumbnailService;
 
     @Autowired
-    public GoogleDriveService(Drive googleDrive, ThumbnailGeneratorService thumbnailGeneratorService) {
+    public GoogleDriveService(Drive googleDrive, ThumbnailService thumbnailService) {
         this.googleDrive = googleDrive;
-        this.thumbnailGeneratorService = thumbnailGeneratorService;
+        this.thumbnailService = thumbnailService;
     }
 
     public void deleteFile(String fileId) {
@@ -65,9 +66,11 @@ public class GoogleDriveService {
                     .execute();
             FileModel gd = new FileModel();
             gd.setName(fileName);
-            gd.setThumbnail(generateThumbnail(tempFile, name.concat(".jpg"), thumbnailId));
+            gd.setFileId(file.getId());
+            gd.setThumbnail(generateThumbnail(tempFile, name.replace(".pdf", "").concat(".jpg"), thumbnailId));
             gd.setViewUrl("https://drive.google.com/file/d/" + file.getId() + "/preview");
             gd.setDownloadUrl(file.getWebContentLink());
+            gd.setTotalPages(countTotalPages(tempFile));
             tempFile.delete();
             return gd;
         } catch (IOException e) {
@@ -79,7 +82,7 @@ public class GoogleDriveService {
 
     public String generateThumbnail(java.io.File pdfFile, String fileName, String thumbnailId) {
         try {
-            BufferedImage thumbnail = thumbnailGeneratorService.generateThumbnail(pdfFile);
+            BufferedImage thumbnail = thumbnailService.generateThumbnail(pdfFile);
 
             // Set the folder to store thumbnail
             File ggDriveFile = new File();
@@ -167,4 +170,17 @@ public class GoogleDriveService {
         }
     }
 
+    public int countTotalPages(java.io.File pdfFile) {
+        int numberOfPages = 1;
+
+        try {
+            PDDocument document = PDDocument.load(pdfFile);
+            numberOfPages = document.getNumberOfPages();
+
+            document.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return numberOfPages;
+    }
 }

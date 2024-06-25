@@ -139,6 +139,7 @@ public class SecurityConfig {
                                 "/api/v2/documents/public").permitAll()
                         .requestMatchers(
                                 "/api/v2/documents/related/*",
+                                "/api/v2/documents/*/note/all",
                                 "/api/v2/documents/*/like",
                                 "/api/v2/documents/*/unlike",
                                 "/api/v2/documents/*/relike",
@@ -147,6 +148,8 @@ public class SecurityConfig {
                                 "/api/v2/documents/*/unsave",
                                 "/api/v2/documents/*/resave",
                                 "/api/v2/documents/*/recent",
+                                "/api/v2/documents/*/note",
+                                "/api/v2/documents/*/current",
                                 "/api/v2/documents/saved",
                                 "/api/v2/documents/liked",
                                 "/api/v2/documents/recent",
@@ -303,6 +306,10 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/v2/collections/*/document/*",
                                 "/api/v2/collections/mine",
+                                "/api/v2/collections/liked",
+                                "/api/v2/collections/*/like",
+                                "/api/v2/collections/*/unlike",
+                                "/api/v2/collections/*/relike",
                                 "/api/v2/collections/*",
                                 "/api/v2/collections").authenticated()
 

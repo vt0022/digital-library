@@ -794,7 +794,7 @@ public class InitController {
                     postLike.setPost(post);
                     postLike.setUser(user);
 
-                    postLikeService.save(postLike);
+                    postLikeRepository.save(postLike);
                 } catch (Exception e) {
                     System.out.println(e);
                 }
@@ -1596,6 +1596,57 @@ public class InitController {
                 .error(false)
                 .message("Init doc verified successfully")
                 .build());
+    }
+
+    @PostMapping("/documents/id")
+    public ResponseEntity<?> initDocumentFileId() {
+        List<Document> documents = documentRepository.findAll();
+
+        for (Document document : documents) {
+            String id = extractFileId(document.getViewUrl());
+            document.setFileId(id);
+            documentRepository.save(document);
+        }
+
+        return ResponseEntity.ok(ResponseModel.builder()
+                .status(200)
+                .error(false)
+                .message("Init doc file id successfully")
+                .build());
+    }
+
+    @PostMapping("/documents/totalPages")
+    public ResponseEntity<?> initDocumentTotalPages() {
+        List<Document> documents = documentRepository.findAll();
+
+        for (Document document : documents) {
+            if (document.getTotalPages() == 0) {
+                document.setTotalPages(10);
+                documentRepository.save(document);
+            }
+        }
+
+        return ResponseEntity.ok(ResponseModel.builder()
+                .status(200)
+                .error(false)
+                .message("Init doc file id successfully")
+                .build());
+    }
+
+    private String extractFileId(String url) {
+        String regex = "/d/([a-zA-Z0-9_-]+)/";
+
+        // Tạo đối tượng Pattern và Matcher
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(url);
+
+        // Kiểm tra và lấy ID
+        if (matcher.find()) {
+            String id = matcher.group(1);
+            return id;
+        } else {
+            return "";
+        }
     }
 
     private String getId(String url) {

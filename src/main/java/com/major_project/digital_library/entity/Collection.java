@@ -38,6 +38,9 @@ public class Collection {
     @OneToMany(mappedBy = "collection", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CollectionDocument> collectionDocuments = new ArrayList<>();
 
+    @OneToMany(mappedBy = "collection", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CollectionLike> collectionLikes = new ArrayList<>();
+
     @PrePersist
     protected void onCreate() {
         createdAt = new Timestamp(System.currentTimeMillis());
