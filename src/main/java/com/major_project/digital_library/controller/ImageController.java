@@ -1,9 +1,7 @@
 package com.major_project.digital_library.controller;
 
-import com.major_project.digital_library.entity.ReplyImage;
 import com.major_project.digital_library.model.FileModel;
 import com.major_project.digital_library.model.response_model.ResponseModel;
-import com.major_project.digital_library.service.IReplyImageService;
 import com.major_project.digital_library.service.other.GoogleDriveService;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,31 +14,27 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
-@RequestMapping("/api/v2/replies")
-public class ReplyImageController {
-    private final IReplyImageService replyImageService;
+@RequestMapping("/api/v2/images")
+public class ImageController {
     private final GoogleDriveService googleDriveService;
 
     @Autowired
-    public ReplyImageController(IReplyImageService replyImageService, GoogleDriveService googleDriveService) {
-        this.replyImageService = replyImageService;
+    public ImageController(GoogleDriveService googleDriveService) {
         this.googleDriveService = googleDriveService;
     }
 
     @Operation(summary = "Tải một hình ảnh của phản hồi lên")
-    @PostMapping(path = "/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> uploadImage(@RequestPart MultipartFile image) {
         FileModel gd = googleDriveService.uploadImage(image, image.getOriginalFilename(), null, "reply");
-        ReplyImage replyImage = new ReplyImage();
-        replyImage.setUrl(gd.getViewUrl());
-        replyImageService.save(replyImage);
 
         return ResponseEntity.ok(
                 ResponseModel
                         .builder()
-                        .status(200)
+                        .status(gd == null ? 400 : 200)
                         .error(false)
-                        .message(gd.getViewUrl())
+                        .message(gd == null ? "Error uploaded image" : "Image uploaded successfully")
+                        .data(gd == null ? null : gd.getViewUrl())
                         .build());
     }
 }

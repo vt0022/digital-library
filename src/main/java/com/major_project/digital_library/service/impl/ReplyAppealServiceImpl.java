@@ -113,6 +113,20 @@ public class ReplyAppealServiceImpl implements IReplyAppealService {
         replyAppealRepository.delete(replyAppeal);
     }
 
+    @Override
+    public ReplyAppealResponseModel checkAppeal(UUID replyReportId) {
+        ReplyReport replyReport = replyReportRepository.findById(replyReportId).orElse(null);
+
+        if (replyReportId == null)
+            return null;
+        else {
+            ReplyAppeal replyAppeal = replyAppealRepository.findByReplyReport(replyReport).orElse(null);
+            ReplyAppealResponseModel replyAppealResponseModel = replyAppeal == null ? null : convertToReplyAppealModel(replyAppeal);
+
+            return replyAppealResponseModel;
+        }
+    }
+
     private ReplyAppealResponseModel convertToReplyAppealModel(ReplyAppeal replyAppeal) {
         ReplyAppealResponseModel replyAppealResponseModel = modelMapper.map(replyAppeal, ReplyAppealResponseModel.class);
 

@@ -167,6 +167,7 @@ public class AppealController {
                 .build());
     }
 
+    @Operation(summary = "Giữ nguyên quyết định")
     @PostMapping("/reply/{appealId}/handle")
     public ResponseEntity<?> handleReplyAppeal(@PathVariable UUID appealId,
                                                @RequestParam String type
@@ -180,15 +181,16 @@ public class AppealController {
                 .build());
     }
 
+    @Operation(summary = "Kiểm tra khiếu nại phản hồi chu")
     @GetMapping("/reply/{reportId}/check")
     public ResponseEntity<?> checkReplyAppeal(@PathVariable UUID reportId) {
-        PostAppealResponseModel postAppealResponseModel = postAppealService.checkAppeal(reportId);
+        ReplyAppealResponseModel replyAppealResponseModel = replyAppealService.checkAppeal(reportId);
 
         return ResponseEntity.ok(ResponseModel.builder()
                 .status(200)
                 .error(false)
                 .message("Check reply appeal successfully")
-                .data(postAppealResponseModel)
+                .data(replyAppealResponseModel)
                 .build());
     }
 }

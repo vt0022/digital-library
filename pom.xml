@@ -10,9 +10,9 @@
     </parent>
     <groupId>com.major-project</groupId>
     <artifactId>digital-library</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.1-SNAPSHOT</version>
     <name>digital-library</name>
-    <description>Major Project of a digital library</description>
+    <description>Major Project for miniverse</description>
     <properties>
         <java.version>17</java.version>
     </properties>
@@ -177,7 +177,7 @@
             <artifactId>jdf</artifactId>
             <version>1.0.0</version>
             <scope>system</scope>
-            <systemPath>${project.basedir}/jdf.jar</systemPath>
+            <systemPath>${project.basedir}/src/main/resources/jdf.jar</systemPath>
         </dependency>
 
         <dependency>
@@ -185,7 +185,7 @@
             <artifactId>vncorenlp</artifactId>
             <version>1.2.0</version>
             <scope>system</scope>
-            <systemPath>${project.basedir}/VnCoreNLP-1.2.jar</systemPath>
+            <systemPath>${project.basedir}/src/main/resources/VnCoreNLP-1.2.jar</systemPath>
         </dependency>
     </dependencies>
 
@@ -254,14 +254,6 @@
                 </configuration>
             </plugin>
 
-            <!--            <plugin>-->
-            <!--                <artifactId>maven-surefire-plugin</artifactId>-->
-            <!--                <configuration>-->
-            <!--                    <additionalClasspathElements>-->
-            <!--                        <additionalClasspathElement>${project.basedir}/models}</additionalClasspathElement>-->
-            <!--                    </additionalClasspathElements>-->
-            <!--                </configuration>-->
-            <!--            </plugin>-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
@@ -276,18 +268,8 @@
             <resource>
                 <directory>src/main/resources</directory>
                 <filtering>true</filtering>
-            </resource>
-            <resource>
-                <directory>${project.basedir}</directory>
                 <includes>
-                    <include>models/**</include>
-                </includes>
-            </resource>
-            <resource>
-                <directory>${project.basedir}</directory>
-                <includes>
-                    <include>jdf.jar</include>
-                    <include>VnCoreNLP-1.2.jar</include>
+                    <include>**/*</include>
                 </includes>
             </resource>
         </resources>

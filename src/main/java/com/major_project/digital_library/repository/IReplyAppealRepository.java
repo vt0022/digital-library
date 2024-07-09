@@ -1,6 +1,7 @@
 package com.major_project.digital_library.repository;
 
 import com.major_project.digital_library.entity.ReplyAppeal;
+import com.major_project.digital_library.entity.ReplyReport;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -8,9 +9,12 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface IReplyAppealRepository extends JpaRepository<ReplyAppeal, UUID> {
+    Optional<ReplyAppeal> findByReplyReport(ReplyReport replyReport);
+
     @Query("SELECT r FROM ReplyAppeal r " +
             "WHERE (:status IS NULL OR :status = '' OR r.status = :status) " +
             "AND (:type IS NULL OR :type = '' OR r.type = :type) " +

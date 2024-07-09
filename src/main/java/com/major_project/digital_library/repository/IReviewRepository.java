@@ -26,9 +26,9 @@ public interface IReviewRepository extends JpaRepository<Review, UUID> {
 
     Page<Review> findByDocumentAndStarAndVerifiedStatusOrderByCreatedAt(Document document, Integer star, int verifiedStatus, Pageable pageable);
 
-    Page<Review> findByUserOrderByCreatedAt(User user, Pageable pageable);
+    Page<Review> findByUserOrderByCreatedAtDesc(User user, Pageable pageable);
 
-    Page<Review> findByUserAndVerifiedStatusOrderByCreatedAt(User user, int verifiedStatus, Pageable pageable);
+    Page<Review> findByUserAndVerifiedStatusOrderByCreatedAtDesc(User user, int verifiedStatus, Pageable pageable);
 
     @Query("SELECT r.star, COUNT(r) FROM Review r " +
             "WHERE r.verifiedStatus = 1 " +

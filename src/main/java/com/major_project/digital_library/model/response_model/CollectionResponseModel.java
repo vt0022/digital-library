@@ -30,4 +30,8 @@ public class CollectionResponseModel implements Serializable {
     private Timestamp updatedAt;
 
     private List<String> thumbnails;
+
+    private int totalLikes;
+
+    private int totalDocuments;
 }

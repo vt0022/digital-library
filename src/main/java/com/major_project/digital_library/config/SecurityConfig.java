@@ -268,7 +268,6 @@ public class SecurityConfig {
                                 "/api/v2/replies/*/accept",
                                 "/api/v2/replies/*/undo-accept").authenticated()
                         .requestMatchers(
-                                "/api/v2/replies/image",
                                 "/api/v2/replies/user/*",
                                 "/api/v2/replies/*/history").permitAll()
                         .requestMatchers(
@@ -352,6 +351,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET,
                                 "/api/v2/appeals/post",
                                 "/api/v2/appeals/reply").hasAuthority("ROLE_ADMIN")
+
+                        .requestMatchers(
+                                "/api/v2/images").authenticated()
 
                         .requestMatchers("/api/v2/recaptcha/verify").permitAll()
 

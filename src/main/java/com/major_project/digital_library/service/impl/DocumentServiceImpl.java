@@ -419,12 +419,10 @@ public class DocumentServiceImpl implements IDocumentService {
         document.setCategory(category);
         document.setField(field);
         document.setOrganization(organization);
-        if (user.getRole().getRoleName().equals("ROLE_STUDENT")) {
-            document.setContributed(true);
-        }
 
         // Student must wait for the approval
         if (user.getRole().getRoleName().equals("ROLE_STUDENT")) {
+            document.setContributed(true);
             document.setVerifiedStatus(0);
         } else {
             document.setVerifiedStatus(1);
@@ -458,7 +456,7 @@ public class DocumentServiceImpl implements IDocumentService {
 
         if (multipartFile != null) {
             // Get id of old file and thumbnail file
-            String fileId = document.getViewUrl() != null ? stringHandler.getFileId(document.getViewUrl()) : null;
+            String fileId = document.getFileId() != null ? document.getFileId() : null;
             String thumbnailId = document.getThumbnail() != null ? stringHandler.getFileId(document.getThumbnail()) : null;
             // Upload file
             FileModel gd = googleDriveService.uploadFile(multipartFile, documentRequestModel.getDocName(), fileId, thumbnailId);
@@ -502,7 +500,7 @@ public class DocumentServiceImpl implements IDocumentService {
     public void deleteDocument(UUID docId) {
         Document document = documentRepository.findById(docId).orElseThrow(() -> new RuntimeException("Document not found!"));
         googleDriveService.deleteFile(stringHandler.getFileId(document.getThumbnail()));
-        googleDriveService.deleteFile(stringHandler.getFileId(document.getViewUrl()));
+        googleDriveService.deleteFile(document.getFileId());
         documentRepository.delete(document);
     }
 

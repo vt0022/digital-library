@@ -50,6 +50,7 @@ public class PostLikeServiceImpl implements IPostLikeService {
 
         if (postLike.isPresent()) {
             postLikeRepository.delete(postLike.get());
+            notificationService.deleteNotification(user, post.getUserPosted(), NotificationMessage.LIKE_POST.name(), post);
             return true;
         } else {
             PostLike newPostLike = new PostLike();

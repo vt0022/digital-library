@@ -1,6 +1,6 @@
 version: '3.9'
 
-name: digital-library
+name: miniverse
 
 services:
   mysql:
@@ -8,14 +8,14 @@ services:
     container_name: mysql
     environment:
       MYSQL_ROOT_PASSWORD: root-password
-      MYSQL_DATABASE: digital_library
+      MYSQL_DATABASE: miniverse
     volumes:
       - ./src/main/resources/database/digilib.sql:/docker-entrypoint-initdb.d/digilib.sql
     ports:
       - "3307:3306"
 
   app:
-    container_name: digital-library-app
+    container_name: miniverse-api
     environment:
       SPRING_PROFILES_ACTIVE: docker
     build:
@@ -28,6 +28,6 @@ services:
         max_attempts: 2
         window: 60s
     ports:
-      - "8081:8080"
+      - "8080:8080"
     depends_on:
       - mysql

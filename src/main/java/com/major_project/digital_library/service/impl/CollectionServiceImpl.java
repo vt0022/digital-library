@@ -1,7 +1,6 @@
 package com.major_project.digital_library.service.impl;
 
 import com.major_project.digital_library.entity.Collection;
-import com.major_project.digital_library.entity.CollectionDocument;
 import com.major_project.digital_library.entity.Document;
 import com.major_project.digital_library.entity.User;
 import com.major_project.digital_library.model.request_model.CollectionRequestModel;
@@ -26,7 +25,6 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 public class CollectionServiceImpl implements ICollectionService {
@@ -78,7 +76,7 @@ public class CollectionServiceImpl implements ICollectionService {
         Pageable pageable = PageRequest.of(page, size);
 
         Page<Collection> collections = collectionRepository.findPublicCollections(s, pageable);
-        Page<CollectionResponseModel> collectionResponseModels = collections.map(this::convertToCollectionModel);
+        Page<CollectionResponseModel> collectionResponseModels = collections.map(this::convertToCollectionModelForGuest);
 
         return collectionResponseModels;
     }
@@ -90,7 +88,7 @@ public class CollectionServiceImpl implements ICollectionService {
         Pageable pageable = PageRequest.of(page, size);
 
         Page<Collection> collections = collectionRepository.findForUser(user, s, pageable);
-        Page<CollectionResponseModel> collectionResponseModels = collections.map(this::convertToCollectionModel);
+        Page<CollectionResponseModel> collectionResponseModels = collections.map(this::convertToCollectionModelForUser);
 
         return collectionResponseModels;
 
@@ -103,7 +101,7 @@ public class CollectionServiceImpl implements ICollectionService {
         Pageable pageable = PageRequest.of(page, size);
 
         Page<Collection> collections = collectionRepository.findByUser(user, s, pageable);
-        Page<CollectionResponseModel> collectionResponseModels = collections.map(this::convertToCollectionModel);
+        Page<CollectionResponseModel> collectionResponseModels = collections.map(this::convertToCollectionModelForUser);
 
         return collectionResponseModels;
 
@@ -145,15 +143,16 @@ public class CollectionServiceImpl implements ICollectionService {
         collectionRepository.delete(collection);
     }
 
-    public CollectionResponseModel convertToCollectionModel(Collection collection) {
+    public CollectionResponseModel convertToCollectionModelForUser(Collection collection) {
+        User user = userService.findLoggedInUser();
         CollectionResponseModel collectionResponseModel = modelMapper.map(collection, CollectionResponseModel.class);
 
-        List<Document> documents = collection.getCollectionDocuments().stream()
-                .map(CollectionDocument::getDocument)
-                .collect(Collectors.toList());
+        Pageable pageable = PageRequest.of(0, 100);
+        List<Document> documents = documentRepository.findByCollectionForUser(collection, user.getOrganization(), "", pageable).getContent();
+        int totalDocuments = documents.size();
+        int totalLikes = collection.getCollectionLikes().size();
 
         List<String> thumbnails = new ArrayList<>();
-
         if (documents.size() >= 1)
             thumbnails.add(documents.get(0).getThumbnail());
         if (documents.size() >= 2)
@@ -162,6 +161,31 @@ public class CollectionServiceImpl implements ICollectionService {
             thumbnails.add(documents.get(2).getThumbnail());
 
         collectionResponseModel.setThumbnails(thumbnails);
+        collectionResponseModel.setTotalDocuments(totalDocuments);
+        collectionResponseModel.setTotalLikes(totalLikes);
+
+        return collectionResponseModel;
+    }
+
+    public CollectionResponseModel convertToCollectionModelForGuest(Collection collection) {
+        CollectionResponseModel collectionResponseModel = modelMapper.map(collection, CollectionResponseModel.class);
+
+        Pageable pageable = PageRequest.of(0, 1000);
+        List<Document> documents = documentRepository.findByCollectionForGuest(collection, "", pageable).getContent();
+        int totalDocuments = documents.size();
+        int totalLikes = collection.getCollectionLikes().size();
+
+        List<String> thumbnails = new ArrayList<>();
+        if (documents.size() >= 1)
+            thumbnails.add(documents.get(0).getThumbnail());
+        if (documents.size() >= 2)
+            thumbnails.add(documents.get(1).getThumbnail());
+        if (documents.size() > 2)
+            thumbnails.add(documents.get(2).getThumbnail());
+
+        collectionResponseModel.setThumbnails(thumbnails);
+        collectionResponseModel.setTotalDocuments(totalDocuments);
+        collectionResponseModel.setTotalLikes(totalLikes);
 
         return collectionResponseModel;
     }

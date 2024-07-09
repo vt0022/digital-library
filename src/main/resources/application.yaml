@@ -6,7 +6,7 @@ GOOGLE_RECAPTCHA_SECRET_KEY: 6Le5QeopAAAAAJBC_wz9_3fqYxbM_CTKJkp5DlDD
 
 server:
   servlet:
-    context-path: /digital.library
+    context-path: /miniverse
   forward-headers-strategy: framework
 
 spring:

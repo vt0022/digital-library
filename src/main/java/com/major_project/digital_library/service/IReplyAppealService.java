@@ -16,4 +16,6 @@ public interface IReplyAppealService {
     boolean handleAppeal(UUID appealId, String type);
 
     void deleteAppeal(UUID replyAppealId);
+
+    ReplyAppealResponseModel checkAppeal(UUID replyReportId);
 }

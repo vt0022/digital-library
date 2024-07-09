@@ -14,4 +14,6 @@ public interface INotificationService {
     int countUnreadNotificationsOfUser();
 
     NotificationResponseModel readNotification(UUID notiID);
+
+    void deleteNotification(User sender, User recipient, String type, Object object);
 }

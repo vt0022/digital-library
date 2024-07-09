@@ -1,5 +1,5 @@
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/digital_library
+    url: jdbc:mysql://localhost:3306/miniverse
     username: root
     password: 01669871043

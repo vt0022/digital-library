@@ -93,9 +93,9 @@ public class ReviewServiceImpl implements IReviewService {
         Page<Review> reviews = Page.empty();
 
         if (status >= -1 && status <= 1)
-            reviews = reviewRepository.findByUserAndVerifiedStatusOrderByCreatedAt(user, status, pageable);
+            reviews = reviewRepository.findByUserAndVerifiedStatusOrderByCreatedAtDesc(user, status, pageable);
         else
-            reviews = reviewRepository.findByUserOrderByCreatedAt(user, pageable);
+            reviews = reviewRepository.findByUserOrderByCreatedAtDesc(user, pageable);
 
         Page<ReviewResponseModel> reviewResponseModels = reviews.map(this::convertToReviewModel);
 

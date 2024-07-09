@@ -15,6 +15,8 @@ import java.util.UUID;
 public interface IReplyAcceptanceRepository extends JpaRepository<ReplyAcceptance, UUID> {
     Optional<ReplyAcceptance> findByReplyAndUser(Reply reply, User user);
 
+    void deleteByReplyAndUser(Reply reply, User user);
+
     @Query("SELECT ra FROM ReplyAcceptance ra " +
             "WHERE ra.reply.post = :post")
     Optional<ReplyAcceptance> findByPost(Post post);

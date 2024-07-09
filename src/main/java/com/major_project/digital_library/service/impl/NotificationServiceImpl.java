@@ -11,6 +11,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -87,6 +88,21 @@ public class NotificationServiceImpl implements INotificationService {
         NotificationResponseModel notificationResponseModel = convertToNotificationModel(notification);
 
         return notificationResponseModel;
+    }
+
+    @Override
+    public void deleteNotification(User sender, User recipient, String type, Object object) {
+        if (object.getClass() == Post.class) {
+            Optional<Notification> optionalNotification = notificationRepository.findBySenderAndRecipientAndTypeAndPost(sender, recipient, type, (Post) object);
+            if (optionalNotification.isPresent()) {
+                notificationRepository.delete(optionalNotification.get());
+            }
+        } else if (object.getClass() == Reply.class) {
+            Optional<Notification> optionalNotification = notificationRepository.findBySenderAndRecipientAndTypeAndReply(sender, recipient, type, (Reply) object);
+            if (optionalNotification.isPresent()) {
+                notificationRepository.delete(optionalNotification.get());
+            }
+        }
     }
 
     private NotificationResponseModel convertToNotificationModel(Notification notification) {

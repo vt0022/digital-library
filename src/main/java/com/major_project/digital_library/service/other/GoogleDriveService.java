@@ -30,7 +30,7 @@ public class GoogleDriveService {
         try {
             googleDrive.files().delete(fileId).execute();
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            System.out.println("Error while uploading");
         }
     }
 
@@ -56,7 +56,7 @@ public class GoogleDriveService {
                 try {
                     googleDrive.files().delete(fileId).execute();
                 } catch (Exception e) {
-                    System.out.println(e.getMessage());
+                    System.out.println("Error while uploading");
                 }
             }
 
@@ -74,8 +74,7 @@ public class GoogleDriveService {
             tempFile.delete();
             return gd;
         } catch (IOException e) {
-            // Handle exceptions
-            e.printStackTrace();
+            System.out.println("Error while uploading");
             return null;
         }
     }
@@ -103,7 +102,7 @@ public class GoogleDriveService {
                 try {
                     googleDrive.files().delete(thumbnailId).execute();
                 } catch (Exception e) {
-                    System.out.println(e.getMessage());
+                    System.out.println("Error while uploading");
                 }
             }
 
@@ -115,8 +114,7 @@ public class GoogleDriveService {
             tempThumbnail.delete();
             return "https://drive.google.com/thumbnail?id=" + uploadFile.getId();
         } catch (IOException e) {
-            // Handle exceptions
-            e.printStackTrace();
+            System.out.println("Error while uploading");
             return null;
         }
     }
@@ -150,7 +148,7 @@ public class GoogleDriveService {
                 try {
                     googleDrive.files().delete(fileId).execute();
                 } catch (Exception e) {
-                    System.out.println(e.getMessage());
+                    System.out.println("Error while uploading");
                 }
             }
 
@@ -164,8 +162,7 @@ public class GoogleDriveService {
             tempFile.delete();
             return gd;
         } catch (Exception e) {
-            // Handle exceptions
-            e.printStackTrace();
+            System.out.println("Error while uploading");
             return null;
         }
     }
@@ -179,7 +176,7 @@ public class GoogleDriveService {
 
             document.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Error while counting number of pages");
         }
         return numberOfPages;
     }

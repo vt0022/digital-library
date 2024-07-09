@@ -2,8 +2,9 @@ package com.major_project.digital_library.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.sql.Timestamp;
@@ -11,7 +12,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 
@@ -46,9 +48,6 @@ public class Reply {
     private User user;
 
     @OneToMany(mappedBy = "reply", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ReplyImage> replyImages = new ArrayList<>();
-
-    @OneToMany(mappedBy = "reply", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ReplyLike> replyLikes = new ArrayList<>();
 
     @OneToMany(mappedBy = "reply", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -57,10 +56,10 @@ public class Reply {
     @OneToMany(mappedBy = "reply", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Notification> notifications = new ArrayList<>();
 
-    @OneToMany(mappedBy = "reply", cascade = CascadeType.MERGE)
+    @OneToMany(mappedBy = "reply", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ReplyReport> replyReports = new ArrayList<>();
 
-    @OneToOne(mappedBy = "reply", cascade = CascadeType.MERGE)
+    @OneToOne(mappedBy = "reply", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private ReplyAcceptance replyAcceptance;
 
     @PrePersist

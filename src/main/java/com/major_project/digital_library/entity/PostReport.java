@@ -3,14 +3,16 @@ package com.major_project.digital_library.entity;
 import com.major_project.digital_library.constant.ProcessStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.sql.Timestamp;
 import java.util.UUID;
 
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 
@@ -37,7 +39,10 @@ public class PostReport {
     @JoinColumn(name = "userId")
     private User user;
 
-    @OneToOne(mappedBy = "postReport", cascade = CascadeType.MERGE)
+    @OneToOne(mappedBy = "postReport", cascade = CascadeType.ALL, orphanRemoval = true)
+    private PostAppeal postAppeal;
+
+    @OneToOne(mappedBy = "postReport", cascade = CascadeType.ALL, orphanRemoval = true)
     private Notification notification;
 
     @PrePersist

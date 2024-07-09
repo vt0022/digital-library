@@ -70,6 +70,7 @@ public class ReplyLikeServiceImpl implements IReplyLikeService {
 
         if (replyLike.isPresent()) {
             replyLikeRepository.delete(replyLike.get());
+            notificationService.deleteNotification(user, reply.getUser(), NotificationMessage.LIKE_REPLY.name(), reply);
             return true;
         } else {
             ReplyLike newReplyLike = new ReplyLike();
