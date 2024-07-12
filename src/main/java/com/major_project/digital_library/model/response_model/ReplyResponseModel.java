@@ -22,6 +22,8 @@ public class ReplyResponseModel implements Serializable {
 
     private String content;
 
+    private String note;
+
     private Timestamp createdAt;
 
     private Timestamp updatedAt;

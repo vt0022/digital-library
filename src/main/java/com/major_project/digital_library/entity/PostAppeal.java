@@ -26,6 +26,8 @@ public class PostAppeal {
 
     private String status;
 
+    private String disableReason;
+
     private String type;
 
     @Column(columnDefinition = "TEXT")

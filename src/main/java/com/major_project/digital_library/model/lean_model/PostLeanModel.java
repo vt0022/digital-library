@@ -21,6 +21,8 @@ public class PostLeanModel implements Serializable {
 
     private String content;
 
+    private String note;
+
     private UserLeanModel userPosted;
 
     private boolean isDisabled;

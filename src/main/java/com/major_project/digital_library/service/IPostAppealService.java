@@ -13,7 +13,7 @@ public interface IPostAppealService {
 
     PostAppealResponseModel readAppeal(UUID postAppealId);
 
-    boolean handleAppeal(UUID appealId, String type);
+    boolean handleAppeal(UUID appealId, String action);
 
     void deleteAppeal(UUID postAppealId);
 

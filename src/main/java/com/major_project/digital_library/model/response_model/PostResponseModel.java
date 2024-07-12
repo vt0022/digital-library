@@ -26,6 +26,8 @@ public class PostResponseModel implements Serializable {
 
     private String content;
 
+    private String note;
+
     private Timestamp createdAt;
 
     private Timestamp updatedAt;

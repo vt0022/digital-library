@@ -10,7 +10,7 @@ services:
       MYSQL_ROOT_PASSWORD: root-password
       MYSQL_DATABASE: miniverse
     volumes:
-      - ./src/main/resources/database/digilib.sql:/docker-entrypoint-initdb.d/digilib.sql
+      - ./database.sql:/docker-entrypoint-initdb.d/database.sql
     ports:
       - "3307:3306"
 

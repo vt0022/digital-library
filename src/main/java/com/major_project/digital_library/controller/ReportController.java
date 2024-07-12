@@ -102,9 +102,10 @@ public class ReportController {
     @Operation(summary = "Xử lý báo cáo bài đăng")
     @PostMapping("/post/{reportId}/handle")
     public ResponseEntity<?> handlePostReport(@PathVariable UUID reportId,
+                                              @RequestParam String action,
                                               @RequestParam String type
     ) {
-        boolean isDisabled = postReportService.handleReport(reportId, type);
+        boolean isDisabled = postReportService.handleReport(reportId, type, action);
 
         return ResponseEntity.ok(ResponseModel.builder()
                 .status(200)
@@ -187,9 +188,10 @@ public class ReportController {
     @Operation(summary = "Xử lý báo cáo phản hồi")
     @PostMapping("/reply/{reportId}/handle")
     public ResponseEntity<?> handleReplyReport(@PathVariable UUID reportId,
+                                               @RequestParam String action,
                                                @RequestParam String type
     ) {
-        boolean isDisabled = replyReportService.handleReport(reportId, type);
+        boolean isDisabled = replyReportService.handleReport(reportId, type, action);
 
         return ResponseEntity.ok(ResponseModel.builder()
                 .status(200)

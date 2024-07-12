@@ -14,7 +14,7 @@ public interface IPostReportService {
 
     PostReportResponseModel readReport(UUID postReportId);
 
-    boolean handleReport(UUID reportId, String type);
+    boolean handleReport(UUID reportId, String type, String action);
 
     List<PostReportResponseModel> checkReport(UUID reportId);
 

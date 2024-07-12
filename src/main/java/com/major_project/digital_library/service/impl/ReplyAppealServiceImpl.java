@@ -65,6 +65,7 @@ public class ReplyAppealServiceImpl implements IReplyAppealService {
         replyAppeal.setUser(user);
         replyAppeal.setType(replyAppealRequestModel.getType());
         replyAppeal.setReason(replyAppealRequestModel.getReason());
+        replyAppeal.setDisableReason(replyReport.getReply().getNote());
         replyAppeal = replyAppealRepository.save(replyAppeal);
 
         ReplyAppealResponseModel replyAppealResponseModel = modelMapper.map(replyAppeal, ReplyAppealResponseModel.class);
@@ -84,13 +85,14 @@ public class ReplyAppealServiceImpl implements IReplyAppealService {
     }
 
     @Override
-    public boolean handleAppeal(UUID appealId, String type) {
+    public boolean handleAppeal(UUID appealId, String action) {
         User user = userService.findLoggedInUser();
         ReplyAppeal replyAppeal = replyAppealRepository.findById(appealId).orElseThrow(() -> new RuntimeException("Reply appeal not found"));
         Reply reply = replyAppeal.getReplyReport().getReply();
 
-        if (type.equals("restore")) {
+        if (action.equals("restore")) {
             reply.setDisabled(false);
+            reply.setNote(null);
             replyRepository.save(reply);
 
             replyAppeal.setStatus(ProcessStatus.RESTORED.name());

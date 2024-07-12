@@ -86,9 +86,9 @@ public class AppealController {
 
     @PostMapping("/post/{appealId}/handle")
     public ResponseEntity<?> handlePostAppeal(@PathVariable UUID appealId,
-                                              @RequestParam String type
+                                              @RequestParam String action
     ) {
-        boolean isRestored = postAppealService.handleAppeal(appealId, type);
+        boolean isRestored = postAppealService.handleAppeal(appealId, action);
 
         return ResponseEntity.ok(ResponseModel.builder()
                 .status(200)
@@ -170,9 +170,9 @@ public class AppealController {
     @Operation(summary = "Giữ nguyên quyết định")
     @PostMapping("/reply/{appealId}/handle")
     public ResponseEntity<?> handleReplyAppeal(@PathVariable UUID appealId,
-                                               @RequestParam String type
+                                               @RequestParam String action
     ) {
-        boolean isRestored = replyAppealService.handleAppeal(appealId, type);
+        boolean isRestored = replyAppealService.handleAppeal(appealId, action);
 
         return ResponseEntity.ok(ResponseModel.builder()
                 .status(200)

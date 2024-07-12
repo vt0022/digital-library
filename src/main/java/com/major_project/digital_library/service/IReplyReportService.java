@@ -16,7 +16,7 @@ public interface IReplyReportService {
 
     List<ReplyReportResponseModel> checkReport(UUID reportId);
 
-    boolean handleReport(UUID reportId, String type);
+    boolean handleReport(UUID reportId, String type, String action);
 
     void deleteReport(UUID replyReportId);
 }

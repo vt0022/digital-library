@@ -36,6 +36,8 @@ public class Post {
 
     private boolean isDisabled;
 
+    private String note;
+
     @ManyToOne
     @JoinColumn(name = "postedBy")
     private User userPosted;

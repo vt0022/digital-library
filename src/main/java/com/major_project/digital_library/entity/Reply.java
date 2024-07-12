@@ -32,6 +32,8 @@ public class Reply {
 
     private boolean isDisabled;
 
+    private String note;
+
     @OneToMany(mappedBy = "parentReply", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Reply> childReplies = new ArrayList<>();
 

@@ -83,7 +83,7 @@ public class PostReportServiceImpl implements IPostReportService {
         return postReportResponseModel;
     }
 
-    public boolean handleReport(UUID reportId, String type) {
+    public boolean handleReport(UUID reportId, String type, String action) {
         User user = userService.findLoggedInUser();
         PostReport postReport = postReportRepository.findById(reportId).orElseThrow(() -> new RuntimeException("Post report not found"));
         Post post = postReport.getPost();
@@ -93,8 +93,9 @@ public class PostReportServiceImpl implements IPostReportService {
             reason = postReport.getReason();
         else reason = ReportReason.valueOf(postReport.getType()).getMessage();
 
-        if (type.equals("disable")) {
+        if (action.equals("disable")) {
             post.setDisabled(true);
+            post.setNote(type);
             postRepository.save(post);
 
             postReport.setStatus(ProcessStatus.DISABLED.name());

@@ -65,6 +65,7 @@ public class PostAppealServiceImpl implements IPostAppealService {
         postAppeal.setUser(user);
         postAppeal.setType(postAppealRequestModel.getType());
         postAppeal.setReason(postAppealRequestModel.getReason());
+        postAppeal.setDisableReason(postReport.getPost().getNote());
         postAppeal = postAppealRepository.save(postAppeal);
 
         PostAppealResponseModel postAppealResponseModel = modelMapper.map(postAppeal, PostAppealResponseModel.class);
@@ -84,13 +85,14 @@ public class PostAppealServiceImpl implements IPostAppealService {
     }
 
     @Override
-    public boolean handleAppeal(UUID appealId, String type) {
+    public boolean handleAppeal(UUID appealId, String action) {
         User user = userService.findLoggedInUser();
         PostAppeal postAppeal = postAppealRepository.findById(appealId).orElseThrow(() -> new RuntimeException("Post appeal not found"));
         Post post = postAppeal.getPostReport().getPost();
 
-        if (type.equals("restore")) {
+        if (action.equals("restore")) {
             post.setDisabled(false);
+            post.setNote(null);
             postRepository.save(post);
 
             postAppeal.setStatus(ProcessStatus.RESTORED.name());

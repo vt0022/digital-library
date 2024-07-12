@@ -23,6 +23,8 @@ public class ReplyAppealResponseModel implements Serializable {
 
     private String status;
 
+    private String disableReason;
+
     private String type;
 
     private String reason;

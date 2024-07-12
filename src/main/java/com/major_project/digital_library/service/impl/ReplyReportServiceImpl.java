@@ -95,7 +95,7 @@ public class ReplyReportServiceImpl implements IReplyReportService {
     }
 
     @Override
-    public boolean handleReport(UUID reportId, String type) {
+    public boolean handleReport(UUID reportId, String type, String action) {
         User user = userService.findLoggedInUser();
         ReplyReport replyReport = replyReportRepository.findById(reportId).orElseThrow(() -> new RuntimeException("Reply report not found"));
         Reply reply = replyReport.getReply();
@@ -105,8 +105,9 @@ public class ReplyReportServiceImpl implements IReplyReportService {
             reason = replyReport.getReason();
         else reason = ReportReason.valueOf(replyReport.getType()).getMessage();
 
-        if (type.equals("disable")) {
+        if (action.equals("disable")) {
             reply.setDisabled(true);
+            reply.setNote(type);
             replyRepository.save(reply);
 
             replyReport.setStatus(ProcessStatus.DISABLED.name());
@@ -119,7 +120,7 @@ public class ReplyReportServiceImpl implements IReplyReportService {
                 replyReportRepository.save(report);
             });
 
-            notificationService.sendNotification(NotificationMessage.WARN_REPLY.name(), NotificationMessage.WARN_REPLY.getMessage(), user, reply.getUser(), replyReport);
+            notificationService.sendNotification(NotificationMessage.WARN_REPLY.name(), NotificationMessage.WARN_REPLY.getMessage() + " " + reason, user, reply.getUser(), replyReport);
 
             return true;
         } else {
