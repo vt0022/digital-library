@@ -200,6 +200,8 @@ public class UserServiceImpl implements IUserService {
         FileModel gd = googleDriveService.uploadImage(file, stringHandler.getEmailUsername(newUser.getEmail()), null, "avatar");
         newUser.setImage(gd.getViewUrl());
 
+        newUser.setAuthenticated(true);
+
         newUser = save(newUser);
 
         UserResponseModel userResponseModel = modelMapper.map(newUser, UserResponseModel.class);

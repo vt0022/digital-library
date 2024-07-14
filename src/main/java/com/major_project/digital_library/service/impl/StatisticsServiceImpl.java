@@ -208,8 +208,8 @@ public class StatisticsServiceImpl implements IStatisticsService {
 
         long totalDocuments = getTotalDocumentCount(user.getOrganization(), startDate, endDate);
         long totalPendingDocuments = getPendingDocumentCount(user.getOrganization(), startDate, endDate);
-        long totalReviews = getTotalReviewCount(null, startDate, endDate);
-        long totalPendingReviews = getPendingReviewCount(null, startDate, endDate);
+        long totalReviews = getTotalReviewCount(user.getOrganization(), startDate, endDate);
+        long totalPendingReviews = getPendingReviewCount(user.getOrganization(), startDate, endDate);
         long totalUsers = getTotalUserCount(user.getOrganization(), startDate, endDate);
 
         Map<String, Long> documentCountByCategory = getDocumentCountByCategory(startDate, endDate, user.getOrganization());

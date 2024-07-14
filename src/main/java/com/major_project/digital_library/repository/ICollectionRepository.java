@@ -15,6 +15,8 @@ import java.util.UUID;
 public interface ICollectionRepository extends JpaRepository<Collection, UUID> {
     Optional<Collection> findBySlug(String slug);
 
+    Optional<Collection> findByUserAndCollectionName(User user, String collectionName);
+
     @Query("SELECT c FROM Collection c " +
             "WHERE c.isPrivate = FALSE " +
             "AND LOWER(c.collectionName) LIKE LOWER(CONCAT('%', :query, '%'))")

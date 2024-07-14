@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -111,6 +112,10 @@ public class CollectionServiceImpl implements ICollectionService {
     public CollectionResponseModel addCollection(CollectionRequestModel collectionRequestModel) {
         User user = userService.findLoggedInUser();
 
+        Optional<Collection> collectionOptional = collectionRepository.findByUserAndCollectionName(user, collectionRequestModel.getCollectionName());
+        if (collectionOptional.isPresent()) {
+            throw new RuntimeException("Collection already exists");
+        }
         Collection collection = modelMapper.map(collectionRequestModel, Collection.class);
         collection.setUser(user);
         collection.setSlug(SlugGenerator.generateSlug(collectionRequestModel.getCollectionName(), true));
@@ -124,7 +129,14 @@ public class CollectionServiceImpl implements ICollectionService {
 
     @Override
     public CollectionResponseModel editCollection(UUID collectionId, CollectionRequestModel collectionRequestModel) {
+        User user = userService.findLoggedInUser();
         Collection collection = collectionRepository.findById(collectionId).orElseThrow(() -> new RuntimeException("Collection not found"));
+
+        Optional<Collection> collectionOptional = collectionRepository.findByUserAndCollectionName(user, collectionRequestModel.getCollectionName());
+        if (collectionOptional.isPresent() && !collectionOptional.get().getCollectionId().equals(collectionId)) {
+            throw new RuntimeException("Collection already exists");
+        }
+
         collection.setCollectionName(collectionRequestModel.getCollectionName());
         collection.setPrivate(collectionRequestModel.isPrivate());
         collection.setSlug(SlugGenerator.generateSlug(collectionRequestModel.getCollectionName(), true));

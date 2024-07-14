@@ -214,7 +214,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET,
                                 "/api/v2/users/*").permitAll()
                         .requestMatchers(
-                                "/api/v2/users").hasAuthority("ROLE_ADMIN")
+                                "/api/v2/users").hasAnyAuthority("ROLE_ADMIN", "ROLE_MANAGER")
 
                         .requestMatchers(
                                 "/api/v2/statistics/general/admin",
