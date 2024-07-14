@@ -69,11 +69,11 @@ public interface IUserRepository extends JpaRepository<User, UUID> {
     @Query(value = "SELECT BIN_TO_UUID(u.user_id) userId, u.first_name firstName, u.last_name lastName, u.image, u.email, u.created_at createdAt, " +
             "COALESCE(pa.totalPostAcceptances, 0) totalPostAcceptances, COALESCE(ra.totalReplyAcceptances, 0) totalReplyAcceptances, COALESCE(pl.totalPostLikes, 0) totalPostLikes, COALESCE(rl.totalReplyLikes, 0) totalReplyLikes, " +
             "(COALESCE(pa.totalPostAcceptances, 0) * 10 + COALESCE(ra.totalReplyAcceptances, 0) * 10 + COALESCE(pl.totalPostLikes, 0) * 2 + COALESCE(rl.totalReplyLikes, 0) * 2) totalScores " +
-            "FROM User u " +
-            "LEFT JOIN (SELECT Post.posted_by, COUNT(*) totalPostAcceptances FROM Post JOIN Post_Acceptance ON Post_Acceptance.post_id = Post.post_id WHERE Post.is_disabled = FALSE GROUP BY Post.posted_by) pa ON u.user_id = pa.posted_by " +
-            "LEFT JOIN (SELECT Reply.replied_by, COUNT(*) totalReplyAcceptances FROM Reply JOIN Reply_Acceptance ON Reply_Acceptance.reply_id = Reply.reply_id WHERE Reply.is_disabled = FALSE GROUP BY Reply.replied_by) ra ON u.user_id = ra.replied_by " +
-            "LEFT JOIN (SELECT Post.posted_by, COUNT(*) totalPostLikes FROM Post JOIN Post_Like ON Post_Like.post_id = Post.post_id WHERE Post.is_disabled = FALSE GROUP BY Post.posted_by) pl ON u.user_id = pl.posted_by " +
-            "LEFT JOIN (SELECT Reply.replied_by, COUNT(*) totalReplyLikes FROM Reply JOIN Reply_Like ON Reply_Like.reply_id = Reply.reply_id WHERE Reply.is_disabled = FALSE GROUP BY Reply.replied_by) rl ON u.user_id = rl.replied_by " +
+            "FROM user u " +
+            "LEFT JOIN (SELECT post.posted_by, COUNT(*) totalPostAcceptances FROM post JOIN post_acceptance ON post_acceptance.post_id = post.post_id WHERE post.is_disabled = FALSE GROUP BY post.posted_by) pa ON u.user_id = pa.posted_by " +
+            "LEFT JOIN (SELECT reply.replied_by, COUNT(*) totalReplyAcceptances FROM reply JOIN reply_acceptance ON reply_acceptance.reply_id = reply.reply_id WHERE reply.is_disabled = FALSE GROUP BY reply.replied_by) ra ON u.user_id = ra.replied_by " +
+            "LEFT JOIN (SELECT post.posted_by, COUNT(*) totalPostLikes FROM post JOIN post_like ON post_like.post_id = post.post_id WHERE post.is_disabled = FALSE GROUP BY post.posted_by) pl ON u.user_id = pl.posted_by " +
+            "LEFT JOIN (SELECT reply.replied_by, COUNT(*) totalReplyLikes FROM reply JOIN reply_like ON reply_like.reply_id = reply.reply_id WHERE reply.is_disabled = FALSE GROUP BY reply.replied_by) rl ON u.user_id = rl.replied_by " +
             "WHERE u.is_disabled = FALSE " +
             "AND u.is_authenticated = TRUE " +
             "AND (LOWER(u.first_name) LIKE LOWER(CONCAT('%', :query, '%')) " +
@@ -89,7 +89,7 @@ public interface IUserRepository extends JpaRepository<User, UUID> {
             "COALESCE(pl.totalPostLikes, 0) DESC, " +
             "COALESCE(rl.totalReplyLikes, 0) DESC, " +
             "u.created_at",
-            countQuery = "SELECT COUNT(*) FROM User " +
+            countQuery = "SELECT COUNT(*) FROM user " +
                     "WHERE is_disabled = FALSE " +
                     "AND is_authenticated = TRUE " +
                     "AND (LOWER(first_name) LIKE LOWER(CONCAT('%', :query, '%')) " +
@@ -100,11 +100,11 @@ public interface IUserRepository extends JpaRepository<User, UUID> {
     @Query(value = "SELECT BIN_TO_UUID(u.user_id) userId, u.first_name firstName, u.last_name lastName, u.image, u.email, u.created_at createdAt, " +
             "COALESCE(pa.totalPostAcceptances, 0) totalPostAcceptances, COALESCE(ra.totalReplyAcceptances, 0) totalReplyAcceptances, COALESCE(pl.totalPostLikes, 0) totalPostLikes, COALESCE(rl.totalReplyLikes, 0) totalReplyLikes, " +
             "(COALESCE(pa.totalPostAcceptances, 0) * 10 + COALESCE(ra.totalReplyAcceptances, 0) * 10 + COALESCE(pl.totalPostLikes, 0) * 2 + COALESCE(rl.totalReplyLikes, 0) * 2) totalScores " +
-            "FROM User u " +
-            "LEFT JOIN (SELECT Post.posted_by, COUNT(*) totalPostAcceptances FROM Post JOIN Post_Acceptance ON Post_Acceptance.post_id = Post.post_id WHERE Post.is_disabled = FALSE AND MONTH(Post_Acceptance.accepted_at) = :month AND YEAR(Post_Acceptance.accepted_at) = :year GROUP BY Post.posted_by) pa ON u.user_id = pa.posted_by " +
-            "LEFT JOIN (SELECT Reply.replied_by, COUNT(*) totalReplyAcceptances FROM Reply JOIN Reply_Acceptance ON Reply_Acceptance.reply_id = Reply.reply_id WHERE Reply.is_disabled = FALSE AND MONTH(Reply_Acceptance.accepted_at) = :month AND YEAR(Reply_Acceptance.accepted_at) = :year GROUP BY Reply.replied_by) ra ON u.user_id = ra.replied_by " +
-            "LEFT JOIN (SELECT Post.posted_by, COUNT(*) totalPostLikes FROM Post JOIN Post_Like ON Post_Like.post_id = Post.post_id WHERE Post.is_disabled = FALSE AND MONTH(Post_Like.liked_at) = :month AND YEAR(Post_Like.liked_at) = :year GROUP BY Post.posted_by) pl ON u.user_id = pl.posted_by " +
-            "LEFT JOIN (SELECT Reply.replied_by, COUNT(*) totalReplyLikes FROM Reply JOIN Reply_Like ON Reply_Like.reply_id = Reply.reply_id WHERE Reply.is_disabled = FALSE AND MONTH(Reply_Like.liked_at) = :month AND YEAR(Reply_Like.liked_at) = :year GROUP BY Reply.replied_by) rl ON u.user_id = rl.replied_by " +
+            "FROM user u " +
+            "LEFT JOIN (SELECT post.posted_by, COUNT(*) totalPostAcceptances FROM post JOIN post_acceptance ON post_acceptance.post_id = post.post_id WHERE post.is_disabled = FALSE AND MONTH(post_acceptance.accepted_at) = :month AND YEAR(post_acceptance.accepted_at) = :year GROUP BY post.posted_by) pa ON u.user_id = pa.posted_by " +
+            "LEFT JOIN (SELECT reply.replied_by, COUNT(*) totalReplyAcceptances FROM reply JOIN reply_acceptance ON reply_acceptance.reply_id = reply.reply_id WHERE reply.is_disabled = FALSE AND MONTH(reply_acceptance.accepted_at) = :month AND YEAR(reply_acceptance.accepted_at) = :year GROUP BY reply.replied_by) ra ON u.user_id = ra.replied_by " +
+            "LEFT JOIN (SELECT post.posted_by, COUNT(*) totalPostLikes FROM post JOIN post_like ON post_like.post_id = post.post_id WHERE post.is_disabled = FALSE AND MONTH(post_like.liked_at) = :month AND YEAR(post_like.liked_at) = :year GROUP BY post.posted_by) pl ON u.user_id = pl.posted_by " +
+            "LEFT JOIN (SELECT reply.replied_by, COUNT(*) totalReplyLikes FROM reply JOIN reply_like ON reply_like.reply_id = reply.reply_id WHERE reply.is_disabled = FALSE AND MONTH(reply_like.liked_at) = :month AND YEAR(reply_like.liked_at) = :year GROUP BY reply.replied_by) rl ON u.user_id = rl.replied_by " +
             "WHERE u.is_disabled = FALSE " +
             "AND u.is_authenticated = TRUE " +
             "AND (LOWER(u.first_name) LIKE LOWER(CONCAT('%', :query, '%')) " +
@@ -120,7 +120,7 @@ public interface IUserRepository extends JpaRepository<User, UUID> {
             "COALESCE(pl.totalPostLikes, 0) DESC, " +
             "COALESCE(rl.totalReplyLikes, 0) DESC, " +
             "u.created_at",
-            countQuery = "SELECT COUNT(*) FROM User " +
+            countQuery = "SELECT COUNT(*) FROM user " +
                     "WHERE is_disabled = FALSE " +
                     "AND is_authenticated = TRUE " +
                     "AND (LOWER(first_name) LIKE LOWER(CONCAT('%', :query, '%')) " +
@@ -133,11 +133,11 @@ public interface IUserRepository extends JpaRepository<User, UUID> {
     @Query(value = "SELECT BIN_TO_UUID(u.user_id) userId, u.first_name firstName, u.last_name lastName, u.image, u.email, u.created_at createdAt, " +
             "COALESCE(pa.totalPostAcceptances, 0) totalPostAcceptances, COALESCE(ra.totalReplyAcceptances, 0) totalReplyAcceptances, COALESCE(pl.totalPostLikes, 0) totalPostLikes, COALESCE(rl.totalReplyLikes, 0) totalReplyLikes, " +
             "(COALESCE(pa.totalPostAcceptances, 0) * 10 + COALESCE(ra.totalReplyAcceptances, 0) * 10 + COALESCE(pl.totalPostLikes, 0) * 2 + COALESCE(rl.totalReplyLikes, 0) * 2) totalScores " +
-            "FROM User u " +
-            "LEFT JOIN (SELECT Post.posted_by, COUNT(*) totalPostAcceptances FROM Post JOIN Post_Acceptance ON Post_Acceptance.post_id = Post.post_id WHERE Post.is_disabled = FALSE AND YEAR(Post_Acceptance.accepted_at) = :year GROUP BY Post.posted_by) pa ON u.user_id = pa.posted_by " +
-            "LEFT JOIN (SELECT Reply.replied_by, COUNT(*) totalReplyAcceptances FROM Reply JOIN Reply_Acceptance ON Reply_Acceptance.reply_id = Reply.reply_id WHERE Reply.is_disabled = FALSE AND YEAR(Reply_Acceptance.accepted_at) = :year GROUP BY Reply.replied_by) ra ON u.user_id = ra.replied_by " +
-            "LEFT JOIN (SELECT Post.posted_by, COUNT(*) totalPostLikes FROM Post JOIN Post_Like ON Post_Like.post_id = Post.post_id WHERE Post.is_disabled = FALSE AND YEAR(Post_Like.liked_at) = :year GROUP BY Post.posted_by) pl ON u.user_id = pl.posted_by " +
-            "LEFT JOIN (SELECT Reply.replied_by, COUNT(*) totalReplyLikes FROM Reply JOIN Reply_Like ON Reply_Like.reply_id = Reply.reply_id WHERE Reply.is_disabled = FALSE AND YEAR(Reply_Like.liked_at) = :year GROUP BY Reply.replied_by) rl ON u.user_id = rl.replied_by " +
+            "FROM user u " +
+            "LEFT JOIN (SELECT post.posted_by, COUNT(*) totalPostAcceptances FROM post JOIN post_acceptance ON post_acceptance.post_id = post.post_id WHERE post.is_disabled = FALSE AND YEAR(post_acceptance.accepted_at) = :year GROUP BY post.posted_by) pa ON u.user_id = pa.posted_by " +
+            "LEFT JOIN (SELECT reply.replied_by, COUNT(*) totalReplyAcceptances FROM reply JOIN reply_acceptance ON reply_acceptance.reply_id = reply.reply_id WHERE reply.is_disabled = FALSE AND YEAR(reply_acceptance.accepted_at) = :year GROUP BY reply.replied_by) ra ON u.user_id = ra.replied_by " +
+            "LEFT JOIN (SELECT post.posted_by, COUNT(*) totalPostLikes FROM post JOIN post_like ON post_like.post_id = post.post_id WHERE post.is_disabled = FALSE AND YEAR(post_like.liked_at) = :year GROUP BY post.posted_by) pl ON u.user_id = pl.posted_by " +
+            "LEFT JOIN (SELECT reply.replied_by, COUNT(*) totalReplyLikes FROM reply JOIN reply_like ON reply_like.reply_id = reply.reply_id WHERE reply.is_disabled = FALSE AND YEAR(reply_like.liked_at) = :year GROUP BY reply.replied_by) rl ON u.user_id = rl.replied_by " +
             "WHERE u.is_disabled = FALSE " +
             "AND u.is_authenticated = TRUE " +
             "AND (LOWER(u.first_name) LIKE LOWER(CONCAT('%', :query, '%')) " +
@@ -153,7 +153,7 @@ public interface IUserRepository extends JpaRepository<User, UUID> {
             "COALESCE(pl.totalPostLikes, 0) DESC, " +
             "COALESCE(rl.totalReplyLikes, 0) DESC, " +
             "u.created_at",
-            countQuery = "SELECT COUNT(*) FROM User " +
+            countQuery = "SELECT COUNT(*) FROM user " +
                     "WHERE is_disabled = FALSE " +
                     "AND is_authenticated = TRUE " +
                     "AND (LOWER(first_name) LIKE LOWER(CONCAT('%', :query, '%')) " +
