@@ -79,7 +79,8 @@ public interface IUserRepository extends JpaRepository<User, UUID> {
             "AND (LOWER(u.first_name) LIKE LOWER(CONCAT('%', :query, '%')) " +
             "OR LOWER(u.last_name) LIKE LOWER(CONCAT('%', :query, '%'))) " +
             "GROUP BY u.user_id, u.first_name, u.last_name, u.image, u.email, u.created_at, " +
-            "COALESCE(pa.totalPostAcceptances, 0), COALESCE(ra.totalReplyAcceptances, 0), COALESCE(pl.totalPostLikes, 0), COALESCE(rl.totalReplyLikes, 0) " +
+            "COALESCE(pa.totalPostAcceptances, 0), COALESCE(ra.totalReplyAcceptances, 0), COALESCE(pl.totalPostLikes, 0), COALESCE(rl.totalReplyLikes, 0), " +
+            "(COALESCE(pa.totalPostAcceptances, 0) * 10 + COALESCE(ra.totalReplyAcceptances, 0) * 10 + COALESCE(pl.totalPostLikes, 0) * 2 + COALESCE(rl.totalReplyLikes, 0) * 2) " +
             "ORDER BY " +
             "(COALESCE(pa.totalPostAcceptances, 0) * 10 + " +
             "COALESCE(ra.totalReplyAcceptances, 0) * 10 + " +
@@ -111,7 +112,8 @@ public interface IUserRepository extends JpaRepository<User, UUID> {
             "AND (LOWER(u.first_name) LIKE LOWER(CONCAT('%', :query, '%')) " +
             "OR LOWER(u.last_name) LIKE LOWER(CONCAT('%', :query, '%'))) " +
             "GROUP BY u.user_id, u.first_name, u.last_name, u.image, u.email, u.created_at, " +
-            "COALESCE(pa.totalPostAcceptances, 0), COALESCE(ra.totalReplyAcceptances, 0), COALESCE(pl.totalPostLikes, 0), COALESCE(rl.totalReplyLikes, 0) " +
+            "COALESCE(pa.totalPostAcceptances, 0), COALESCE(ra.totalReplyAcceptances, 0), COALESCE(pl.totalPostLikes, 0), COALESCE(rl.totalReplyLikes, 0), " +
+            "(COALESCE(pa.totalPostAcceptances, 0) * 10 + COALESCE(ra.totalReplyAcceptances, 0) * 10 + COALESCE(pl.totalPostLikes, 0) * 2 + COALESCE(rl.totalReplyLikes, 0) * 2) " +
             "ORDER BY " +
             "(COALESCE(pa.totalPostAcceptances, 0) * 10 + " +
             "COALESCE(ra.totalReplyAcceptances, 0) * 10 + " +
@@ -145,7 +147,8 @@ public interface IUserRepository extends JpaRepository<User, UUID> {
             "AND (LOWER(u.first_name) LIKE LOWER(CONCAT('%', :query, '%')) " +
             "OR LOWER(u.last_name) LIKE LOWER(CONCAT('%', :query, '%'))) " +
             "GROUP BY u.user_id, u.first_name, u.last_name, u.image, u.email, u.created_at, " +
-            "COALESCE(pa.totalPostAcceptances, 0), COALESCE(ra.totalReplyAcceptances, 0), COALESCE(pl.totalPostLikes, 0), COALESCE(rl.totalReplyLikes, 0) " +
+            "COALESCE(pa.totalPostAcceptances, 0), COALESCE(ra.totalReplyAcceptances, 0), COALESCE(pl.totalPostLikes, 0), COALESCE(rl.totalReplyLikes, 0), " +
+            "(COALESCE(pa.totalPostAcceptances, 0) * 10 + COALESCE(ra.totalReplyAcceptances, 0) * 10 + COALESCE(pl.totalPostLikes, 0) * 2 + COALESCE(rl.totalReplyLikes, 0) * 2) " +
             "ORDER BY " +
             "(COALESCE(pa.totalPostAcceptances, 0) * 10 + " +
             "COALESCE(ra.totalReplyAcceptances, 0) * 10 + " +
