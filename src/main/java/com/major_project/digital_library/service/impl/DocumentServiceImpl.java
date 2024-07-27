@@ -513,12 +513,13 @@ public class DocumentServiceImpl implements IDocumentService {
 
         if (isApproved) {
             document.setVerifiedStatus(1);
-            document.setNote("");
+            document.setNote(null);
             notificationService.sendNotification(NotificationMessage.ACCEPT_DOCUMENT.name(), NotificationMessage.ACCEPT_DOCUMENT.getMessage(), user, document.getUserUploaded(), document);
         } else {
             document.setVerifiedStatus(-1);
             document.setNote(note);
-            notificationService.sendNotification(NotificationMessage.REJECT_DOCUMENT.name(), NotificationMessage.REJECT_DOCUMENT.getMessage(), user, document.getUserUploaded(), document);
+            String reason = note.equals("") ? "" : " vì " + note;
+            notificationService.sendNotification(NotificationMessage.REJECT_DOCUMENT.name(), NotificationMessage.REJECT_DOCUMENT.getMessage() + reason, user, document.getUserUploaded(), document);
         }
         document.setUserVerified(user);
         document.setVerifiedAt(new Timestamp(System.currentTimeMillis()));

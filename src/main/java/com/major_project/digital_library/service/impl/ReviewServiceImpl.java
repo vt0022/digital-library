@@ -1,5 +1,6 @@
 package com.major_project.digital_library.service.impl;
 
+import com.major_project.digital_library.constant.NotificationMessage;
 import com.major_project.digital_library.entity.Document;
 import com.major_project.digital_library.entity.Organization;
 import com.major_project.digital_library.entity.Review;
@@ -9,6 +10,7 @@ import com.major_project.digital_library.model.response_model.ReviewResponseMode
 import com.major_project.digital_library.repository.IDocumentRepository;
 import com.major_project.digital_library.repository.IOrganizationRepository;
 import com.major_project.digital_library.repository.IReviewRepository;
+import com.major_project.digital_library.service.INotificationService;
 import com.major_project.digital_library.service.IReviewService;
 import com.major_project.digital_library.service.IUserService;
 import org.modelmapper.ModelMapper;
@@ -35,14 +37,16 @@ public class ReviewServiceImpl implements IReviewService {
     private final IDocumentRepository documentRepository;
     private final IOrganizationRepository organizationRepository;
     private final IUserService userService;
+    private final INotificationService notificationService;
     private final ModelMapper modelMapper;
 
     @Autowired
-    public ReviewServiceImpl(IReviewRepository reviewRepository, IDocumentRepository documentRepository, IOrganizationRepository organizationRepository, IUserService userService, ModelMapper modelMapper) {
+    public ReviewServiceImpl(IReviewRepository reviewRepository, IDocumentRepository documentRepository, IOrganizationRepository organizationRepository, IUserService userService, INotificationService notificationService, ModelMapper modelMapper) {
         this.reviewRepository = reviewRepository;
         this.documentRepository = documentRepository;
         this.organizationRepository = organizationRepository;
         this.userService = userService;
+        this.notificationService = notificationService;
         this.modelMapper = modelMapper;
     }
 
@@ -109,10 +113,13 @@ public class ReviewServiceImpl implements IReviewService {
         Review review = reviewRepository.findById(reviewId).orElseThrow(() -> new RuntimeException("Review not found"));
 
         review.setVerifiedStatus(isApproved ? 1 : -1);
-        if (!isApproved)
+        if (!isApproved) {
             review.setNote(note);
-        else
-            review.setNote("");
+            String reason = note.equals("") ? "" : " vì " + note;
+            notificationService.sendNotification(NotificationMessage.REJECT_REVIEW.name(), NotificationMessage.REJECT_REVIEW.getMessage() + reason, user, review.getUser(), review);
+        } else {
+            review.setNote(null);
+        }
         review.setTimesLeft(review.getTimesLeft() - 1);
         review.setUserVerified(user);
         review.setVerifiedAt(new Timestamp(System.currentTimeMillis()));
